@@ -1,0 +1,124 @@
+# ModelMux configuration.
+#
+# Per SPEC section 2: "Configuration over code." Tiers, thresholds and provider
+# settings live here, never in Python.
+#
+# Sections beyond `tiers` and `limits` are read but unused until their stage
+# lands. They are present now so the shape is fixed and config.py does not have
+# to change later.
+
+# ---------------------------------------------------------------------------
+# PRICING SNAPSHOT: 2026-09-08
+# Per SPEC section 13, prices drift and model names change. These are a dated
+# snapshot, not a source of truth.
+#
+# !! VERIFY BEFORE TRUSTING ANY COST NUMBER !!
+#   Groq      https://groq.com/pricing
+#   Google    https://ai.google.dev/pricing
+#   Anthropic https://claude.com/pricing
+# ---------------------------------------------------------------------------
+
+tiers:
+  # VERIFIED 2026-09-08 against https://console.groq.com/docs/models
+  #
+  # Groq lists prices per 1M tokens; these are per 1K, so divide by 1000.
+  #   gpt-oss-20b :  $0.075 / $0.30  per 1M  ->  0.000075 / 0.0003 per 1K
+  #   gpt-oss-120b:  $0.15  / $0.60  per 1M  ->  0.00015  / 0.0006  per 1K
+  #
+  # NOT USED, and why: llama-3.1-8b-instant and llama-3.3-70b-versatile are
+  # both marked **Enterprise / Contact Sales** on the models page. They have no
+  # published price and are not available on a developer plan. The earlier
+  # config pointed at llama-3.1-8b-instant, which was wrong on both counts.
+
+  small:
+    providers:
+      - name: groq
+        model: openai/gpt-oss-20b     # VERIFIED 2026-09-08. 1000 T/s.
+        cost_per_1k_input: 0.000075
+        cost_per_1k_output: 0.0003
+
+  mid:
+    # TEMPORARILY ON GROQ. The intended mid tier is Google Gemini, but there is
+    # no GOOGLE_API_KEY yet -- and with mid unreachable, the router cannot be
+    # exercised end to end for real. gpt-oss-120b is 2x the price of the small
+    # tier, so tier selection still has genuine cost consequences to measure.
+    # Swap back to the google entry below once a key exists.
+    providers:
+      - name: groq
+        model: openai/gpt-oss-120b    # VERIFIED 2026-09-08. 500 T/s.
+        cost_per_1k_input: 0.00015
+        cost_per_1k_output: 0.0006
+      # - name: google
+      #   model: gemini-2.0-flash     # UNVERIFIED - no key yet
+      #   cost_per_1k_input: 0.00030
+      #   cost_per_1k_output: 0.00060
+
+  large:
+    # UNVERIFIED. No ANTHROPIC_API_KEY, and these prices are estimates, not
+    # checked against a pricing page. Every cost_if_large_usd figure -- and so
+    # every savings claim -- depends on them. Verify before quoting any number.
+    providers:
+      - name: anthropic
+        model: claude-sonnet-5        # UNVERIFIED
+        cost_per_1k_input: 0.00300    # UNVERIFIED
+        cost_per_1k_output: 0.01500   # UNVERIFIED
+
+# Which tier the counterfactual "what would this have cost on the big model"
+# figure is priced against. Every savings claim in the README derives from this.
+baseline_tier: large
+
+classifier:
+  # Stage 2 uses `naive_tokens`: route on token count alone. It is meant to be
+  # bad -- cataloguing HOW it is bad is Stage 2's completion criterion.
+  # Becomes heuristic | embedding | hybrid at Stage 3.
+  mode: hybrid
+
+  naive:
+    # Token count that maps to a complexity score of 1.0. Linear below it,
+    # flat above. With the thresholds below this gives:
+    #     <= 198 tokens -> small
+    #     <= 396 tokens -> mid
+    #      > 396 tokens -> large
+    saturation_tokens: 600
+  thresholds:
+    small_max: 0.33
+    mid_max: 0.66
+  escalate_on_low_confidence: true
+  confidence_threshold: 0.60
+
+cache:
+  enabled: true
+  similarity_threshold: 0.92
+  ttl_seconds: 86400
+  max_entries: 10000
+
+resilience:
+  request_timeout_seconds: 30
+  connect_timeout_seconds: 5
+  max_retries: 2
+  backoff_base_seconds: 0.5
+  circuit_failure_threshold: 5
+  circuit_window_seconds: 60
+  circuit_cooldown_seconds: 30
+  # When a tier is exhausted, escalate one tier up rather than fail (SPEC 8.7).
+  # Exposed as a switch because during a provider outage this converts an
+  # availability problem into a cost spike, and that should be a choice.
+  escalate_on_tier_exhausted: true
+
+limits:
+  max_prompt_chars: 100000
+  max_tokens_default: 1000
+  rate_limit_per_minute: 60
+
+database:
+  # DELIBERATELY OUTSIDE THE PROJECT FOLDER.
+  #
+  # This project lives under OneDrive. OneDrive syncing a SQLite file while
+  # SQLite holds a lock on it can corrupt the database, and WAL mode adds two
+  # companion files (-wal, -shm) that must stay consistent with it. Putting the
+  # database in LOCALAPPDATA -- which OneDrive never syncs -- removes the risk
+  # without having to relocate the whole project. See SPEC 13, DECISIONS.md D7.
+  #
+  # ${VAR} is expanded by config.py. A relative path resolves against the
+  # project root. MODELMUX_DB_PATH overrides this entirely (used by tests).
+  path: ${LOCALAPPDATA}/ModelMux/modelmux.db

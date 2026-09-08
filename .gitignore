@@ -1,0 +1,19 @@
+# Environment
+.venv/
+.env
+
+# Database (also lives outside the project -- see DECISIONS.md D7)
+*.db
+*.db-wal
+*.db-shm
+
+# Python caches
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Documents -- kept on disk, not in the repo
+*.docx
+learnings
+PLAN.md
+specs.md

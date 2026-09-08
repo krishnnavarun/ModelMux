@@ -1,0 +1,46 @@
+{
+  "_readme": "HELD-OUT TEST SET. Written after the heuristic weights were tuned, and never used to tune anything. This is the only set whose accuracy figure is a legitimate estimate of generalisation. prompts.json became a de-facto training set once weights were adjusted against it; labelled.json is the embedding classifier's reference data. Neither can measure generalisation.",
+  "_limitation": "Written and labelled by the same person who built the classifier. That is a real weakness: unconscious bias towards prompts the signals already handle cannot be ruled out. The honest fix is a second labeller on a blind sample -- until then, treat this number as an upper bound, not a guarantee.",
+  "_method": "Labels assigned before running the classifier even once. Category mix mirrors prompts.json so the two are comparable.",
+  "prompts": [
+    {"id": 1, "category": "lookup", "expected_tier": "small", "prompt": "What is the tallest mountain in Africa?"},
+    {"id": 2, "category": "lookup", "expected_tier": "small", "prompt": "Who discovered penicillin?"},
+    {"id": 3, "category": "lookup", "expected_tier": "small", "prompt": "What is the atomic number of carbon?"},
+    {"id": 4, "category": "trivial_math", "expected_tier": "small", "prompt": "What is 18 multiplied by 7?"},
+    {"id": 5, "category": "trivial_math", "expected_tier": "small", "prompt": "Convert 100 kilograms to pounds."},
+    {"id": 6, "category": "formatting", "expected_tier": "small", "prompt": "Make this lowercase: HELLO WORLD"},
+    {"id": 7, "category": "formatting", "expected_tier": "small", "prompt": "Translate 'good night' into Italian."},
+    {"id": 8, "category": "code_simple", "expected_tier": "small", "prompt": "How do I append to a list in Python?"},
+    {"id": 9, "category": "code_simple", "expected_tier": "small", "prompt": "What does the len() function do?"},
+    {"id": 10, "category": "creative", "expected_tier": "small", "prompt": "Suggest four names for a bakery."},
+
+    {"id": 11, "category": "trap_short_but_hard", "expected_tier": "large", "prompt": "Prove that the halting problem is undecidable."},
+    {"id": 12, "category": "trap_short_but_hard", "expected_tier": "large", "prompt": "Derive Bayes' theorem from the axioms of probability."},
+    {"id": 13, "category": "trap_short_but_hard", "expected_tier": "large", "prompt": "Critique the efficient market hypothesis."},
+    {"id": 14, "category": "trap_short_but_hard", "expected_tier": "large", "prompt": "Design a consensus algorithm for an unreliable network."},
+    {"id": 15, "category": "trap_short_but_hard", "expected_tier": "large", "prompt": "Can a machine be conscious? Defend your answer."},
+    {"id": 16, "category": "trap_short_but_hard", "expected_tier": "large", "prompt": "Justify the use of randomised controlled trials over observational studies."},
+    {"id": 17, "category": "trap_short_but_hard", "expected_tier": "mid", "prompt": "Debug: my Docker build hangs at step 4."},
+    {"id": 18, "category": "trap_short_but_hard", "expected_tier": "mid", "prompt": "Optimise this loop: for i in range(len(x)): total += x[i]"},
+
+    {"id": 19, "category": "reasoning", "expected_tier": "mid", "prompt": "Explain why a database index can make a query slower rather than faster."},
+    {"id": 20, "category": "reasoning", "expected_tier": "mid", "prompt": "What are the trade-offs between server-side and client-side rendering?"},
+    {"id": 21, "category": "reasoning", "expected_tier": "mid", "prompt": "Two teams report the same bug with different symptoms. How would you approach diagnosing it?"},
+    {"id": 22, "category": "reasoning", "expected_tier": "mid", "prompt": "Walk me through how a TLS handshake establishes a shared secret."},
+
+    {"id": 23, "category": "code_mid", "expected_tier": "mid", "prompt": "Write a Python context manager that times the block it wraps and logs the duration."},
+    {"id": 24, "category": "code_mid", "expected_tier": "mid", "prompt": "Explain the difference between shallow and deep copy in Python, with an example where it matters."},
+
+    {"id": 25, "category": "summarize", "expected_tier": "mid", "prompt": "Summarise the main arguments for and against nuclear power for electricity generation."},
+    {"id": 26, "category": "summarize", "expected_tier": "mid", "prompt": "Describe how the internet routes a packet between two continents, for a non-technical reader."},
+
+    {"id": 27, "category": "multi_question", "expected_tier": "mid", "prompt": "What is a container? How does it differ from a virtual machine? And when would I choose one over the other?"},
+    {"id": 28, "category": "multi_question", "expected_tier": "mid", "prompt": "What causes deadlock? How do you detect it? What are the standard prevention strategies?"},
+
+    {"id": 29, "category": "long_and_hard", "expected_tier": "large", "prompt": "We run a fleet of about four hundred microservices and our on-call engineers are drowning in alerts, most of which turn out to be noise. Alert rules were written by individual teams over six years with no shared standard, and nobody feels able to delete any of them in case the one they remove is the one that mattered. Latency alerts fire on p99 spikes that self-resolve within a minute. Diagnose the organisational and technical roots of this, propose a concrete alerting philosophy with specific thresholds and ownership rules, and explain how you would migrate without a period of dangerous blindness."},
+    {"id": 30, "category": "long_and_hard", "expected_tier": "large", "prompt": "I have inherited a monolithic Rails application with a 40,000-line models directory, no test coverage on the billing path, and a database where several tables have grown past 200 million rows. Leadership wants to extract billing into its own service within two quarters while continuing to ship features. Evaluate whether that is achievable, identify the specific risks in extracting billing first rather than something safer, and lay out a sequenced plan with the decision points at which you would abandon the extraction."},
+
+    {"id": 31, "category": "trap_long_but_easy", "expected_tier": "small", "prompt": "Below is the agenda that was circulated for our quarterly planning meeting. Nine fifteen, coffee and informal catch-up in the main atrium, no formal agenda item, people are encouraged to arrive early. Nine forty five, welcome and framing from the department head, covering the results of the last quarter and the headline targets for the coming one. Ten fifteen, breakout groups by function, with product, engineering, design and operations each meeting separately to surface their top three constraints. Eleven thirty, coffee break and informal regrouping. Eleven forty five, plenary session where each breakout group presents its constraints and the room discusses dependencies between them. Twelve forty five, lunch is served in the west room, vegetarian and vegan options are available and dietary requirements should have been submitted in advance. One forty five, prioritisation exercise using dot voting against the constraints raised in the morning. Three o'clock, commitments and owners are assigned for the top-ranked items. Three forty five, closing remarks and confirmation of the follow-up schedule. Four o'clock, optional drinks for those who can stay. My question is simply: what time does lunch start?"},
+    {"id": 32, "category": "trap_long_but_easy", "expected_tier": "small", "prompt": "Here is the full text of the warranty card that came with my washing machine. This appliance is guaranteed against defects in materials and workmanship for a period of twenty four months from the date of purchase, provided that proof of purchase can be supplied. The guarantee covers the cost of parts and labour for repairs carried out by an approved engineer. It does not cover damage caused by misuse, incorrect installation, use of non-approved detergents, or attempts at repair by anyone other than an approved engineer. Consumable parts including filters and hoses are covered for the first twelve months only. Cosmetic damage to the exterior casing is not covered at any point. Where a repair is not economically viable the manufacturer reserves the right to replace the appliance with an equivalent model rather than repair it. Claims must be initiated by telephone or through the website before any work is carried out, and work carried out without prior authorisation will not be reimbursed. This guarantee is in addition to and does not affect your statutory rights. The question I have is: how many months does the guarantee last?"}
+  ]
+}
