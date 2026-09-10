@@ -1,0 +1,45 @@
+{
+  "_readme": "Labelled prompt pairs for tuning the cache similarity threshold (SPEC 8.5). EQUIVALENT pairs SHOULD share a cached answer -- missing them costs hit rate. DANGEROUS pairs MUST NOT share one -- serving a cached answer across them returns a WRONG answer to a real user. The threshold is the line between these two sets, and there is no value that separates them perfectly.",
+  "_why_dangerous_pairs_matter": "Every dangerous pair below is superficially similar -- often one word apart -- but has a materially different correct answer. These are not adversarial edge cases invented to make a point; they are the ordinary shape of real traffic. A cache tuned only for hit rate will serve the wrong one.",
+
+  "equivalent": [
+    ["What is the capital of Japan?", "Whats the capital city of japan"],
+    ["What is the capital of Japan?", "Japan's capital city is what?"],
+    ["How do I reverse a string in Python?", "In Python, how can I reverse a string?"],
+    ["How do I reverse a string in Python?", "python reverse string how to"],
+    ["What causes rain?", "Why does it rain?"],
+    ["Explain how HTTPS works.", "Can you explain the way HTTPS works?"],
+    ["What is the difference between a list and a tuple?", "How do lists and tuples differ?"],
+    ["Convert 32 Fahrenheit to Celsius.", "What is 32F in Celsius?"],
+    ["Who wrote Pride and Prejudice?", "Pride and Prejudice was written by whom?"],
+    ["Summarise the causes of World War One.", "Give me a summary of what caused WW1."],
+    ["How do I install Docker on Ubuntu?", "What are the steps to install Docker on Ubuntu?"],
+    ["What is machine learning?", "Can you explain what machine learning is?"],
+    ["Write a function that adds two numbers.", "Write a function to add two numbers together."],
+    ["What time zone is Tokyo in?", "Which timezone does Tokyo use?"],
+    ["Why is the sky blue?", "What makes the sky appear blue?"]
+  ],
+
+  "dangerous": [
+    ["What is the capital of Japan?", "What is the capital of France?"],
+    ["What is the capital of Japan?", "What is the currency of Japan?"],
+    ["What is the capital of Japan?", "What is the population of Japan?"],
+    ["How do I start a Docker container?", "How do I stop a Docker container?"],
+    ["How do I install Docker on Ubuntu?", "How do I uninstall Docker on Ubuntu?"],
+    ["Is it safe to take ibuprofen with alcohol?", "Is it safe to take paracetamol with alcohol?"],
+    ["What is 15% of 240?", "What is 15% of 420?"],
+    ["What is 15% of 240?", "What is 50% of 240?"],
+    ["How do I commit changes in git?", "How do I revert changes in git?"],
+    ["What are the side effects of aspirin?", "What are the side effects of penicillin?"],
+    ["Convert 32 Fahrenheit to Celsius.", "Convert 32 Celsius to Fahrenheit."],
+    ["Write a function that adds two numbers.", "Write a function that multiplies two numbers."],
+    ["What is the boiling point of water?", "What is the freezing point of water?"],
+    ["How do I create a database index?", "How do I drop a database index?"],
+    ["What is the difference between TCP and UDP?", "What is the difference between HTTP and HTTPS?"],
+    ["Who wrote Pride and Prejudice?", "Who wrote Sense and Sensibility?"],
+    ["What is the tallest mountain in Africa?", "What is the tallest mountain in Asia?"],
+    ["How do I encrypt a file?", "How do I decrypt a file?"],
+    ["Show me how to enable logging in nginx.", "Show me how to disable logging in nginx."],
+    ["What year did World War One begin?", "What year did World War Two begin?"]
+  ]
+}

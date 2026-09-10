@@ -18,6 +18,12 @@ import pytest
 _TEST_DB = Path(os.environ.get("TEMP", "/tmp")) / f"modelmux-test-{uuid.uuid4().hex}.db"
 os.environ["MODELMUX_DB_PATH"] = str(_TEST_DB)
 
+# The API tests exercise the PROVIDER path and count calls on a shared mock.
+# A live cache makes the second identical prompt a hit, so the count stops
+# reflecting reality. test_cache.py connects to Redis explicitly for its own
+# tests; everything else runs cache-free.
+os.environ["MODELMUX_CACHE_DISABLED"] = "1"
+
 # Tests import the app package from the project root.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 

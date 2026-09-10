@@ -88,7 +88,13 @@ classifier:
 
 cache:
   enabled: true
-  similarity_threshold: 0.92
+  url: redis://localhost:6379   # WSL2 forwards localhost; see DECISIONS.md D9
+
+  # !! THE MOST DANGEROUS SETTING IN THIS PROJECT (SPEC 8.5) !!
+  # Too loose: semantically DIFFERENT prompts share an answer, across users.
+  # Too tight: the hit rate collapses and the cache earns nothing.
+  # Justified by measurement in DECISIONS.md D16, with the failure case shown.
+  similarity_threshold: 0.88   # MEASURED, not guessed. DECISIONS.md D16.
   ttl_seconds: 86400
   max_entries: 10000
 

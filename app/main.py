@@ -25,7 +25,8 @@ from fastapi import BackgroundTasks, FastAPI
 from fastapi.responses import JSONResponse
 
 from app import config as config_module
-from app import db, router, tokens
+from app import cache, db, router, tokens
+from app.classifier import embedding
 from app.providers import build_all
 from app.providers.base import ProviderError
 from app.schemas import ChatRequest
@@ -62,6 +63,8 @@ async def lifespan(app: FastAPI):
     # first encode costs ~48ms; steady state is ~0.01ms. Doing this per request
     # would blow the 20ms classification budget on its own.
     tokens.init()
+    embedding.init()
+    await cache.init(config)
 
     async with httpx.AsyncClient(timeout=timeout) as client:
         app.state.http = client
@@ -69,6 +72,7 @@ async def lifespan(app: FastAPI):
         # Anthropic in Stage 2 required no change to this line.
         app.state.providers = build_all(config, client)
         yield
+    await cache.close()
 
 app = FastAPI(title="ModelMux", version="0.1.0", lifespan=lifespan)
 
@@ -155,6 +159,61 @@ async def chat(request: ChatRequest, background: BackgroundTasks):
     provider_config = decision.provider
     provider = app.state.providers[provider_config["name"]]
 
+    # --- Cache (SPEC section 8.5) -----------------------------------------
+    # AFTER routing, not before. Routing is ~11ms of local compute and the
+    # decision is recorded on a hit too -- so a cached row still shows which
+    # tier the router WOULD have chosen. Without that, cache hits would be
+    # blind spots in the routing statistics the whole project is measured by.
+    cache_lookup_ms = None
+    if not request.bypass_cache and cache.available():
+        hit, cache_lookup_ms = await cache.lookup(request.prompt)
+        cache_lookup_ms = int(cache_lookup_ms)
+
+        if hit is not None:
+            # Zero provider calls, zero cost.
+            finish(
+                "cached",
+                complexity_score=decision.complexity_score,
+                signals_json=json.dumps(decision.signals),
+                tier=hit.tier,
+                provider=provider_config["name"],
+                model=hit.model,
+                cache_hit=1,
+                tokens_in=0,
+                tokens_out=hit.tokens_out,
+                cost_usd=0.0,
+                cost_if_large_usd=config.cost_usd(
+                    config.baseline_tier, 0, hit.tokens_out),
+                classify_ms=classify_ms,
+                cache_lookup_ms=cache_lookup_ms,
+            )
+            return {
+                "response": hit.response,
+                "routing": {
+                    "request_id": request_id,
+                    "tier": hit.tier,
+                    "provider": provider_config["name"],
+                    "model": hit.model,
+                    "cache_hit": True,
+                    "cache_similarity": hit.similarity,
+                    "cached_at": hit.cached_at,
+                    "complexity_score": decision.complexity_score,
+                    "signals": decision.signals,
+                    "escalated": decision.escalated,
+                    "fallback_fired": False,
+                    "attempts": 0,
+                    "tokens_in": 0,
+                    "tokens_out": hit.tokens_out,
+                    "cost_usd": 0.0,
+                    "cost_if_large_usd": round(config.cost_usd(
+                        config.baseline_tier, 0, hit.tokens_out), 8),
+                    "latency_ms": int((time.perf_counter() - started) * 1000),
+                    "classify_ms": classify_ms,
+                    "cache_lookup_ms": cache_lookup_ms,
+                    "routing_reason": decision.reason + " (served from cache)",
+                },
+            }
+
     try:
         result = await provider.complete(
             prompt=request.prompt,
@@ -197,6 +256,14 @@ async def chat(request: ChatRequest, background: BackgroundTasks):
         config.baseline_tier, result.tokens_in, result.tokens_out
     )
 
+    # Cache the answer for next time. Fire-and-forget in the background so the
+    # caller never waits on Redis -- same reasoning as the database write.
+    if not request.bypass_cache and cache.available():
+        background.add_task(
+            cache.store, request.prompt, result.text, tier,
+            result.model, result.tokens_out,
+        )
+
     signals = decision.signals
 
     finish(
@@ -211,7 +278,7 @@ async def chat(request: ChatRequest, background: BackgroundTasks):
         cost_usd=cost_usd,
         cost_if_large_usd=cost_if_large_usd,
         classify_ms=classify_ms,
-        cache_lookup_ms=None,
+        cache_lookup_ms=cache_lookup_ms,
     )
 
     return {
@@ -233,8 +300,9 @@ async def chat(request: ChatRequest, background: BackgroundTasks):
             "cost_if_large_usd": round(cost_if_large_usd, 8),
             "latency_ms": int((time.perf_counter() - started) * 1000),
             "provider_latency_ms": result.raw_latency_ms,
+            "cache_similarity": None,   # miss: nothing was close enough
             "classify_ms": classify_ms,
-            "cache_lookup_ms": None,   # no cache until Stage 4
+            "cache_lookup_ms": cache_lookup_ms,
             "routing_reason": decision.reason,
         },
     }

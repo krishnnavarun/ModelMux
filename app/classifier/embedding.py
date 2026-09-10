@@ -41,6 +41,29 @@ LABELLED_PATH = PROJECT_ROOT / "eval" / "labelled.json"
 MODEL_NAME = "all-MiniLM-L6-v2"
 DEFAULT_K = 5
 
+# Hard cap on the text handed to the encoder.
+#
+# Encoding cost grows with sequence length. Measured on this machine:
+#
+#     96 chars ->  9.9ms      600 chars -> 16.2ms
+#   1200 chars -> 34.8ms     2400 chars -> 38.8ms   (plateau)
+#
+# 1200 chars breaks BOTH budgets -- 20ms for classification, 30ms for cache
+# lookup. The plateau at 2400 is the model truncating at its 256-token limit.
+#
+# So the model was ALREADY discarding everything past ~1000 characters; this
+# just makes the bound explicit, predictable, and cheap.
+#
+# 400 chars is ~100 tokens. Chosen on what the job needs, not on what made a
+# test pass: the signals that decide a tier -- the reasoning cue, the question
+# shape, the subject -- sit at the START of a request. A prompt whose
+# difficulty is only revealed after 100 tokens of preamble is rare, and
+# `question_part()` already strips pasted context before this cap applies.
+#
+# 600 was tried first and left classification at 20.4ms p50, grazing the
+# budget with no margin.
+EMBED_MAX_CHARS = 400
+
 _model = None
 _vectors = None          # numpy array, one row per labelled example
 _tiers: list[str] = []   # tier for each row, same order
@@ -63,6 +86,14 @@ def init() -> None:
     service -- routing falls back to the heuristic and says so.
     """
     global _model, _vectors, _tiers, _available, _load_error
+
+    # Idempotent. Loading the model costs ~10-15 seconds, and init() is called
+    # from the app lifespan -- which the test suite enters once per test via a
+    # function-scoped fixture. Without this guard the suite went from 5 seconds
+    # to nearly 10 MINUTES, reloading an 80MB model for every test. A suite
+    # that slow stops being run, which costs more than any bug it would catch.
+    if _model is not None:
+        return
 
     try:
         from sentence_transformers import SentenceTransformer
@@ -111,6 +142,23 @@ def available() -> bool:
     return _available
 
 
+def encode(text: str):
+    """Encode one string to a unit-length vector, or None if unavailable.
+
+    Shared with cache.py so the two never load separate copies of the model.
+    An 80MB model and several seconds of startup, duplicated, would be pure
+    waste -- and worse, the two copies could drift if the model name were ever
+    changed in one place and not the other.
+
+    Unit length matters: it makes cosine similarity a plain dot product, which
+    both the classifier and the cache rely on.
+    """
+    if not _available:
+        return None
+    return _model.encode([text[:EMBED_MAX_CHARS]], normalize_embeddings=True,
+                         show_progress_bar=False)[0]
+
+
 def classify(prompt: str, k: int = DEFAULT_K) -> tuple[str | None, float]:
     """Return (tier, confidence) from the k nearest labelled examples.
 
@@ -137,7 +185,8 @@ def classify(prompt: str, k: int = DEFAULT_K) -> tuple[str | None, float]:
     # discarding the question at the end. This makes the choice deliberate.
     target = signals.question_part(prompt)
 
-    query = _model.encode([target], normalize_embeddings=True,
+    query = _model.encode([target[:EMBED_MAX_CHARS]],
+                          normalize_embeddings=True,
                           show_progress_bar=False)[0]
 
     # Both sides are unit vectors, so the dot product IS cosine similarity.

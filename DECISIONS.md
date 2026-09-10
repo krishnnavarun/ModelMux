@@ -581,3 +581,244 @@ question makes the choice deliberate.
 - **The marker lists were extended while looking at failures.** Generic verbs
   (`explain`, `describe`, `summarise`) are defensible; the risk of having fitted
   to the eval set is real and is what the held-out set exists to bound.
+
+---
+
+## D16 — Cache similarity threshold: 0.88, and why a threshold alone is not enough
+
+**Date:** 2026-09-10 · **Stage:** 4 · **This is Stage 4's completion criterion
+(SPEC section 11): a measured hit rate and a justified threshold with its
+failure case documented.**
+
+SPEC 8.5 calls `similarity_threshold` "the most dangerous setting in this
+project." It is now chosen by measurement — `eval/tune_cache_threshold.py`
+against 15 equivalent pairs (should hit) and 20 dangerous pairs (must not).
+
+### Finding 1 — the distributions overlap, so no threshold is clean
+
+```
+equivalent  min 0.7780  median 0.9185  max 0.9938
+dangerous   min 0.3677  median 0.7416  max 0.9903
+```
+
+The most similar DANGEROUS pair scores **higher** than the least similar
+EQUIVALENT pair. Every threshold trades hit rate against wrong answers.
+
+### Finding 2 — with similarity alone, NO threshold is safe
+
+| threshold | hit rate | false hits |
+|---|---|---|
+| 0.90 | 67% | 2 |
+| 0.92 | 47% | 1 |
+| 0.98 | **7%** | **1** |
+
+Even at 0.98, where the cache has stopped being worth having, one dangerous
+pair still hits:
+
+```
+0.9903  "Convert 32 Fahrenheit to Celsius."
+     vs "Convert 32 Celsius to Fahrenheit."
+```
+
+Opposite operations. Answers 0 and 89.6. **0.99 similarity.**
+
+**The cause is structural, not a tuning failure. Embeddings encode topic and
+vocabulary, not logical direction.** Negation, antonyms and argument order are
+exactly what they represent worst, because the two sentences share nearly every
+token. No value of a single cosine threshold can separate them.
+
+### Decision 1 — a second, lexical gate
+
+`cache.is_inverted()` runs after the threshold and checks two things:
+
+1. **Antonym swap** — one prompt says "encrypt", the other "decrypt", and
+   neither says both.
+2. **Exact positional exchange** — two words land in each other's slots while
+   the rest of the sentence stays put. This is what catches Fahrenheit/Celsius,
+   where an antonym list never could: both prompts contain *both* units.
+
+A weaker "did any pair change relative order" rule was tried first and was too
+blunt — it also blocked *"How do I reverse a string in Python?"* vs *"In
+Python, how can I reverse a string?"*, where "python" merely migrates. That is
+a rephrasing, and blocking it costs a legitimate hit. Requiring an **exact**
+exchange separates the two cleanly.
+
+With the guard:
+
+| threshold | hit rate | false hits |
+|---|---|---|
+| 0.80 | 80% | 1 |
+| **0.84** | **80%** | **0** — lowest safe |
+| 0.88 | 67% | 0 |
+| 0.90 | 53% | 0 |
+
+Guard blocked 10/20 dangerous pairs outright, at a cost of 0/15 equivalent
+pairs once narrowed.
+
+### Decision 2 — the threshold is 0.88, not the lowest safe 0.84
+
+The highest dangerous pair surviving the guard scores **0.8156**
+(*"What is 15% of 240?"* vs *"What is 50% of 240?"*).
+
+| threshold | margin above 0.8156 | hit rate |
+|---|---|---|
+| 0.84 | +0.024 | 80% |
+| **0.88** | **+0.064** | **67%** |
+
+Taking 0.84 because it is the lowest value with zero false hits **on my own 20
+pairs** would be the Day 1 mistake repeated — fitting a constant to the test
+set. 0.88 keeps a real margin for pairs I did not think of.
+
+### Measured end to end
+
+```
+HIT RATE (rephrasings): 12/15 = 80%
+FALSE HITS (dangerous):  0/20 =  0%
+```
+
+The 80% exceeds the 67% predicted by the sweep because `lookup()` checks up to
+3 candidates above threshold, so a guard-rejected top match does not lose the
+hit outright.
+
+### The safety test
+
+`tests/test_cache.py::test_loose_threshold_serves_a_wrong_answer` is required
+by SPEC 8.5. At a deliberately reckless 0.75, asking *"What is the tallest
+mountain in Asia?"* returns **"Mount Kilimanjaro."** — Africa's answer,
+confidently, with nothing to indicate a substitution. The risk is executable,
+not described.
+
+`test_shipped_threshold_blocks_that_same_wrong_answer` shows 0.88 refusing it,
+and `test_inversion_survives_a_high_similarity_score` covers the 0.99 case that
+only the guard catches.
+
+### Honest limitations
+
+- **35 pairs, written by one person.** Zero false hits *here* is not zero false
+  hits in production. Treat it as a lower bound on risk.
+- **The guard is a patch on a fundamental limitation**, not a fix. It catches
+  the two shapes I observed. Others exist.
+- **Entity substitution is not caught by the guard at all** — "Africa" vs
+  "Asia", "aspirin" vs "penicillin" are not inversions. Only the threshold
+  stands between those and a wrong answer.
+- `bypass_cache` remains the answer for callers who cannot tolerate any chance
+  of substitution.
+
+---
+
+## D17 — In-process vector mirror: the linear scan did not hold
+
+**Date:** 2026-09-10 · **Stage:** 4 · **Amends:** SPEC section 8.5
+
+SPEC: *"A linear scan is fine at 10k entries and is the honest simple choice.
+Do not add a vector database. If scan time exceeds 30ms, say so and we'll
+discuss."*
+
+**It exceeded 30ms.** Measured, fetching every vector from Redis per lookup:
+
+| entries | total | embed | redis+matmul |
+|---|---|---|---|
+| 50 | 20.7ms | 12.1 | 8.6 |
+| 200 | 14.2ms | 8.9 | 5.4 |
+| **1000** | **74.4ms** | 9.4 | **64.9** |
+
+At the configured 10,000 ceiling that extrapolates to roughly **650ms**.
+
+**The cost is the round trip, not the maths.** 1000 vectors is 1.5MB of float32
+over the wire; the matmul itself is microseconds even at 10k.
+
+**Decision: mirror the vectors in process, refetch only when Redis says they
+changed.** `mm:version` is incremented on every write; a lookup reads that one
+integer and reuses the local matrix when it matches.
+
+| entries | before | after |
+|---|---|---|
+| 1,000 | 74.4ms | **10.0ms** |
+| 10,000 | ~650ms | **11.2ms** |
+
+Essentially flat, because the remaining cost is the embedding (~9ms) plus a
+1ms version check.
+
+**This is not a vector database.** It is the same linear scan over a local copy
+— no index, no ANN, no new dependency.
+
+**The trade-off, stated plainly:** with several worker processes, one
+process's write is invisible to another until its next version check. That
+costs **missed hits, never wrong answers** — a stale mirror can only fail to
+find something, and every hit is still verified against the live answer in
+Redis. Memory is 10k x 384 x 4 bytes, about 15MB.
+
+---
+
+## D18 — Embedding input capped at 400 characters
+
+**Date:** 2026-09-10 · **Stage:** 4 · **Amends:** SPEC section 2 budgets
+
+Encoding cost grows with sequence length:
+
+```
+   96 chars ->  9.9ms       600 chars -> 16.2ms
+ 1200 chars -> 34.8ms      2400 chars -> 38.8ms  (plateau)
+```
+
+1200 characters breaks both budgets — 20ms classification, 30ms cache lookup.
+The plateau at 2400 is `all-MiniLM-L6-v2` truncating at its 256-token limit,
+which means **the model was already discarding everything past ~1000
+characters.** The cap makes that bound explicit and predictable rather than
+accidental.
+
+**400 chars (~100 tokens), chosen on what the job needs.** The signals that
+decide a tier — the reasoning cue, the question shape, the subject — sit at the
+start of a request, and `question_part()` already strips pasted context before
+this cap applies. 600 was tried first and left classification at 20.4ms p50,
+grazing the budget with no margin.
+
+**Consequence for the cache:** two prompts sharing their first 400 characters
+now embed identically. Guarded by a length-ratio check (`LENGTH_RATIO_MIN =
+0.5`) — prompts whose lengths differ by more than 2x are never a match,
+whatever their similarity.
+
+**Residual limitation, worth stating:** a prompt whose difficulty is only
+revealed after 100 tokens of preamble will be misclassified. The pathological
+worst case — 1200 characters with no sentence boundaries at all, so
+`question_part()` has nothing to clip to — still sits at 15-20ms, right at the
+budget rather than comfortably inside it. Pinned by
+`test_classification_worst_case_is_bounded`.
+
+---
+
+## D19 — Test isolation from the live cache, and a 10-minute suite
+
+**Date:** 2026-09-10 · **Stage:** 4
+
+Two problems appeared the moment the cache went into the request path.
+
+### The cache broke test isolation
+
+The mock provider returns identical text for every prompt. With a live cache,
+the second request in a test run became a HIT — so `mock.calls` stopped
+counting provider calls, and `test_provider_failure_returns_502` got a 200
+because a cached answer arrived before the deliberately-failing provider was
+ever reached.
+
+**This is the same failure as the Day 1 provider fixture, in a new place:**
+adding a code path silently widened what the test doubles had to cover.
+
+Fixed with `MODELMUX_CACHE_DISABLED=1` in `conftest.py`, matching the existing
+`MODELMUX_DB_PATH` pattern. `test_cache.py` opts back in.
+
+**And the first fix was wrong.** `test_cache.py` originally popped the variable
+at module import — but **pytest imports every test module before running any
+test**, so it re-enabled the cache for `test_api.py` too. The opt-in had to
+move inside the fixture, scoped to the tests that need it.
+
+### The suite went from 5 seconds to 9m46s
+
+`embedding.init()` loads an 80MB model in ~10-15 seconds, and it is called from
+the app lifespan — which a function-scoped `client` fixture enters **once per
+test**.
+
+Made `init()` idempotent in both `embedding` and `cache`. **9m46s → 57s.**
+
+> A suite that slow stops being run, which costs more than any bug it would
+> catch. Worth treating test runtime as a feature, not an afterthought.
