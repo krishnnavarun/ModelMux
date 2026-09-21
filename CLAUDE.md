@@ -188,8 +188,10 @@ outside this OneDrive-synced folder. See `DECISIONS.md` D7.
 - **Groq models and prices: VERIFIED 2026-09-08** against console.groq.com/docs/models.
   Small = `openai/gpt-oss-20b`, mid = `openai/gpt-oss-120b`. The Llama models
   are Enterprise/Contact-Sales and unusable on a developer key. (D14)
-- **Large tier (Anthropic): STILL UNVERIFIED** — no key, and the prices are
-  estimates never checked against a pricing page. Every `cost_if_large_usd`
-  figure and therefore every savings claim depends on them.
+- **Large tier (Anthropic): VERIFIED 2026-09-21** (D27). `claude-opus-5` at
+  0.005 / 0.025 per 1K. It previously read `claude-sonnet-5` at 0.003 / 0.015 —
+  which is Sonnet **4.6** pricing, so it was neither the model named nor any
+  current rate. Still no key, so no live call has been made; the *prices* are
+  verified, the *adapter* is not.
 - Mid tier is **temporarily on Groq** so the router can be exercised with one
   key; the Google entry is commented in `config.yaml` ready to swap back.
