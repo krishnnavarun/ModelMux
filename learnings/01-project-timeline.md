@@ -753,3 +753,70 @@ against the code, line by line.
 
 Worth doing once per project, near the end, and it is not the same activity as
 testing.
+
+---
+
+## Verification pass — the number that was wrong in our favour
+
+Two things closed, both found by checking claims rather than by anything
+failing.
+
+### The large tier was priced at a previous generation's rate
+
+It had carried `UNVERIFIED` since Stage 1. Checked against the Anthropic model
+and pricing reference, and it was **wrong in two ways at once**:
+
+```
+was:  claude-sonnet-5   0.003 / 0.015 per 1K
+is:   claude-opus-5     0.005 / 0.025 per 1K
+```
+
+`0.003 / 0.015` is Claude **Sonnet 4.6** pricing ($3/$15 per 1M) — a previous
+generation. Sonnet 5 is $2/$10. So the figure matched neither the model named
+in the config nor any current price: the spec's placeholder numbers had been
+inherited and a guessed model name attached to them.
+
+**This is the baseline every savings figure is measured against.** For a
+representative 500-in / 300-out exchange:
+
+```
+large (old, wrong)   $0.006000   -> savings would read 97.9%
+large (verified)     $0.010000   -> savings actually  98.7%
+```
+
+The error *understated* the gap — but a number that is wrong in your favour is
+still wrong, and it was off by 40% on the baseline.
+
+> **The lesson: a known-unverified number in a load-bearing position is a bug
+> with a comment on it.** The flag was honest and it sat there for two weeks
+> while every savings figure quietly depended on it. The comment does not make
+> the number less wrong; it only makes it easier to find once somebody finally
+> looks.
+
+### The blind spot-check nothing could read
+
+`run_eval.py` had exported a blind grading file since the day it was written,
+and **no code could read it back.** Quality was ungradeable even by hand.
+
+`eval/grade_quality.py` closes it: joins the graded file to its key, unblinds
+in exactly one place, and reports routed / baseline / tie.
+
+Three things it does deliberately:
+
+- **Headlines "not worse", not "wins."** Routing is justified when the cheap
+  answer is *as good*, not only when it beats the expensive one.
+- **Refuses to let a small sample look like a measurement.** Below n=20 it says
+  so, with what a single item is worth as a percentage.
+- **Prints its own caveats every run** — not independent, and a pairwise
+  preference rather than a quality score.
+
+> **Half a mechanism is a gesture at the problem, not a solution to it.** The
+> export looked like quality was handled. It was not, and nothing about the
+> output would have revealed that.
+
+### No LLM-as-judge, deliberately
+
+It needs the `anthropic` SDK — not on SPEC section 3's approved list — and a
+key this project has never had. **Adding a dependency is a conversation, not a
+default taken while the owner is away.** The human path needs neither, which is
+why D23 recommended building it first.

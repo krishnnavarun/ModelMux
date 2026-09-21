@@ -78,5 +78,7 @@ Ranked by how much they demonstrate:
 | Fixed flaky single-sample latency tests, then left an identical one unfixed | Fixing a class of bug, not just the instance in front of you |
 | Built a harness that REFUSES to produce numbers from mock data | Protecting the result from yourself, not just the user from bugs |
 | Two required features missing for 4 days past 113 green tests | Tests verify what you wrote, not what you failed to write |
+| Large-tier price was a previous generation's rate, flagged UNVERIFIED for 2 weeks | A known-unverified number in a load-bearing position is a bug with a comment on it |
+| Exported a blind spot-check that nothing could read back | Half a mechanism is a gesture at the problem, not a solution |
 
 Full write-ups in `01-project-timeline.md`.

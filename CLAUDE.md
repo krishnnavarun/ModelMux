@@ -106,8 +106,9 @@ plausible fake in a results table is worse than no number at all.
   30 plus LLM-as-judge on the full set, reported as separate columns, never
   averaged. `run_eval.py` already exports the blind spot-check file — gradeable
   today, no key needed.
-- **Anthropic's large-tier prices are UNVERIFIED.** Every savings figure rests
-  on them.
+- ~~Anthropic's large-tier prices are UNVERIFIED~~ — **VERIFIED 2026-09-21**
+  (D27). They were `claude-sonnet-5` at Sonnet **4.6** rates: wrong model, wrong
+  generation's price. Now `claude-opus-5` at 0.005 / 0.025 per 1K.
 
 ### Deliberately cut
 

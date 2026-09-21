@@ -127,6 +127,9 @@ D3.
 
 ### Limitations worth stating plainly
 
+- **Quality has not been graded.** `eval/run_eval.py` exports a blind
+  spot-check and `eval/grade_quality.py` scores it — gradeable today, no key
+  needed — but nobody has filled one in.
 - **Every accuracy number is measured against hand-labels written by one
   person** — the same person who built the classifier. Treat them as an upper
   bound.

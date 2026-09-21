@@ -1196,3 +1196,117 @@ endpoint changes that to "here is how much, on this prompt" — and
 
 An assumption you have quantified is a finding. The same assumption unquantified
 is a footnote nobody acts on.
+
+---
+
+## D27 — The large tier was priced at a previous-generation rate
+
+**Date:** 2026-09-21 · **Stage:** 6 · **Corrects:** config.yaml, and every
+savings figure the project has ever produced
+
+The large tier had carried `UNVERIFIED` since Stage 1. Verified now against the
+Anthropic model and pricing reference, and **it was wrong in two ways at once**:
+
+| | was | is |
+|---|---|---|
+| model | `claude-sonnet-5` | **`claude-opus-5`** |
+| input / 1K | 0.00300 | **0.005** |
+| output / 1K | 0.01500 | **0.025** |
+
+**`0.003 / 0.015` is Claude Sonnet 4.6 pricing** ($3/$15 per 1M) — a previous
+generation. Claude Sonnet 5 is $2/$10. So the figure matched neither the model
+named in the config nor any current price: I had inherited the spec's
+placeholder numbers and attached a model name I guessed at.
+
+The spec itself never named a model — it said `<current-model>` — so the
+correct default for the most capable tier is **Claude Opus 5**, $5/$25 per 1M.
+
+### Why this mattered more than a config typo
+
+`cost_if_large_usd` is the baseline **every** savings figure is measured
+against. A wrong price there propagates straight into the project's headline
+claim.
+
+For a representative 500-in / 300-out exchange:
+
+```
+small                  $0.000127
+large (old, wrong)     $0.006000   -> savings would read 97.9%
+large (verified)       $0.010000   -> savings actually  98.7%
+```
+
+The error *understated* the true gap — but the direction is not the point. A
+number that is wrong in your favour is still wrong, and it was wrong by 40% on
+the baseline.
+
+### What this says about the earlier verification pass
+
+Groq's models and prices were verified on 2026-09-08 (D14) and that same pass
+left Anthropic flagged `UNVERIFIED`. The flag was honest and it sat there for
+two weeks while every savings figure quietly depended on it.
+
+**A known-unverified number in a load-bearing position is a bug with a comment
+on it.** The comment does not make the number less wrong; it only makes it
+easier to find once someone finally looks.
+
+### Left as an alternative
+
+`claude-sonnet-5` at 0.002 / 0.010 per 1K is recorded in `config.yaml` as the
+cheaper option, should the large tier be meant as "good enough" rather than
+"most capable". That is a product decision, not a correctness one.
+
+---
+
+## D28 — A quality score needs a tool that reads the grading back
+
+**Date:** 2026-09-21 · **Stage:** 6 · **Completes:** the buildable half of D23
+
+`run_eval.py` exported a blind spot-check file from the day it was written, and
+**nothing could read it back.** Quality was ungradeable even by hand — the
+export was a gesture at the problem rather than a solution to it.
+
+`eval/grade_quality.py` closes that: it joins the graded file to its
+`_KEY.json`, unblinds, and reports routed-wins / baseline-wins / ties.
+
+### Unblinding happens in exactly one place
+
+The export withholds which tier produced which answer and writes the mapping to
+a separate file. This script is the only code that joins them.
+
+**That separation is the method, not a formality.** A grader who knows "A is
+the cheap one" finds what they expect to find — and nothing in the output would
+reveal that it had happened.
+
+### The headline is "not worse", not "wins"
+
+```
+ROUTED NOT WORSE: 27/30 = 90%
+```
+
+Routing is justified when the cheap answer is **as good**, not only when it
+beats the expensive one. Counting only wins would understate the case for
+routing and measure the wrong question.
+
+### It refuses to let a small sample look like a measurement
+
+Below n=20 the output says so explicitly, with what one item is worth as a
+percentage. A 6-item spot-check reporting "50%" invites exactly the
+over-reading the caution prevents.
+
+### Two caveats printed on every run
+
+- **Not independent.** One grader, and the same person who built the router
+  unless someone else filled in the file.
+- **Not a quality score.** It is a *pairwise preference* between two answers to
+  the same prompt. It says routing held up against the baseline — not that
+  either answer was any good.
+
+### No LLM-as-judge mode, deliberately
+
+That needs the `anthropic` SDK, which is **not on the approved dependency list**
+in SPEC section 3, plus an `ANTHROPIC_API_KEY` this project has never had.
+Adding a dependency is a conversation, not a default taken while the owner is
+away.
+
+The human path needs neither — which is exactly why D23 recommended it as the
+half to build first. It is gradeable today.
