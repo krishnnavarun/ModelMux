@@ -1494,6 +1494,12 @@ might be one.
 
 ## D33 — What the first live measurement actually showed
 
+> ⚠️ **SUPERSEDED IN PART BY D36.** The 6.6% cost saving recorded below did
+> **not** reproduce — a second run of the identical set gave 1.7%. The real
+> routing effect is 3-4% and the A/B measurement is noise-dominated. The
+> latency result below did reproduce. Left in place because the mistake is the
+> useful part.
+
 **Date:** 2026-09-21 · **Stage:** 6 · **Records:** the README results table
 
 32 held-out prompts, live, 0 failures, total spend **$0.027**.
@@ -1694,5 +1700,140 @@ Rewrite the probe with a load generator that actually competes for CPU
 (separate *processes*, not GIL-bound threads), measure classify time with
 `torch.set_num_threads(1)` against the default, and only then decide whether
 this is a production concern or a test-environment one.
+
+### A second instance of the same family, found 2026-09-21
+
+One full-suite run reported **`123 passed, 8 skipped`**. The 8 were the
+Redis-backed cache tests, skipping on *"Redis unavailable"* — while Redis was
+in fact up and reachable from Windows Python (`PING -> True`) both before and
+after. Re-running gave `131 passed`. Not reproducible; `test_cache.py` passes
+alone and passes after `test_api.py`.
+
+So: a load-sensitive connect check, degrading under the same conditions as the
+timing flake above.
+
+**What makes this one worse than a flaky failure:**
+
+> **A skip reads as success.** `123 passed` in a `-q` summary looks green. The
+> 8 tests that did not run include the cache *safety* tests — the ones guarding
+> the similarity threshold, which D16 calls the most dangerous setting in the
+> project. A silent skip of exactly the tests that protect the riskiest
+> behaviour is the worst possible thing to be intermittent.
+
+**Not fixed, and deliberately not converted to a hard failure yet** — the skip
+exists so the suite is runnable without Redis, which is a real need. The right
+fix is probably to make it *fail* when Redis is expected (an env var or a
+marker in CI) and skip only when it is genuinely absent, so absence is a
+choice rather than an accident. Recorded here rather than acted on, because it
+was observed once.
+
+---
+
+## D36 — The 6.6% cost saving did not reproduce. It was noise.
+
+**Date:** 2026-09-21 · **Stage:** 6 · **Corrects:** D33 and the README
+results table
+
+D33 recorded a measured cost saving of **6.6%**. Re-running the identical
+32-prompt held-out set, unchanged in every respect, produced **1.7%**.
+
+| run | routed | baseline | "saved" | baseline/routed output tokens |
+|---|---|---|---|---|
+| 18:40 | $0.4121 / 1k | $0.4411 / 1k | **6.58%** | 1.040 |
+| 20:05 | $0.4181 / 1k | $0.4253 / 1k | **1.70%** | 0.974 |
+
+Same prompts, same config, same routing decisions (9 small / 7 mid / 16 large
+in both). **The only variable is how long the models chose to answer.**
+
+### The actual routing effect is 3-4%
+
+Comparing routed cost against the **same tokens repriced at baseline rates** —
+which holds output length constant and isolates routing — gives:
+
+```
+run 1:  3.00%
+run 2:  4.15%
+```
+
+And the arithmetic confirms why it must be small:
+
+- 9 of 32 prompts route to the small tier
+- those 9 produce only **5.2%** and **7.6%** of total output tokens
+  respectively — short questions get short answers
+- small is exactly **2×** cheaper than the tier above
+- ceiling ≈ half of 5-8% ≈ **3-4%** ✓
+
+**The A/B swing is ±5 points around a 3-4% signal. The noise is larger than
+the effect.**
+
+### Why this is a real methodological error, not bad luck
+
+The two arms of the A/B are *separate generations*. Both vary independently,
+so the difference between them carries **twice** the variance of either — and
+the quantity being estimated is a few percent of a number dominated by 23
+prompts that cost **identically in both arms**.
+
+> **Subtracting two large noisy numbers to find a small difference is the
+> classic way to measure nothing with great precision.** The routed and
+> baseline totals agreed to within about 1.5% of each other; the "saving" was
+> a rounding artefact of LLM verbosity.
+
+Worse, the error was *invisible from inside a single run*: 6.6% is a plausible
+number, it pointed the right direction, and it came from real calls with zero
+failures.
+
+### What should have been quoted instead
+
+`cost_if_large_usd` — the same-token counterfactual — which D3 had flagged as
+*biased* because it assumes both tiers emit the same output length.
+
+**It is biased, and it is also far less noisy**, because holding tokens
+constant removes the dominant error term. The D3 bias is ±4% and roughly
+centred (1.040, then 0.974). The A/B noise is ±5 points and swamps a 3-4%
+signal.
+
+> **The "more honest" measurement was the worse estimator.** A/B feels more
+> rigorous because it measures both arms for real. On a low-signal quantity
+> with a high-variance generator, the assumption-carrying estimator wins —
+> and it says so in its own caveat, which the A/B never did.
+
+### What was changed
+
+- README now leads with the **3-4% same-token routing effect**, shows both
+  runs side by side, and states that a single A/B run of this set is not
+  evidence.
+- The **latency** result is separated out as the one that reproduced: 2.49×
+  then 2.45× at p50. It is stable because it depends on *which model answered*,
+  not on how many tokens it emitted.
+- D33's 6.6% is superseded rather than deleted; it is left in place with a
+  pointer here, because the mistake is the useful part.
+
+### Cost
+
+The project's headline cost claim drops from 6.6% to 3-4%, and gains a caveat
+that it cannot be measured by A/B on this configuration at all. That is a
+worse-sounding result and a better-supported one.
+
+### What would fix it properly
+
+1. **A second provider key.** At the configured 33× ladder the signal is ~37%
+   and clears the noise trivially. This is one input away.
+2. **Repeat runs with a variance estimate.** Two runs is not a variance
+   estimate, it is two points. Five would give an honest interval.
+3. **Pin generation determinism where the provider allows it** (temperature 0,
+   fixed seed) so output length stops being a random variable.
+
+None of these were done, and the README says the figure is provisional rather
+than pretending otherwise.
+
+### The lesson
+
+> **Re-running a measurement is part of making it, not a formality afterwards.**
+> This project already refused to publish numbers from mock data, already used a
+> held-out set, already carried a bias caveat in the payload — and still
+> published a headline figure from a single draw of a noisy distribution.
+>
+> Every guard was pointed at *where the number came from*. None was pointed at
+> *whether it would happen again*.
 
 ---

@@ -189,7 +189,8 @@ Say these unprompted; they read as reflection rather than defensiveness.
 > all.*
 >
 > *But the measurement taught me the limit: **savings are bounded by the price
-> spread you're given.** With a compressed ladder I measured 6.6%, and with the
+> spread you're given.** With a compressed ladder the routing effect is 3-4%
+> — small enough that an A/B measurement of it is pure noise — and with the
 > intended ladder the same routing projects to 37%. The classifier was
 > identical in both. That's the number I'd want a team to understand before
 > committing to this architecture — and the latency win, 2.5× at the median,

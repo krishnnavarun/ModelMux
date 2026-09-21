@@ -232,7 +232,9 @@ flagged `UNVERIFIED` for two weeks while every savings figure depended on it.
 |---|---|---|---|
 | p50 latency | **2,803 ms** | 6,973 ms | **2.5× faster** |
 | p95 latency | 9,037 ms | 9,019 ms | unchanged |
-| cost / 1k, **measured** | $0.4121 | $0.4411 | **6.6%** |
+| cost / 1k, run 1 | $0.4121 | $0.4411 | 6.6% |
+| cost / 1k, run 2 | $0.4181 | $0.4253 | **1.7%** |
+| **same-token routing effect** | | | **3.0% / 4.2%** ← quote this |
 | cost / 1k, *projected* | $11.49 | $18.25 | *37.1%* |
 
 **Tier distribution:** small 9 · mid 7 · large 16
@@ -258,7 +260,7 @@ If you remember nothing else from this file:
 | Shipped (hybrid) accuracy | **72%, with zero too-cheap** |
 | Cache hit rate | **80%**, 0% false |
 | Latency win | **2.5×** at p50 |
-| Cost saved, measured | **6.6%** (and *why* it's small) |
+| Cost saved | **3-4%** same-token. A/B gave 6.6% then 1.7% — **noise** |
 | Rate limit | **60/min**, per IP |
 | Circuit breaker | **5 failures / 60s → open, 30s cooldown** |
 | Held-out set size | **n=32** — one prompt is 3 points |

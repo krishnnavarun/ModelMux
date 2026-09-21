@@ -198,12 +198,19 @@ Measured live, 2026-09-21, 32 held-out prompts, 0 failures, $0.027 total:
 |---|---|---|---|
 | p50 latency | **2,803 ms** | 6,973 ms | **2.5× faster** |
 | p95 latency | 9,037 ms | 9,019 ms | unchanged |
-| cost / 1k requests | $0.4121 | $0.4411 | **6.6% saved** |
+| cost / 1k, run 1 | $0.4121 | $0.4411 | 6.6% |
+| cost / 1k, run 2 | $0.4181 | $0.4253 | **1.7%** |
 
-**Why only 6.6%?** Only one API key ever worked, so the large tier falls back
-to `gpt-oss-120b` — the same model the mid tier uses. The ladder compresses to
-2×, and the router sent 16 of 32 prompts to "large", where routed and baseline
-are byte-for-byte the same call.
+**Why two different answers?** Same prompts, same config, same routing. The
+only thing that changed is how long the models chose to answer. **The A/B
+measurement is noise-dominated** — the real routing effect, measured by
+repricing the *same* tokens at baseline rates, is **3-4%**.
+
+**And why is even that small?** Only one API key ever worked, so the large tier
+falls back to `gpt-oss-120b` — the same model the mid tier uses. The ladder
+compresses to 2×, and 16 of 32 prompts route to "large", where routed and
+baseline are byte-for-byte the same call. The 9 prompts that do route cheap
+produce only 5-8% of all output tokens, and save half of that. (D36)
 
 **p95 is unchanged, and that's correct.** The tail is the hard prompts, which
 route large either way. Routing improves the *typical* request and leaves the

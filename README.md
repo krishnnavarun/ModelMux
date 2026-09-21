@@ -2,11 +2,13 @@
 
 Cost-aware inference routing. ModelMux sits between your application and multiple LLM providers, classifies every incoming request, and dispatches it to the cheapest model tier that can actually handle it.
 
-> **Status:** all six stages built. Cost and latency were measured live for
-> the first time on 2026-09-21, against Groq. Only one provider key exists, so
-> the large tier is served by a Groq fallback -- which makes the measured
-> savings much smaller than the configured ladder would give, and the README
-> reports both figures separately. Answer quality is still ungraded.
+> **Status:** all six stages built. Cost and latency were measured live on
+> 2026-09-21, twice. Only one provider key exists, so the large tier is served
+> by a Groq fallback, which flattens the tier ladder to 2x. **The latency win
+> (2.5x at the median) reproduces; the cost saving does not** -- it came out
+> 6.6% then 1.7% on identical prompts, because output-length noise is larger
+> than the routing effect on this configuration. See Results. Answer quality
+> is still ungraded.
 
 ---
 
@@ -59,42 +61,93 @@ Every request that resolves from cache costs nothing and returns in milliseconds
 
 ## Results
 
-Measured **2026-09-21** on the 32-prompt held-out set, live against Groq.
+Measured **2026-09-21** on the 32-prompt held-out set, live against Groq,
+**twice** — because the first run's cost figure turned out not to reproduce.
+Both runs completed 32/32 pairs with zero failures.
+
 Reproduce with `python eval/run_eval.py --set holdout.json`.
 
 ### Latency — the clearest win
 
 | | ModelMux | Baseline (everything to the top tier) |
 |---|---|---|
-| p50 latency | **2,803 ms** | 6,973 ms |
-| p95 latency | 9,037 ms | 9,019 ms |
+| p50 latency | **2,803 / 2,815 ms** | 6,973 / 6,891 ms |
+| p95 latency | 9,037 / 8,958 ms | 9,019 / 10,256 ms |
 
-**2.5× faster at the median.** Routing the easy half of the traffic to a
-smaller model halves typical response time. p95 is unchanged, and that is
-expected — the tail is dominated by the hard prompts, which route to the big
-model either way.
+*(two independent runs of the same 32 prompts)*
 
-### Cost — and why the honest number is small
+**2.5× faster at the median, and it reproduced.** 2.49× on the first run,
+2.45× on the second — unlike the cost figure below, this result is stable
+across runs, because it comes from *which model answered* rather than from how
+many tokens it chose to emit.
+
+p95 is unchanged, and that is expected — the tail is dominated by the hard
+prompts, which route to the big model either way. **Routing improves the
+typical request and leaves the worst case alone.**
+
+### Cost — and why the measured number is noise
+
+**Run the same 32 prompts twice and the cost saving comes out 6.6%, then
+1.7%.** That is not a typo, and it is the most useful thing this evaluation
+produced.
+
+| run | ModelMux | Baseline | "Saved" | baseline/routed output tokens |
+|---|---|---|---|---|
+| 18:40 | $0.4121 / 1k | $0.4411 / 1k | 6.6% | 1.040 |
+| 20:05 | $0.4181 / 1k | $0.4253 / 1k | 1.7% | 0.974 |
+
+Identical prompts, identical configuration, identical routing (9 small / 7 mid
+/ 16 large both times). **The only thing that changed is how long the models
+chose to answer**, and that moved the headline by a factor of four.
+
+#### The real routing effect: 3-4%
+
+Comparing routed cost against the *same tokens* repriced at baseline rates —
+which removes output-length noise entirely — gives **3.0% and 4.2%** across the
+two runs. That is the actual, reproducible effect of routing on this
+configuration.
+
+**Why so small:**
+
+- 9 of 32 prompts route to the cheap tier
+- but those 9 produce only **5-8% of all output tokens** — short questions get
+  short answers
+- the small tier is exactly **2×** cheaper than the tier above it
+- so the ceiling is about half of 5-8%, which is **3-4%** ✓
+
+The A/B measurement swings ±5 points around a 3-4% signal. **The noise is
+larger than the effect**, so any single A/B run of this set is not evidence of
+anything.
+
+#### Why the ladder is flat
+
+Only a Groq key exists, so the large tier falls back to `gpt-oss-120b` — the
+same model the mid tier uses. The ladder compresses to a 2× spread, and 16 of
+32 prompts route to a tier where routed and baseline are **byte-for-byte the
+same call**. Half the traffic has nothing to save and the rest has 2× to save
+from.
 
 | | ModelMux | Baseline | Saved |
 |---|---|---|---|
-| **Measured** (one API key) | $0.4121 / 1k req | $0.4411 / 1k req | **6.6%** |
 | **Projected** (configured ladder) | $11.49 / 1k req | $18.25 / 1k req | **37.1%** |
 
-**The measured 6.6% is the real number, and it is small for a reason worth
-understanding.** Only a Groq key exists, so the large tier falls back to
-`gpt-oss-120b` — the same model the mid tier uses. That compresses the ladder to
-a 2× spread, and the router sent 16 of 32 prompts to the top tier, where routed
-and baseline are then *identical*. There is almost nothing left to save.
+The projection reprices measured token counts at the configured tiers
+(`gpt-oss-20b` → `gpt-oss-120b` → `claude-opus-5`, a 33× spread). It is
+arithmetic on real measurements, not a simulation — but no Anthropic call was
+ever made, so it is a projection and labelled as one.
 
-The projection reprices the same measured token counts at the configured tiers
-(`gpt-oss-20b` → `gpt-oss-120b` → `claude-opus-5`). It is arithmetic on real
-measurements, not a simulation — but no Anthropic call was made, so it is a
-projection and labelled as one.
+> **Two lessons, and the second only appeared by running it twice:**
+>
+> 1. **A router's savings are bounded by the price spread it is given.**
+>    Perfect classification earns nothing on a flat ladder.
+> 2. **When the effect is smaller than the variance, a single measurement is
+>    not a result.** The first run's 6.6% was quoted here as a finding. It was
+>    a draw from a noisy distribution, and re-running it is what revealed that.
 
-**The lesson the measurement teaches: a router's savings are bounded by the
-price spread it has to work with.** Perfect classification earns nothing on a
-flat ladder.
+**Cost figures on this configuration should be quoted as the same-token
+routing effect (3-4%), not as an A/B difference.** With the configured ladder
+the spread is 33× instead of 2× and the signal would clear the noise easily —
+but that run has not been made.
 
 ### Where the prompts went
 
@@ -131,9 +184,15 @@ the heuristic first and hidden that it sends hard prompts to weak models.
 tokens as the routed tier. `/v1/compare` and `run_eval.py` now check that
 instead of assuming it.
 
-**Measured ratio: 1.04×** — the baseline was 4% more verbose, so the live
-savings figure understates reality by about that much. Approximately unbiased
-on this set. See `DECISIONS.md` D3.
+**Measured ratio: 1.040, then 0.974** across two runs of the same prompts —
+the baseline was 4% more verbose, then 3% less. It straddles 1.0, so the
+assumption is approximately unbiased *on average*.
+
+But the spread is the real finding: **that ±4% swing in output length is
+exactly the noise that moved the headline cost saving from 6.6% to 1.7%.**
+Repricing observed tokens (which is what `cost_if_large_usd` does) is *more*
+stable than an A/B comparison, because it holds tokens constant instead of
+letting both arms vary. See `DECISIONS.md` D3 and D36.
 
 ### Still not measured: answer quality
 
@@ -155,6 +214,13 @@ Until that is filled in, the cost and latency figures above are half a result.
 - **One API key.** No adapter has spoken to Google or Anthropic; the large tier
   is served by a Groq fallback. The Anthropic *prices* are verified, the
   *adapter* is not.
+- **The A/B cost measurement is noise-dominated on this configuration.** The
+  routing effect is 3-4%; run-to-run variance is ±5 points. Quote the
+  same-token figure, not the A/B difference — and note that two runs is not a
+  variance estimate either, it is two points.
+- **Groq's on-demand tier rate-limited the second run heavily** (8,000 tokens
+  per minute on `gpt-oss-120b`). Retry and backoff absorbed every one and the
+  run still completed 32/32, but the latency figures include that waiting.
 - **Every accuracy number is measured against hand-labels written by one
   person** — the same person who built the classifier. Treat as an upper bound.
 - **n=32 held out.** One prompt is three percentage points.

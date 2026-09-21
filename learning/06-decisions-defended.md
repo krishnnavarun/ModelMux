@@ -39,22 +39,38 @@ config line.
 
 ---
 
-### D33 — Lead with the 6.6%, not the 37%
+### D33 + D36 — The measured saving didn't reproduce, and that's the story
 
-**Decision:** the README's headline cost figure is the **measured 6.6%**, with
-the 37.1% projection clearly labelled as a projection.
+**Decision:** report the **same-token routing effect (3-4%)** as the headline,
+show both A/B runs side by side, and state that a single A/B run of this set is
+not evidence of anything. The 37.1% projection stays clearly labelled.
 
-**Why:** only one provider key worked, so the large tier falls back to
-`gpt-oss-120b` — the same model as mid. The ladder compresses to 2×, and 16 of
-32 prompts routed to a tier where routed and baseline are the *same call*.
+**Why:** the first run measured 6.6% and it was published. A re-run of the
+identical set gave **1.7%**. Same prompts, same config, same routing — the only
+variable was how long the models chose to answer.
 
-**Cost:** the headline number is unimpressive.
+**Why the signal is so small:** only one provider key worked, so the large tier
+falls back to `gpt-oss-120b` — the same model as mid. The ladder compresses to
+2×, and 16 of 32 prompts routed to a tier where routed and baseline are the
+*same call*. The 9 prompts that do route cheap produce only 5-8% of all output
+tokens, and save half of that → a 3-4% ceiling.
 
-> **The insight that makes it impressive anyway:** *"A router's savings are
-> bounded by the price spread it's given. Perfect classification earns nothing
-> on a flat ladder. I only learned that by measuring instead of projecting —
-> and the latency result, 2.5× faster at the median, turned out to be the
-> stronger finding, from a project framed entirely around cost."*
+**Cost:** the headline drops from 6.6% to 3-4%, and gains a caveat that it
+can't be measured by A/B on this configuration at all. Worse-sounding, better
+supported.
+
+> **The two sentences to say:** *"A router's savings are bounded by the price
+> spread it's given — perfect classification earns nothing on a flat ladder.
+> And when the effect is smaller than the variance, a single measurement isn't
+> a result. I published 6.6% from one run; re-running it gave 1.7%. Every
+> guard I'd built was pointed at where the number came from, and none at
+> whether it would happen again."*
+
+> **The subtle part, if they push:** *"The estimator I'd flagged as **biased** —
+> repricing the same tokens at baseline rates — turned out to be the better
+> one, because holding tokens constant removes the dominant error term. The A/B
+> feels more rigorous because it measures both arms for real, but on a
+> low-signal quantity with a high-variance generator it's strictly worse."*
 
 ---
 
@@ -91,8 +107,9 @@ truly have cost, because a larger model usually answers at a different length.
 payload itself** (`savings_caveat`), so no dashboard can drop it by accident —
 and build `/v1/compare` to *measure* the bias.
 
-**Measured: 1.04×.** The baseline was 4% more verbose, so the live figure
-**understates** savings slightly. Approximately unbiased.
+**Measured: 1.040, then 0.974** across two runs. Straddles 1.0, so
+approximately unbiased on average — but that ±4% swing in output length is
+exactly what moved the A/B cost saving from 6.6% to 1.7% (D36).
 
 > *"The caveat travels with the number instead of living in a README nobody
 > reads. And then I measured it, so it's a number now rather than a

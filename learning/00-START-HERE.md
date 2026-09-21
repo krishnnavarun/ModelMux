@@ -90,9 +90,10 @@ Lead with these. They are what separate it from a tutorial project.
 2. **The evaluation harness refuses to produce numbers from mock data.** A
    plausible fake in a results table is worse than no number at all. (`06`, D23)
 
-3. **Measured savings came out at 6.6%, and the write-up leads with that**
-   rather than the 37% projection — with the reason: a router's savings are
-   bounded by the price spread it is given. (`06`, D33)
+3. **The measured cost saving didn't reproduce, and that is written up as
+   the finding.** 6.6% on one run, 1.7% on an identical re-run — the real
+   routing effect is 3-4% and the noise is bigger than the signal. The
+   *latency* result reproduced. (`06`, D36)
 
 4. **A 401 that lasted weeks was an environment variable shadowing `.env`,**
    found by noticing the provider console said *0 API calls*. (`07`, D29)
@@ -113,6 +114,9 @@ reads as the opposite.
   answers are worse, and that column is empty.
 - **Only one provider key ever worked.** The large tier is served by a Groq
   fallback, so the 37.1% figure is a projection, not a measurement.
+- **The A/B cost saving is noise-dominated and does not reproduce** — 6.6%
+  then 1.7% on identical prompts. Quote the same-token routing effect (3-4%).
+  The latency result *does* reproduce.
 - **Every accuracy number is scored against hand-labels written by one person**
   — the same person who built the classifier. Treat it as an upper bound.
 - **n=32 on the held-out set.** One prompt is three percentage points.

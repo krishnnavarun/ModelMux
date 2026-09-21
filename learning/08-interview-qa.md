@@ -28,7 +28,9 @@ an answer you agree with feels like learning and isn't.
 > Three separate measurements. Classification accuracy against a **held-out**
 > set of 32 prompts never used for tuning — 88% for the heuristic. Cache hit
 > rate of 80% with zero false hits on deliberately confusable pairs. And a
-> live run: 2.5× faster at the median, 6.6% cheaper.
+> live run: 2.5× faster at the median, which reproduced across two runs,
+> and a 3-4% routing cost effect — the A/B cost figure turned out to be
+> noise-dominated, which is itself the more interesting result.
 >
 > And one thing I *don't* know: **nobody has graded answer quality.** Cost
 > savings mean nothing if the cheap answers are worse, and that column is
@@ -187,7 +189,7 @@ an answer you agree with feels like learning and isn't.
 > data, because it priced every call at the tier's first provider while a
 > fallback answered them. Guarding one path doesn't guard the thing.
 
-**Q22. Your headline saving is 6.6%. That's not very impressive.**
+**Q22. Your headline saving is 3-4%. That's not very impressive.**
 > It isn't, and the reason is the most interesting thing I measured. Only one
 > API key worked, so the large tier falls back to the same model the mid tier
 > uses. The ladder compresses to 2×, and the router sent 16 of 32 prompts to

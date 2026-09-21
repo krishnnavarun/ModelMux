@@ -96,14 +96,24 @@ key.
 | | ModelMux | baseline | |
 |---|---|---|---|
 | p50 latency | **2,803 ms** | 6,973 ms | **2.5x faster** |
-| cost / 1k, measured | $0.4121 | $0.4411 | 6.6% saved |
+| cost / 1k, run 1 | $0.4121 | $0.4411 | 6.6% -- **did not reproduce** |
+| cost / 1k, run 2 | $0.4181 | $0.4253 | **1.7%** (same prompts) |
+| **same-token routing effect** | | | **3-4%** -- quote this one |
 | cost / 1k, projected at configured tiers | $11.49 | $18.25 | 37.1% saved |
 
-**Quote the measured row, and say which ladder it used.** With one key the
-large tier falls back to `gpt-oss-120b` (D30) -- the same model as mid -- so
-the ladder compresses to 2x and 16 of 32 prompts route somewhere the baseline
-would have gone anyway. A router's savings are bounded by the price spread it
-is given.
+**Do NOT quote an A/B cost saving from this configuration (D36).** Two runs
+of the identical set gave 6.6% and 1.7% -- the routing effect is 3-4% and
+run-to-run output-length variance is +/-5 points, so the noise is larger than
+the signal. Quote the **same-token** figure (3-4%), or the projection, and say
+which ladder.
+
+With one key the large tier falls back to `gpt-oss-120b` (D30) -- the same
+model as mid -- so the ladder compresses to 2x and 16 of 32 prompts route
+somewhere the baseline would have gone anyway. A router's savings are bounded
+by the price spread it is given.
+
+**The latency result DID reproduce** (2.49x then 2.45x at p50) because it
+depends on which model answered, not on how many tokens it emitted.
 
 The projection reprices *measured* token counts at the configured rates. It is
 arithmetic, not simulation, and it is labelled as projected everywhere.
@@ -147,9 +157,10 @@ of them. Server and eval now share `config.cost_for_provider()`.
   (D27). They were `claude-sonnet-5` at Sonnet **4.6** rates: wrong model, wrong
   generation's price. Now `claude-opus-5` at 0.005 / 0.025 per 1K.
 - **A second provider key** (Anthropic or Google). Everything runs on one Groq
-  key today, which is why the measured saving is 6.6% rather than the 37% the
-  configured ladder projects. This is the single input that would most improve
-  the result.
+  key today, which flattens the ladder to 2x. At the configured 33x ladder the
+  saving would be ~37% and would clear the measurement noise that makes the
+  current A/B figure meaningless (D36). This is the single input that would
+  most improve the result.
 - **D35, open:** the classification budget test's in-suite flake. Cause
   unknown; a correct experiment is described at the end of the entry.
 

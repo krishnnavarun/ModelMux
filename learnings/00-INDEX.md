@@ -97,5 +97,7 @@ Ranked by how much they demonstrate:
 | Mock-provider runs poisoned the real Redis with canned answers | A guard that announces itself on write and stays silent on read is half a guard |
 | The eval harness had never loaded `.env` in its life | The instrument gets less scrutiny than the thing it measures |
 | Guessed torch thread contention, wrote a probe that measured the GIL instead, recorded it as unknown | Refusing to promote an untested hypothesis into an explanation |
+| Published a 6.6% headline saving that re-ran at 1.7% on identical prompts | When the effect is smaller than the variance, one measurement is not a result |
+| The estimator I had flagged as BIASED turned out to be the lower-variance one | "More honest" and "better" are not the same property in an estimator |
 
 Full write-ups in `01-project-timeline.md`.

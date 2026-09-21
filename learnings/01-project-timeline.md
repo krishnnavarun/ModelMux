@@ -1081,3 +1081,113 @@ belong in a synced folder. Source files were assumed to be the safe case.
 The empty `learning/` directory was left in place rather than deleted: it is
 untracked and harmless, and deleting things in a folder that had just lost 19
 files unasked is not the moment to start guessing.
+
+---
+
+## The re-run: the headline number was noise
+
+**2026-09-21, 20:05.** Ran the held-out eval a second time, from a clean
+environment. Same 32 prompts, same config, same routing decisions.
+
+```powershell
+wsl redis-cli FLUSHDB          # 4 keys -> 0
+python eval/run_eval.py --set holdout.json
+```
+
+| run | routed | baseline | "saved" | baseline/routed out-tokens |
+|---|---|---|---|---|
+| 18:40 | $0.4121 / 1k | $0.4411 / 1k | **6.58%** | 1.040 |
+| 20:05 | $0.4181 / 1k | $0.4253 / 1k | **1.70%** | 0.974 |
+
+**The only variable was how long the models chose to answer**, and it moved the
+headline by a factor of four.
+
+### The real effect, isolated
+
+Repricing the *same* tokens at baseline rates — which holds output length
+constant — gives **3.00%** and **4.15%**. And the arithmetic says why it must
+be small:
+
+- 9 of 32 prompts route small
+- those 9 produce only **5.2%** / **7.6%** of all output tokens
+- small is exactly 2x cheaper
+- ceiling = half of 5-8% = **3-4%** ✓
+
+> **Subtracting two large noisy numbers to find a small difference is the
+> classic way to measure nothing with great precision.** Routed and baseline
+> totals agreed to within ~1.5%; the "saving" was a rounding artefact of LLM
+> verbosity.
+
+> **And the estimator I had labelled BIASED was the better one.**
+> `cost_if_large_usd` assumes equal output length — D3 flagged that as a
+> weakness. Holding tokens constant also removes the dominant *variance* term,
+> so the biased estimator beats the "honest" A/B on a low-signal quantity. The
+> A/B feels more rigorous because it measures both arms for real.
+
+> **Every guard this project built was pointed at where a number came from.**
+> Refusing mock data, the held-out set, the caveat in the payload, the blind
+> spot-check. **None was pointed at whether the number would happen again.**
+> Re-running a measurement is part of making it.
+
+Recorded as **D36**; D33 marked superseded in part rather than edited, because
+the mistake is the useful part.
+
+### What reproduced: latency
+
+| | run 1 | run 2 |
+|---|---|---|
+| p50 routed / baseline | 2,803 / 6,973 ms | 2,815 / 6,891 ms |
+| speedup | **2.49x** | **2.45x** |
+
+Stable, because it depends on **which model answered** rather than on how many
+tokens it emitted. The result the project was not looking for is the one that
+held.
+
+### Unplanned: Stage 5 got its first real-world test
+
+Groq's on-demand tier rate-limits `gpt-oss-120b` at **8,000 tokens per
+minute**, and the second run hit it on nearly every request from [24/32]
+onward:
+
+```
+[resilience] groq failed (groq rate limited: ... TPM: Limit 8000, Used 7550,
+             Requested 1089 ...); retry 1/2 in 5.00s
+```
+
+**Every one was absorbed. 32/32 pairs, 0 failures.** Retry with jittered
+backoff and `Retry-After` handling had only ever been tested against
+`MockProvider.fail_with` — this was the first time it met a real rate limiter,
+and it held.
+
+> The caveat: those waits are inside the latency figures. p95 baseline rose
+> from 9,019ms to 10,256ms, which is the rate limiter, not the model.
+
+### Also confirmed: the D29 warning still earns its place
+
+The classifier eval fired it before any of this:
+
+```
+[env] WARNING: GROQ_API_KEY is set in the environment AND in .env, and they differ.
+[env]   environment wins: ...PxcK   (.env has ...yfoX)
+```
+
+User scope `NOT SET`, Machine scope `NOT SET`, **Process scope still holding
+the dead key.** The permanent fix had held; the terminal had been started
+before it and kept the old value, passing it to every child it spawned.
+
+> **Removing a persistent environment variable does not clean processes that
+> already read it.** Environment is copied at spawn, not shared. Without the
+> warning this would have been another silent 401.
+
+### And one more silent degradation, caught by accident
+
+A full-suite run after all this reported **`123 passed, 8 skipped`** instead of
+the usual 131. The 8 were the Redis cache tests, skipping on *"Redis
+unavailable"* — while Redis was up and answering from Windows Python both
+before and after. The next run gave 131 again.
+
+> **A skip reads as success.** `123 passed` looks green in a summary line. The
+> tests that silently did not run include the cache safety tests, which guard
+> the most dangerous setting in the project. Added to **D35** as a second
+> instance of the same load-sensitivity family, rather than fixed on one
+> observation.

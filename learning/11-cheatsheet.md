@@ -17,7 +17,8 @@
 | Shipped (hybrid) | **72%, zero too-cheap** |
 | Cache hit rate / false hits | **80% / 0%** |
 | Latency | **2,803ms vs 6,973ms p50 — 2.5× faster** |
-| Cost saved, measured | **6.6%** · projected **37.1%** |
+| Cost, same-token routing effect | **3-4%** · projected **37.1%** |
+| Cost, A/B across two runs | 6.6% then **1.7%** — noise-dominated |
 | Tier thresholds | **0.33 / 0.66** |
 | Cache threshold | **0.88**, measured |
 | Rate limit | **60/min**, per IP |
@@ -39,8 +40,9 @@
 1. **The less accurate classifier ships** — 72% over 88%, because it makes
    zero too-cheap misroutes
 2. **The eval harness refuses to produce numbers from mock data**
-3. **The write-up leads with 6.6%, not 37%** — savings are bounded by the
-   price spread
+3. **The measured cost saving didn't reproduce** (6.6% → 1.7% on identical
+   prompts) and the write-up says so — savings are bounded by the price
+   spread, and below a certain spread they're unmeasurable by A/B
 4. **A weeks-long 401 was an env var shadowing `.env`** — found via "0 API
    calls"
 5. **HTTP 200 with empty content is an error** — the cheapest answer is silence
