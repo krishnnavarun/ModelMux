@@ -2,7 +2,10 @@
 
 Cost-aware inference routing. ModelMux sits between your application and multiple LLM providers, classifies every incoming request, and dispatches it to the cheapest model tier that can actually handle it.
 
-> **Status:** in development. Metrics marked `TBD` will be filled in once benchmarking is complete.
+> **Status:** in development. Stages 1-5 complete; Stage 6 partial.
+> Cost and latency remain unmeasured because no API key has ever worked --
+> see Results. Routing and cache figures below are real and reproducible
+> without a key.
 
 ---
 
@@ -55,19 +58,90 @@ Every request that resolves from cache costs nothing and returns in milliseconds
 
 ## Results
 
-Measured against a held-out evaluation set of TBD prompts.
+### What is measured
 
-| Metric | Baseline (all requests to large tier) | ModelMux |
-|---|---|---|
-| Cost per 1,000 requests | TBD | TBD |
-| p50 latency | TBD | TBD |
-| p95 latency | TBD | TBD |
-| Cache hit rate | 0% | TBD |
-| Answer quality (eval score) | TBD | TBD |
+These numbers come from `eval/run_classifier_eval.py` and
+`eval/tune_cache_threshold.py`, and need no API key — routing and cache
+matching are pure functions of the prompt.
 
-Classifier accuracy on the labeled test set: **TBD**
+**Classifier accuracy**, held-out set (n=32), never used for tuning:
 
-Quality is reported alongside cost deliberately. Cost savings mean nothing if the cheaper answers are worse, so both numbers are measured on the same evaluation set.
+| mode | accuracy | routed too cheap | routed too expensive |
+|---|---|---|---|
+| token count only (the naive baseline) | 31% | 20 | 2 |
+| heuristic | **88%** | 4 | 0 |
+| embedding (k-NN) | 72% | 0 | 9 |
+| **hybrid — shipped** | 72% | **0** | 9 |
+
+**Hybrid is less accurate than the heuristic and ships anyway.** It eliminates
+every too-cheap misroute, and a wrong cheap answer costs more in trust than a
+wrong expensive one costs in money. A single accuracy figure would have ranked
+the heuristic first and hidden that it sends hard prompts to weak models.
+
+**Cache**, measured on 35 labelled prompt pairs:
+
+| | |
+|---|---|
+| Hit rate on rephrasings | **80%** |
+| False hits on confusable pairs | **0%** |
+| Lookup at 10,000 entries | **11.2 ms** (budget 30 ms) |
+| Classification | **11–12 ms** p50 (budget 20 ms) |
+
+### What is NOT measured, and why
+
+| Metric | Status |
+|---|---|
+| Cost per 1,000 requests | **Not measured** |
+| p50 / p95 latency, end to end | **Not measured** |
+| Answer quality | **Not measured** |
+
+**No API key has ever worked in this project.** Every provider adapter is
+verified against synthetic responses; none has spoken to a live server. Cost and
+latency figures require real calls, and a plausible-looking number produced from
+mock data would be worse than no number at all — so there isn't one.
+
+`eval/run_eval.py` **refuses to run** against mock providers unless
+`--simulated` is passed, and prefixes every line of such a run with
+`SIMULATED`. The moment a working key exists, one command fills this table:
+
+```bash
+python eval/run_eval.py --set holdout.json
+```
+
+**Quality scoring is an undecided design question**, not a missing
+implementation — see `DECISIONS.md` D23. `run_eval.py` exports a blind
+spot-check file (which answer came from which tier is withheld from the grader
+and written to a separate key file) so quality can be graded by hand with no API
+access at all.
+
+### The savings figure carries a caveat
+
+`cost_if_large_usd` reprices **the token counts actually observed** at baseline
+rates. That is *"same tokens, baseline prices"* — not what the large tier would
+truly have cost, since a larger model usually answers at a different length.
+
+The caveat travels in the `/v1/stats` payload itself (`savings_caveat`) so no
+dashboard can drop it by accident, and `run_eval.py` **measures** the bias
+directly by comparing output-token counts from both tiers. See `DECISIONS.md`
+D3.
+
+### Limitations worth stating plainly
+
+- **Every accuracy number is measured against hand-labels written by one
+  person** — the same person who built the classifier. Treat them as an upper
+  bound.
+- **n=32 held out.** One prompt is three percentage points. These figures have
+  wide error bars.
+- **35 cache pairs cannot map the space of confusable prompts.** Zero false hits
+  *there* is not zero false hits in production.
+- **Semantic caching can serve one user's answer to another.** That is inherent
+  to shared caching, not a bug awaiting a fix. Mitigated by a measured
+  threshold, a lexical inversion guard, and a `bypass_cache` flag — and
+  demonstrated by a test that deliberately produces a wrong answer at a loose
+  threshold.
+- **Circuit breaker state is per process.** With several workers each keeps its
+  own view; the cost is uneven traffic to a failing provider, never incorrect
+  answers.
 
 ---
 
@@ -117,13 +191,15 @@ Every response includes the routing decision. Nothing about the choice is hidden
 
 ### Dashboard
 
-```bash
-cd dashboard
-npm install
-npm run dev
+No build step. Start the API and open:
+
+```
+http://localhost:8000/dashboard
 ```
 
-Opens at `http://localhost:5173`.
+One static file, served from the API's own origin so it needs no CORS setup.
+The spec called for React + Vite + Recharts; that was cut deliberately —
+see `DECISIONS.md` D24.
 
 ---
 
@@ -156,6 +232,57 @@ routing:
 ```
 
 The cache similarity threshold is the most consequential setting in the project. Too loose and semantically different prompts share an answer; too tight and the hit rate collapses. See `DECISIONS.md` for how the current value was chosen.
+
+---
+
+## API
+
+| Endpoint | Purpose |
+|---|---|
+| `POST /v1/chat` | Route a prompt and answer it |
+| `POST /v1/compare` | Run the same prompt through the router **and** the baseline tier |
+| `GET /health` | Liveness. Never calls a provider. |
+| `GET /health/providers` | Per-provider circuit state and last error |
+| `GET /v1/stats?window=24h` | Cost saved, hit rate, p50/p95, tier distribution |
+| `GET /v1/requests?limit=50` | Recent request log |
+| `GET /dashboard` | Single-page dashboard |
+
+`GET /v1/stream` (SSE) was cut deliberately — see `DECISIONS.md` D24.
+
+### `/v1/compare` — auditing the savings figure
+
+The headline savings number rests on one assumption: that the baseline tier
+would have produced the same number of output tokens. That is an assumption
+because measuring it means paying for the expensive call.
+
+`/v1/compare` runs both and reports the actual ratio:
+
+```json
+"comparison": {
+  "cost_saved_usd": 0.000365,
+  "savings_pct": 95.67,
+  "output_token_ratio": 1.0,
+  "d3_bias_note": "... >1 means live savings are UNDERstated, <1 OVERstated."
+}
+```
+
+It is deliberately not cached and not counted in `/v1/stats` — it costs two
+provider calls, and letting it into the statistics would corrupt the very
+numbers it exists to audit.
+
+### Rate limiting
+
+Per-caller token bucket, `limits.rate_limit_per_minute` in `config.yaml`.
+Exceeding it returns **429** with `retry_after_seconds` and a `Retry-After`
+header.
+
+Checked *before* classification and *before* the cache, so a rejected request
+costs nothing. Keyed by IP, because there is no authentication yet;
+`X-Forwarded-For` is deliberately **not** trusted, since a caller-controlled
+header would let anyone pick their own bucket.
+
+State is per process — with several workers the effective limit is
+`workers x rate`.
 
 ---
 
@@ -210,7 +337,14 @@ python eval/run_eval.py
 
 Runs the evaluation set through both ModelMux and a baseline that sends everything to the large tier, then reports cost, latency, and quality for each.
 
-Quality scoring is TBD — see `DECISIONS.md` for the approach and its limitations.
+**Quality scoring is an open decision, not a missing implementation** — see
+`DECISIONS.md` D23 for the three candidate approaches, the recommendation, and
+why publishing a savings figure without a quality column would be half a
+result.
+
+`run_eval.py` exports a **blind** spot-check file — which answer came from
+which tier is withheld from the grader and written to a separate key file — so
+quality can be graded by hand today, with no API key.
 
 ---
 

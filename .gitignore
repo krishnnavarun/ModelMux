@@ -14,6 +14,7 @@ __pycache__/
 
 # Documents -- kept on disk, not in the repo
 *.docx
-learnings
-PLAN.md
-specs.md
+
+# Evaluation output: regenerable, and a SIMULATED run must never be mistaken
+# for a real result sitting in version control.
+eval/results/

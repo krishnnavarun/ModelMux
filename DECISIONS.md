@@ -822,3 +822,377 @@ Made `init()` idempotent in both `embedding` and `cache`. **9m46s → 57s.**
 
 > A suite that slow stops being run, which costs more than any bug it would
 > catch. Worth treating test runtime as a feature, not an afterthought.
+
+---
+
+## D20 — Resilience: the error taxonomy becomes executable
+
+**Date:** 2026-09-12 · **Stage:** 5 · **This is Stage 5's completion criterion
+(SPEC section 11): the system keeps serving with a provider forced to fail.**
+
+### Measured, end to end
+
+```
+1. all healthy        200  tier=small  provider=groq       attempts=1
+2. groq FORCED DOWN   200  tier=large  provider=anthropic  attempts=7  escalated
+3. /health/providers  groq: open, 6 recent failures, last="mock 500"
+4. everything down    502  attempts=3  tried=3 providers
+```
+
+Step 2 is the gate. Step 4 shows the breaker working: only 3 attempts, not 7,
+because groq's circuit was already open and was skipped rather than re-paying
+the timeout to rediscover it.
+
+### The taxonomy was never cosmetic
+
+`providers/base.py` has defined four error types since Stage 1. This is the
+stage where they stop being documentation and start being control flow:
+
+| type | policy | why |
+|---|---|---|
+| `ProviderTimeout` | retry | transient |
+| `ProviderRateLimited` | retry, honour `Retry-After` | transient, and they told us how long |
+| `ProviderServerError` | retry | probably transient |
+| `ProviderBadRequest` | **never retry** | deterministic — identical failure, multiplied latency |
+
+`RETRYABLE` is defined by *exclusion*, so a new error type added to `base.py`
+defaults to "do not retry" — the safe direction.
+
+### Two bugs I wrote, and what they teach
+
+**1. The circuit let TWO probes through instead of one.**
+
+The `OPEN -> HALF_OPEN` transition returned `True` without setting
+`probe_in_flight`. The next caller fell through to the `HALF_OPEN` branch,
+found the flag unset, and was also allowed past.
+
+That is precisely the **thundering herd the breaker exists to prevent** — a
+recovering provider getting hit by two requests at the moment it is least able
+to handle them. Caught by `test_half_open_allows_exactly_one_probe`.
+
+*The lesson:* a state machine with a side effect on the transition needs the
+side effect applied on **every** path that performs the transition, not just
+the one you were thinking about.
+
+**2. A test that conflated retry with fallback.**
+
+`test_bad_request_is_never_retried` asserted `calls == 1` and got 2. The code
+was right: our config puts small AND mid on Groq with different models, so
+after a `ProviderBadRequest` on the small model, trying the mid model is
+legitimate **fallback** — an unknown model on one tier says nothing about the
+other.
+
+Fixed by disabling escalation in that test so it measures retry alone, and
+adding `test_transient_failure_exhausts_retries_before_giving_up` as the
+contrast case.
+
+### 502 vs 503 — a distinction worth making
+
+- **502** — we tried providers and they failed
+- **503** — every circuit was open, so nothing was even attempted
+
+The second carries `estimated_recovery_seconds`. "We tried and they broke" and
+"we have stopped trying, come back in 30 seconds" are different facts, and an
+operator reading logs during an incident needs to tell them apart.
+
+### Jitter is not decoration
+
+`backoff_seconds()` returns `uniform(0, base * 2^attempt)`, not the exact
+value. Without randomisation every client that failed at the same moment
+retries at the same moment, producing a synchronised burst that re-triggers the
+very rate limit they are backing off from.
+
+`test_backoff_grows_and_is_jittered` asserts the delays actually differ.
+
+### Stated limitation: circuit state is per process
+
+SPEC 8.7 says in-memory single-process is acceptable. With several workers each
+keeps its own view, so a provider can be open in one process and closed in
+another.
+
+**The consequence is uneven traffic to a failing provider, not incorrect
+answers.** Sharing the state would mean putting it in Redis — which introduces
+a dependency on the thing most likely to be down during an incident.
+
+---
+
+## D21 — Metrics: percentiles in Python, and latency from successes only
+
+**Date:** 2026-09-12 · **Stage:** 6 (partial) · **Amends:** SPEC section 8.9
+
+SPEC: *"Percentiles: compute in SQL where possible, in Python otherwise. Do not
+approximate silently."*
+
+**SQLite has no `PERCENTILE_CONT`.** So p50/p95 are computed in Python from the
+latency column. That is **exact, not approximate** — the cost is pulling the
+window's latencies into memory, which is fine at this scale and stated rather
+than hidden behind a plausible-looking number.
+
+### Nearest-rank, not interpolated
+
+With a handful of requests, interpolation invents a latency nobody experienced.
+`p95 = 147ms` should mean some request actually took 147ms. The rank method
+always returns an observed value.
+
+### Latency excludes errors
+
+A fast 400 would flatter the p50; a timeout would distort the p95. Neither
+tells you how long an *answer* takes, which is the only question a latency
+percentile is asked. Only `success` and `cached` rows count.
+
+### The savings figure carries its caveat in the payload
+
+`get_stats()` returns a `savings_caveat` field naming DECISIONS.md D3.
+
+`cost_if_large_usd` reprices the token counts we actually **observed** at
+baseline rates — "same tokens, baseline prices", not what the large tier would
+truly have cost. A dashboard showing a savings percentage without that is a
+false claim dressed as a measurement, and the caveat travelling *in the
+response* means no consumer can drop it by accident.
+
+`test_savings_carry_the_bias_caveat` enforces it.
+
+### `/health/providers` lists providers with no circuit yet
+
+A provider that has never failed has no `Circuit` object. Omitting it would
+read as "missing" or "broken" on a dashboard, when it is the healthiest state
+there is. The endpoint fills those in as `closed`.
+
+---
+
+## D22 — Two more test-isolation bugs, same family as before
+
+**Date:** 2026-09-12 · **Stage:** 5
+
+**1. A Redis client leaked across event loops.** `test_cache.py` left its
+connected client in the module global. A later module's app shutdown called
+`cache.close()` on it — from a different event loop — and got
+`RuntimeError: Event loop is closed`.
+
+Fixed by making `close()` clear `_redis` and by closing properly in the cache
+fixture's teardown. **A redis.asyncio client is bound to the loop it was created
+on**, so a module-global client is shared state with a hidden affinity.
+
+**2. An ordering-dependent test.** `test_stats_on_an_empty_window_returns_zeros`
+took only the `db_path` fixture, so it never ran `init_db()`. It passed only
+when some earlier test happened to create the table first. Added the `client`
+fixture so it creates its own preconditions.
+
+> This is the **third** distinct test-isolation bug in this project — the
+> provider fixture (Day 1), the cache (Day 2), and now the event loop. Every one
+> had the same shape: **module-level state that one test populates and another
+> silently inherits.** Worth treating any module global in a test-touched code
+> path as a hazard by default.
+
+---
+
+## D23 — Quality scoring: the decision that has NOT been made
+
+**Date:** 2026-09-21 · **Stage:** 6 · **Status: OPEN — needs the project
+owner's call, not mine.**
+
+SPEC's evaluation section says *"Quality scoring is TBD — see DECISIONS.md for
+the approach and its limitations."* This entry exists because that pointer led
+nowhere: the decision was never taken, and writing one here as though it had
+been would be fabricating a choice.
+
+### Why it cannot be deferred quietly
+
+SPEC section on Results: *"Quality is reported alongside cost deliberately. Cost
+savings mean nothing if the cheaper answers are worse, so both numbers are
+measured on the same evaluation set."*
+
+A savings percentage published without a quality column is **half a result**,
+and the missing half is the one that could invalidate the other. "We cut cost
+78%" is a finding only if answers held up; otherwise it is a description of
+having bought worse answers.
+
+### The three viable approaches
+
+| Approach | Cost | What it is good for | Where it is weak |
+|---|---|---|---|
+| **Blind human spot-check** | ~1 hour of your time, 30 items | Most trustworthy signal available | Tiny sample; one grader's taste |
+| **LLM-as-judge** | ~1 large-tier call per prompt | Scales to the whole set, consistent rubric | The judge shares blind spots with the model it grades; known to favour longer and more confident answers |
+| **Exact-match on a factual subset** | Free | Fully objective | Only works for lookup prompts — exactly the ones routing already gets right, so it measures the easy half |
+
+**LLM-as-judge is not a violation of "no LLM call in the classification path."**
+That constraint governs *routing*, which must be cheaper than the request it
+routes. This is offline evaluation, run once, on a fixed set.
+
+### Recommendation
+
+**Blind human spot-check of 30, plus LLM-as-judge on the full set, reported as
+two separate columns — never averaged together.**
+
+If they disagree, that disagreement *is* a finding worth publishing: it would
+say something real about whether automated grading can be trusted for this task.
+Averaging them would destroy exactly that information.
+
+### What is built while the decision is open
+
+`eval/run_eval.py` already exports a **blind** spot-check file:
+
+- which answer came from which tier is withheld from the grader
+- the mapping is written to a separate `_KEY.json`
+- the instructions say not to open the key first
+
+Blinding is the whole point. A grader who knows "A is the cheap one" finds what
+they expect to find, and the exercise becomes theatre. This needs **no API key**,
+so quality can be graded before the cost blocker clears.
+
+The harness prints a loud warning whenever it reports savings with no quality
+column, rather than letting the omission pass silently.
+
+### The cost of leaving it open
+
+The README's results table stays incomplete, and the project's headline claim
+stays unproven in the dimension that matters most. That is the honest state, and
+it is preferable to a quality number produced by a method nobody chose.
+
+---
+
+## D24 — The dashboard is one static file, not React + Vite + Recharts
+
+**Date:** 2026-09-21 · **Stage:** 6 · **Amends:** SPEC section 3
+
+SPEC lists React + Vite + Recharts and a `dashboard/` directory with its own
+`npm install`. Shipped instead: a single `dashboard/index.html`, ~200 lines,
+no build step, served by FastAPI at `/dashboard`.
+
+**Why:** PLAN.md compressed nine spec-days into four. Something had to give, and
+the honest way to absorb that is to cut deliberately rather than let quality slip
+everywhere. The dashboard is the most cuttable item in the project — **the
+numbers are the deliverable; the dashboard only shows them off.** A build
+toolchain for four `fetch` calls would have cost most of a day that Stage 6's
+real work needed.
+
+**A second benefit, not merely an excuse:** served from the API's own origin,
+the page calls `/v1/stats` and `/health/providers` with no CORS configuration
+and no second dev server to run.
+
+**What was given up:** charts (the figures are tiles and a table), a component
+model, and anything resembling a growth path. If this ever needs real
+visualisation, it is a rewrite rather than an extension — accepted knowingly.
+
+**One thing it does NOT give up:** the savings caveat. The page renders
+`savings_caveat` straight from the `/v1/stats` payload, so the D3 bias cannot be
+dropped by a UI that forgot about it.
+
+---
+
+## D25 — Rate limiting: a token bucket, keyed by IP, checked first
+
+**Date:** 2026-09-21 · **Stage:** 6 · **Implements:** SPEC section 10
+
+SPEC required this and it had simply never been built — found by auditing the
+spec's endpoint and error tables against `main.py` rather than by anything
+failing.
+
+**This is the only component in the project that protects money rather than
+correctness.** Every other limit guards a result; this one guards the account.
+A single caller in a retry loop empties the budget in minutes, and no amount of
+clever routing matters once the credit is gone.
+
+### Token bucket, not a fixed window
+
+A fixed window ("60 per minute, reset on the minute") permits **120 requests
+across a boundary** — 60 at 11:59:59 and 60 more at 12:00:00. That is double the
+intended rate at the worst possible moment.
+
+A token bucket refills continuously, so the long-run rate is exactly what was
+configured while still allowing a short burst up to capacity. It is also
+cheaper: two floats per caller, no history to sweep.
+
+`tokens` is a **float**, deliberately. Rounding down on every check would leak
+allowance and make the effective rate quietly lower than the configured one.
+
+### Checked BEFORE classification and before the cache
+
+A rejected request must cost nothing. Checking after routing would still burn
+~11ms of embedding per rejected request — most of what the limit exists to
+prevent.
+
+### A new caller starts FULL
+
+Starting empty would reject everyone's first request, which is
+indistinguishable from an outage to someone trying the API for the first time.
+
+### X-Forwarded-For is deliberately NOT trusted
+
+It is caller-controlled. Honouring it without a verified proxy in front would
+let anyone bypass the limit by inventing a header — turning the protection into
+decoration. `test_forwarded_for_cannot_bypass_the_limit` pins this.
+
+Behind a real load balancer this must change, and the change has to come with
+"trust exactly N proxy hops", not a blanket trust of the header.
+
+### Idle buckets are evicted
+
+Unbounded growth per distinct IP is a slow memory leak that an attacker can
+accelerate deliberately. Buckets unused for an hour are swept, at most once a
+minute.
+
+### A 429 still writes a database row
+
+SPEC section 2: nothing is silently dropped. A rejected request is still a
+request that happened, and an operator investigating "the API keeps refusing
+me" needs to see it.
+
+### Stated limitations
+
+- **Per process.** With several workers the effective limit is
+  `workers x rate`. Sharing it would put Redis on the fast path — a dependency
+  on the hot path for what is a safety net rather than a billing boundary.
+- **Keyed by IP, because there is no authentication.** An IP is shared by
+  everyone behind a NAT and changes for one user on a mobile network. Once
+  auth exists, the key should become the API key or account id. Documented as a
+  limitation rather than presented as identity.
+
+---
+
+## D26 — `/v1/compare` turns the D3 assumption into a measurement
+
+**Date:** 2026-09-21 · **Stage:** 6 · **Implements:** SPEC section 5,
+**mitigates:** DECISIONS.md D3
+
+D3 has been the largest unquantified caveat in the project since Stage 1:
+`cost_if_large_usd` **assumes** the baseline tier would emit the same number of
+output tokens as the routed tier. That assumption is not measured, because
+measuring it means paying for the expensive call — which is the very thing the
+router exists to avoid.
+
+`POST /v1/compare` runs both, so the assumption becomes checkable:
+
+```json
+"comparison": {
+  "cost_saved_usd": 0.000365,
+  "savings_pct": 95.67,
+  "output_token_ratio": 1.0,
+  "d3_bias_note": "... >1 means live savings are UNDERstated, <1 OVERstated."
+}
+```
+
+**`output_token_ratio` is the bias, stated as a number.** Not "there may be a
+discrepancy" in prose, but the factor by which the live figure is wrong and in
+which direction.
+
+### Deliberately not cached, and not logged as a normal request
+
+It costs two provider calls. Letting it into `/v1/stats` would corrupt the very
+numbers it exists to audit — the savings percentage would include a request
+that deliberately paid twice.
+
+### Rate limited like everything else
+
+It is the **last** endpoint that should be exempt from budget protection,
+precisely because it costs double. `test_compare_is_rate_limited_too` pins it.
+
+### Why this matters more than it looks
+
+Every savings figure this project reports rests on D3. Until now the honest
+position was "we know this number is biased and cannot say by how much." This
+endpoint changes that to "here is how much, on this prompt" — and
+`run_eval.py` computes the same ratio across a whole evaluation set.
+
+An assumption you have quantified is a finding. The same assumption unquantified
+is a footnote nobody acts on.

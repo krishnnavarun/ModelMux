@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>ModelMux</title>
+<!--
+  Deliberately ONE static file. No React, no Vite, no build step.
+
+  SPEC section 3 lists React + Vite + Recharts. PLAN.md Part 4 cut that to a
+  single page, because the numbers ARE the project and the dashboard only shows
+  them off. A build toolchain for four fetch calls would have cost most of a day
+  that Stage 6's real deliverable -- the evaluation -- needed more.
+
+  It is served by FastAPI at /dashboard so it can reach the API on the same
+  origin with no CORS setup.
+-->
+<style>
+  :root {
+    --bg: #fbfbfa; --panel: #fff; --ink: #1a1a19; --muted: #6b6b68;
+    --line: #e6e6e3; --accent: #2f6f4f; --warn: #a5561b; --bad: #a32b2b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #17171a; --panel: #1f1f23; --ink: #ececea; --muted: #9a9a96;
+      --line: #32323a; --accent: #6fbf90; --warn: #d8975a; --bad: #e08585;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 28px; background: var(--bg); color: var(--ink);
+    font: 14px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .wrap { max-width: 1060px; margin: 0 auto; }
+  header { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  h1 { font-size: 21px; margin: 0; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); font-size: 13px; }
+  .row { display: flex; gap: 14px; flex-wrap: wrap; margin: 20px 0; }
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 9px;
+    padding: 14px 16px; flex: 1 1 165px;
+  }
+  .label { color: var(--muted); font-size: 11.5px; text-transform: uppercase;
+           letter-spacing: 0.055em; }
+  .value { font-size: 25px; margin-top: 5px; font-variant-numeric: tabular-nums; }
+  .value.small { font-size: 17px; }
+  .accent { color: var(--accent); }
+  section { margin-top: 26px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.055em;
+       color: var(--muted); margin: 0 0 10px; font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px;
+          font-variant-numeric: tabular-nums; }
+  th { text-align: left; color: var(--muted); font-weight: 500; padding: 6px 9px;
+       border-bottom: 1px solid var(--line); white-space: nowrap; }
+  td { padding: 6px 9px; border-bottom: 1px solid var(--line); }
+  .feed-wrap { overflow-x: auto; }
+  .prompt { max-width: 330px; overflow: hidden; text-overflow: ellipsis;
+            white-space: nowrap; color: var(--muted); }
+  .pill { display: inline-block; padding: 1px 7px; border-radius: 99px;
+          font-size: 11px; border: 1px solid var(--line); }
+  .tier-small  { color: var(--accent); }
+  .tier-mid    { color: var(--warn); }
+  .tier-large  { color: var(--bad); }
+  .state-closed    { color: var(--accent); }
+  .state-half_open { color: var(--warn); }
+  .state-open      { color: var(--bad); font-weight: 600; }
+  .caveat {
+    margin-top: 12px; padding: 11px 13px; border-left: 3px solid var(--warn);
+    background: var(--panel); color: var(--muted); font-size: 12.5px;
+    border-radius: 0 6px 6px 0;
+  }
+  .caveat b { color: var(--ink); }
+  .err { color: var(--bad); }
+  .muted { color: var(--muted); }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>ModelMux</h1>
+    <span class="sub" id="sub">loading…</span>
+  </header>
+
+  <div class="row" id="tiles"></div>
+
+  <!--
+    This caveat is NOT decoration and must not be removed. cost_if_large_usd
+    reprices the tokens we ACTUALLY OBSERVED at baseline rates -- it is "same
+    tokens, baseline prices", not what the large tier would truly have cost.
+    The API ships the text in `savings_caveat` precisely so no UI can drop it
+    by accident. See DECISIONS.md D3.
+  -->
+  <div class="caveat" id="caveat"></div>
+
+  <section>
+    <h2>Providers</h2>
+    <table id="providers"><tbody></tbody></table>
+  </section>
+
+  <section>
+    <h2>Recent requests</h2>
+    <div class="feed-wrap">
+      <table id="feed">
+        <thead><tr>
+          <th>time</th><th>prompt (preview)</th><th>tier</th><th>score</th>
+          <th>cache</th><th>tokens</th><th>cost</th><th>latency</th><th>status</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="sub" style="margin-top:9px">
+      Only an 80-character preview is stored, never the full prompt
+      (SPEC&nbsp;10). Polls every 3s.
+    </p>
+  </section>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[<>&]/g, c => ({ "<":"&lt;", ">":"&gt;", "&":"&amp;" }[c]));
+const usd = (n) => "$" + Number(n ?? 0).toFixed(6);
+const pct = (n) => (Number(n ?? 0) * 100).toFixed(1) + "%";
+
+function tile(label, value, cls = "") {
+  return `<div class="card"><div class="label">${label}</div>
+          <div class="value ${cls}">${value}</div></div>`;
+}
+
+async function refresh() {
+  try {
+    const [stats, feed, health] = await Promise.all([
+      fetch("/v1/stats?window=24h").then(r => r.json()),
+      fetch("/v1/requests?limit=25").then(r => r.json()),
+      fetch("/health/providers").then(r => r.json()),
+    ]);
+
+    $("#sub").textContent =
+      `last 24h · classifier: ${health.classifier_mode} · ` +
+      `cache: ${health.cache_available ? "on" : "off"}`;
+
+    // Savings is shown LAST and least prominently of the cost tiles, because
+    // it is the figure carrying the D3 caveat.
+    $("#tiles").innerHTML = [
+      tile("Requests", stats.requests),
+      tile("Cost", usd(stats.cost_usd), "small"),
+      tile("If all large", usd(stats.cost_if_all_large_usd), "small"),
+      tile("Saved", `${stats.savings_pct}%`, "accent"),
+      tile("Cache hit rate", pct(stats.cache_hit_rate)),
+      tile("p50 / p95", `${stats.latency_p50_ms ?? "–"} / ${stats.latency_p95_ms ?? "–"} ms`, "small"),
+      tile("Errors", pct(stats.error_rate), Number(stats.error_rate) > 0 ? "err" : ""),
+      tile("Fallbacks", stats.fallback_count),
+    ].join("");
+
+    $("#caveat").innerHTML =
+      `<b>On the savings figure:</b> ${esc(stats.savings_caveat)}`;
+
+    $("#providers > tbody").innerHTML = (health.providers || []).map(p => `
+      <tr>
+        <td>${esc(p.provider)}</td>
+        <td class="state-${esc(p.state)}">${esc(p.state)}</td>
+        <td class="muted">${p.recent_failures} recent failures</td>
+        <td class="muted">${p.recovers_in_seconds != null
+          ? "probes again in " + p.recovers_in_seconds + "s" : ""}</td>
+        <td class="muted">${esc((p.last_error || "").slice(0, 60))}</td>
+      </tr>`).join("") || `<tr><td class="muted">no providers</td></tr>`;
+
+    $("#feed > tbody").innerHTML = (feed.requests || []).map(r => `
+      <tr>
+        <td class="muted">${esc((r.timestamp || "").slice(11, 19))}</td>
+        <td class="prompt" title="${esc(r.prompt_preview)}">${esc(r.prompt_preview)}</td>
+        <td class="tier-${esc(r.tier)}">${esc(r.tier ?? "–")}</td>
+        <td>${r.complexity_score != null ? r.complexity_score.toFixed(3) : "–"}</td>
+        <td>${r.cache_hit ? '<span class="pill accent">hit</span>' : ""}</td>
+        <td class="muted">${r.tokens_in ?? 0}/${r.tokens_out ?? 0}</td>
+        <td>${usd(r.cost_usd)}</td>
+        <td>${r.latency_ms ?? "–"} ms</td>
+        <td class="${r.status === "error" ? "err" : "muted"}">${esc(r.status)}</td>
+      </tr>`).join("") || `<tr><td class="muted">no requests yet</td></tr>`;
+
+  } catch (e) {
+    $("#sub").innerHTML = `<span class="err">API unreachable — is the server running?</span>`;
+  }
+}
+
+refresh();
+setInterval(refresh, 3000);
+</script>

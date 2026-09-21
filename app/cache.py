@@ -217,8 +217,27 @@ async def init(config) -> None:
 
 
 async def close() -> None:
+    """Close the connection and forget it.
+
+    Clearing `_redis` matters, not just tidiness. A redis.asyncio client is
+    bound to the event loop it was created on. Leaving a closed -- or
+    foreign-loop -- client in the module global means the NEXT caller's
+    shutdown tries to close it from a different loop and gets
+    "RuntimeError: Event loop is closed". That is exactly what happened when
+    the cache tests left a client behind for the metrics tests to trip over.
+    """
+    global _redis, _available, _mirror_matrix, _mirror_version
+
     if _redis is not None:
-        await _redis.aclose()
+        try:
+            await _redis.aclose()
+        except Exception:  # noqa: BLE001 -- shutdown must not raise
+            pass
+
+    _redis = None
+    _available = False
+    _mirror_matrix = None
+    _mirror_version = -1
 
 
 def available() -> bool:

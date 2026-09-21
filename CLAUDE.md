@@ -69,24 +69,50 @@ and move on.
 
 ---
 
-## Current state (2026-09-08)
+## Current state (2026-09-21)
 
-**Stage 1 — bare proxy: complete except for one item.**
-**Stage 2 — two providers + naive routing: complete.**
-**Stage 3 — real classifier: complete.**
+**Every stage is built. Stages 1-5 complete; Stage 6 complete except its
+measurements, which need a working API key.**
 
-Built: `config.yaml` + validation, `Provider` ABC with a four-type error
-taxonomy, three adapters (Groq/Google/Anthropic) plus a mock, a provider
-registry, `router.py` with the naive token-count rule, tiktoken counting,
-SQLite logging on every path, 56 passing tests, and a 50-prompt routing
-evaluation set.
+`130 tests passing`, 26 decisions recorded, 19 learnings files.
 
-**Blocked on:** a valid `GROQ_API_KEY` (current one is well-formed but 401s),
-and there are no Google or Anthropic keys at all. **No adapter has ever spoken
-to a live server** — all three are verified against synthetic responses only.
+### The one blocker, and it is not a code problem
 
-The mock provider means that blocks only the live calls; the request path, cost
-arithmetic, routing, and logging are all verified without them.
+**No API key has ever worked.** The `GROQ_API_KEY` in `.env` is well-formed and
+returns 401; there are no Google or Anthropic keys at all. **No adapter has
+ever spoken to a live server** — all three are verified against synthetic
+responses only.
+
+That blocks exactly three things:
+
+1. Stage 1's last item (a live `200`)
+2. The README results table: cost per 1,000 requests, p50/p95 latency
+3. Answer quality
+
+Everything else is measured and reproducible without a key.
+
+**When a key works, one command fills the table:**
+
+```powershell
+C:\dev\modelmux-venv\Scripts\python.exe eval/run_eval.py --set holdout.json
+```
+
+It **refuses** to run against mock providers without `--simulated`, because a
+plausible fake in a results table is worse than no number at all.
+
+### Still open for the project owner
+
+- **Quality scoring method** (D23). Recommendation: blind human spot-check of
+  30 plus LLM-as-judge on the full set, reported as separate columns, never
+  averaged. `run_eval.py` already exports the blind spot-check file — gradeable
+  today, no key needed.
+- **Anthropic's large-tier prices are UNVERIFIED.** Every savings figure rests
+  on them.
+
+### Deliberately cut
+
+`GET /v1/stream` (SSE) and the React/Vite/Recharts dashboard — see D24. The
+dashboard is one static file at `/dashboard`.
 
 ### Stage 3 results (DECISIONS.md D15)
 
