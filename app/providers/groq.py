@@ -72,8 +72,31 @@ class GroqProvider(Provider):
         try:
             body = response.json()
             usage = body.get("usage", {})
+            choice = body["choices"][0]
+            text = choice["message"]["content"]
+
+            # `openai/gpt-oss-*` are REASONING models: they emit a separate
+            # `reasoning` field, and its tokens are billed as completion tokens
+            # while never appearing in `content`. With a small max_tokens the
+            # whole budget can go to reasoning and `content` comes back EMPTY
+            # with finish_reason "length" -- a 200 carrying no answer.
+            #
+            # Measured: max_tokens=20 -> content '', 20 completion tokens spent.
+            #           max_tokens=300 -> content 'Tokyo', 39 of 49 tokens
+            #                             were reasoning.
+            #
+            # Returning "" would be the worst outcome: a confident empty answer,
+            # cached and counted as a success. Treat it as a server error so the
+            # resilience layer retries or falls back.
+            if not text:
+                raise ProviderServerError(
+                    f"groq returned empty content (finish_reason="
+                    f"{choice.get('finish_reason')}); the token budget was "
+                    f"likely consumed by reasoning tokens -- raise max_tokens"
+                )
+
             return ProviderResult(
-                text=body["choices"][0]["message"]["content"],
+                text=text,
                 model=body.get("model", model),
                 tokens_in=usage.get("prompt_tokens", 0),
                 tokens_out=usage.get("completion_tokens", 0),

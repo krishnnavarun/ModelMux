@@ -1,7 +1,7 @@
 # ModelMux — Status and Delivery Plan
 
-**As of 2026-09-08.** Compresses the remaining spec work (SPEC §11 days 6–15)
-into 4 working days.
+**As of 2026-09-21.** All six stages complete. Stage 1 and Stage 6 closed on
+2026-09-21 when a working API key produced the first live measurements.
 
 ---
 
@@ -11,12 +11,12 @@ into 4 working days.
 
 | Stage | SPEC completion criterion | State |
 |---|---|---|
-| **1 — Bare proxy** | "A curl request returns an answer **and the row is visible in SQLite**" | ⚠️ **Partial** — row logging verified; no live answer yet |
+| **1 — Bare proxy** | "A curl request returns an answer **and the row is visible in SQLite**" | ✅ **Complete 2026-09-21** — live `200` after the env-shadowing fix (D29) |
 | **2 — Two providers, naive rule** | "A written list of misroutes exists in DECISIONS.md" | ✅ **Complete** — DECISIONS.md D12 |
 | **3 — Real classifier** | Accuracy figures for heuristic / embedding / hybrid | ✅ **Complete** — DECISIONS.md D15 |
 | **4 — Cache** | Measured hit rate + justified threshold + documented failure case | ✅ **Complete** — DECISIONS.md D16 |
 | **5 — Resilience** | System keeps serving with one provider forced to fail | ✅ **Complete** — DECISIONS.md D20 |
-| 6 — Metrics, dashboard, eval | README results table has **real numbers, no placeholders** | 🟡 **Built, numbers blocked** — harness, dashboard, README done (D21/D23/D24); cost+latency need a working key |
+| 6 — Metrics, dashboard, eval | README results table has **real numbers, no placeholders** | ✅ **Complete 2026-09-21** — cost and latency measured live (D33). Quality still ungraded, and the README says so. |
 
 ## What exists
 

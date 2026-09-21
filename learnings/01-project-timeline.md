@@ -820,3 +820,215 @@ It needs the `anthropic` SDK — not on SPEC section 3's approved list — and a
 key this project has never had. **Adding a dependency is a conversation, not a
 default taken while the owner is away.** The human path needs neither, which is
 why D23 recommended building it first.
+
+---
+
+## The day the key worked — first live measurement
+
+**2026-09-21.** The project's oldest blocker was never a code problem and never
+a key problem. It was one environment variable.
+
+### The 401 that lasted three keys and several weeks
+
+A newly created Groq key returned `401 Invalid API Key`. So had the two before
+it. The working assumption each time was that the key was bad.
+
+The Groq console said: **0 API Calls · Last Used: Never.**
+
+> A rejected key still records an attempt. **Zero attempts means that key was
+> never sent.** The evidence did not point at a bad key — it ruled the key out
+> of the story entirely.
+
+Commands run, and what they returned:
+
+```powershell
+[Environment]::GetEnvironmentVariable('GROQ_API_KEY','User')   # ...PxcK  <- the dead key
+# .env held                                                    # ...yfoX  <- the new one
+```
+
+`load_dotenv()` **does not overwrite a variable already present in the
+environment.** A `GROQ_API_KEY` had been set at Windows **User** scope at some
+point — persistent across reboots and terminals, invisible from inside the
+project folder. Every run read `.env`, saw the variable already set, and kept
+the corpse.
+
+Cleared with:
+
+```powershell
+[Environment]::SetEnvironmentVariable('GROQ_API_KEY',$null,'User')
+```
+
+**Stage 1's last open criterion — a live `200` — closed the same minute.**
+
+### The fix was not removing the variable
+
+That fixes today. So `.env` loading moved into `config.load_env()`, which
+compares the two and **warns on stderr** whenever the environment shadows a
+differing `.env` value, printing the last four characters of each and the exact
+command that clears it.
+
+> It prints the last four characters and **never the key.** Enough to tell two
+> secrets apart, useless in a log. That rule was written after an actual leak
+> earlier in this project: verify a secret by its *properties* — length,
+> prefix, quoting, whitespace — never by printing it.
+
+Recorded as **D29**.
+
+### Then four more things broke, in order
+
+**1. A 200 with an empty answer.** `openai/gpt-oss-*` are reasoning models:
+they think in a separate `reasoning` field, billed as completion tokens, never
+returned in `content`. With `max_tokens=20` the budget went entirely to
+reasoning. A paid-for, successful, empty response.
+
+`groq.py` now raises `ProviderServerError` instead of returning `""`.
+
+> An empty string is indistinguishable from an answer to every layer above. It
+> would be **cached**, **logged as a success**, and **counted as a cheap win**.
+> The cheapest possible answer is the one that says nothing — a cost-optimising
+> router that treats silence as success has its incentives pointing the wrong
+> way. (**D32**)
+
+**2. A cache hit from a ghost.** The first live `/v1/chat` came back
+`status: cached`, 0 tokens, $0.00. Earlier `MODELMUX_MOCK_PROVIDERS=1` runs had
+written **canned mock answers into the real Redis.** Flushed with
+`redis-cli FLUSHDB` before every real run thereafter.
+
+> The mock provider prints a loud banner. The cache it fills does not. A safety
+> mechanism that announces itself at write time and stays silent at read time
+> is only half a mechanism.
+
+**3. `KeyError: 'routing'` on the first hard prompt.** It classified `large` →
+anthropic → no key → no response. The held-out set sends **16 of 32** there, so
+the eval could not finish at all.
+
+The large tier now lists **two** providers — anthropic first, `gpt-oss-120b`
+second. The provider *list* (D4, SPEC §7) had existed since Stage 2 and had
+never held more than one entry. (**D30**)
+
+**4. `no successful pairs (32 attempted)`.** `run_eval.py` imports `config`,
+never `main` — and `.env` loading lived in `main`. **The eval harness had never
+loaded environment variables in its life.** Fixed by D29's move; all four
+`eval/` entry points now call `config_module.load_env()`.
+
+### The mistake that matters most: I published wrong numbers
+
+The first completed run reported **$11.51 routed / $17.97 baseline per 1k**.
+Both were wrong by roughly **40x**.
+
+`run_eval.py` priced by **tier** — `providers[0]`, which is Anthropic — while
+every single call was answered by Groq via fallback. It was pricing
+`gpt-oss-120b` output at **Claude Opus 5 rates**.
+
+The true figures: **$0.4121 / $0.4411**.
+
+**What caught it:** the projection computed afterwards came out *identical* to
+the measurement. Two numbers that differ by construction cannot agree exactly.
+
+> The savings **percentage** was barely affected — both columns were inflated
+> by nearly the same factor — so nothing about the headline looked wrong. **A
+> ratio can survive a bug that destroys both of its terms.**
+
+> This project is a claim about cost. **A bug in the thing that measures cost
+> is worse than a bug in the thing that spends it.** A routing bug shows up as
+> a bad answer; a pricing bug shows up as a confident number in a README that
+> nobody re-derives.
+
+`run_eval.py` already refused to run against mock providers without
+`--simulated`, on the principle that a plausible fake beats no number. It then
+produced a plausible fake out of *real* data, through a path nobody guarded.
+
+Fixed with `config.cost_for_provider(tier, provider_name, ...)`, which prices
+by the provider that actually answered. Server and eval now share it.
+(**D31**)
+
+### What the first live run actually measured
+
+32 prompts, 0 failures, total spend **$0.027**.
+
+| | ModelMux | baseline | |
+|---|---|---|---|
+| p50 latency | **2,803 ms** | 6,973 ms | **2.5x faster** |
+| p95 latency | 9,037 ms | 9,019 ms | unchanged |
+| cost / 1k measured | $0.4121 | $0.4411 | 6.6% |
+| cost / 1k projected | $11.49 | $18.25 | 37.1% |
+
+> **A router's savings are bounded by the price spread it is given.** With one
+> key, `large` *is* `gpt-oss-120b` (D30) — the same model as `mid`. The router
+> sent 16 of 32 prompts there, where routed and baseline are byte-for-byte the
+> same call. Half the traffic had nothing to save; the rest had a 2x spread to
+> save from. Perfect classification earns nothing on a flat ladder.
+
+> **The honest headline from the first live run is speed, and speed was never
+> the goal.** 2.5x at the median, from real calls, with no repricing and no
+> assumptions. p95 is unchanged because the tail is the hard prompts, which
+> route large either way — routing improves the *typical* request and leaves
+> the worst case alone.
+
+**D3's assumption, finally a number:** the baseline emitted **1.04x** the
+routed tier's output tokens (22,713 vs 21,844). Approximately unbiased; the
+savings figure understates by about 4%. (**D33**)
+
+### Adding a provider broke a test, and the test was right
+
+`test_provider_failure_still_writes_a_row` began failing. The row was still
+written, the status was still `error` — but the message had become:
+
+```
+all providers failed; last error: circuit open -- skipped
+```
+
+Both statements true; only one useful. `dispatch()` reported `trail[-1].error`,
+and with a longer chain the last entry is always a skip *after* the breaker
+tripped — the symptom, recorded once the cause had scrolled past.
+
+`Attempt` gained a `skipped` flag; the reported error is now the last provider
+actually **called**. A boolean, not a match on the message string, because the
+string is for humans and should stay free to change.
+
+> The tempting fix was to relax the assertion — the contract held, after all.
+> But it was testing something real: **that a failure explains itself.** A row
+> recording the wrong reason is a quieter version of dropping it. (**D34**)
+
+### One failure left open, with the wrong guess recorded too
+
+`test_classification_is_within_budget` intermittently fails in the full suite
+at a median of **85ms** against a 20ms budget — while passing at 11-12ms alone.
+
+Not sampling noise: every one of the seven samples was 5-11x the isolated
+figure. Not the HTTP path (it reads the server's own `classify_ms`). Not test
+ordering. Not this session's changes.
+
+I guessed torch thread contention and wrote a probe to measure it. **The probe
+was wrong** — it generated load with pure-Python busy loops, which contend on
+the GIL rather than on torch's thread pool. It hung, produced no reading, and
+was killed rather than tuned.
+
+> **So the cause is recorded as unknown.** Writing the untested hypothesis into
+> the project as the explanation would be the same category of error as the
+> pricing bug above: a confident claim nobody re-derived. (**D35**)
+
+### Files touched
+
+| File | Change |
+|---|---|
+| `app/config.py` | `load_env()` + shadow warning; `cost_for_provider()` |
+| `app/main.py` | uses `load_env()`; prices per provider |
+| `app/providers/groq.py` | empty-content guard |
+| `app/resilience.py` | `Attempt.skipped`; root-cause error selection |
+| `config.yaml` | large tier: anthropic + groq fallback |
+| `eval/*.py` | all four entry points load the environment |
+| `tests/test_resilience.py` | regression test for the reported error |
+| `README.md` | measured results replace "Not measured" |
+
+**131 tests** (130 + 1 added). The suite goes green except for D35's open flake.
+
+### The lesson worth keeping
+
+> Four of the five bugs found today were in the **measurement** path, not the
+> product: no environment in the eval harness, wrong prices in the eval
+> harness, a cache full of fakes, and a test whose timing nobody trusts. The
+> router itself was fine.
+>
+> **The instrument gets less scrutiny than the thing it measures, and it is the
+> instrument that decides what you believe.**

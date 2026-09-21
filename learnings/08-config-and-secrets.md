@@ -56,6 +56,42 @@ load_dotenv()          # copies .env into os.environ
 os.environ["GROQ_API_KEY"]
 ```
 
+#### The precedence rule that costs people weeks
+
+**`load_dotenv()` does not overwrite a variable that is already set in the
+environment.** `.env` fills in what is *missing*; it never wins a conflict.
+
+```python
+load_dotenv()                  # os.environ wins
+load_dotenv(override=True)     # .env wins -- almost never what you want
+```
+
+This is deliberate and correct. A real deployment injects real variables, and a
+stray `.env` file left in an image must not be able to override production
+credentials. `.env` is a convenience for local development, not a source of
+truth.
+
+**The cost of being right here is that it is silent.** Nothing warns you that
+the file you just edited is being ignored. On Windows the trap is worse,
+because a variable can be set at three scopes:
+
+| Scope | Lifetime | Set by |
+|---|---|---|
+| Process | this terminal only | `$env:NAME = "x"` |
+| **User** | **permanent, survives reboots** | `[Environment]::SetEnvironmentVariable(..., 'User')` |
+| Machine | permanent, all users | same, with `'Machine'` |
+
+A **User**-scope variable set once, months ago, is invisible from inside the
+project and outlives every terminal you open.
+
+```powershell
+[Environment]::GetEnvironmentVariable('GROQ_API_KEY','User')     # inspect
+[Environment]::SetEnvironmentVariable('GROQ_API_KEY',$null,'User')  # remove
+```
+
+The Unix equivalent hides in `~/.bashrc`, `~/.zshrc` or `~/.profile` and is
+exactly as durable.
+
 ### The critical git caveat
 
 **git only ignores files it is not already tracking.** If a secret is ever
@@ -157,6 +193,52 @@ And upstream error bodies are truncated before being returned:
 detail = (detail or response.text)[:200]
 ```
 
+### The mistake that cost weeks: the environment shadowed `.env`
+
+**Every API key this project ever had returned 401** — three keys, several
+weeks. The conclusion each time was "the key is bad".
+
+The Groq console showed the newest key at **0 API Calls, Last Used: Never.**
+
+> A rejected key still records an attempt. **Zero attempts means that key was
+> never sent.** The evidence did not suggest a bad key — it ruled the key out
+> of the story entirely.
+
+A `GROQ_API_KEY` had been set at Windows **User** scope long before. Every run
+loaded `.env`, found the variable present, and kept the dead value.
+
+**Ask what evidence rules out, not what it suggests.** "401" invites you to
+look at the key. "0 calls" tells you nothing ever reached the key at all, which
+points at the process instead — a much smaller place to search.
+
+### The fix: make shadowing impossible to miss
+
+Deleting the variable fixes today, not the next one. `.env` loading moved into
+`config.load_env()`, which compares `.env` against the environment and warns on
+stderr whenever they differ:
+
+```
+!! GROQ_API_KEY in your environment SHADOWS the value in .env
+   environment ends ...PxcK   .env ends ...yfoX
+   the environment wins; .env is being ignored for this variable
+```
+
+Two design points worth defending:
+
+- **It warns; it never changes behaviour.** Silently switching to `.env` would
+  break the deployment case the precedence rule exists to protect.
+- **It prints the last four characters, never the value** — enough to tell two
+  secrets apart, useless in a log. See the leak below; this project learned
+  that rule the hard way.
+
+**It lives in `config.py`, not `main.py`.** It was in `main.py`, and the eval
+scripts import `config` but never `main` — so the entire measurement harness
+had never loaded environment variables in its life. Moving it fixed a bug
+nobody had connected to it. `config.py` already owns where settings come from,
+and "where does the environment come from" is the same question.
+
+See `DECISIONS.md` D29, D31.
+
 ### The mistake: I printed a secret
 
 While debugging the 401, I ran `od -c .env` to inspect byte encoding. My
@@ -184,6 +266,21 @@ Never in source or committed config. Environment variables at minimum, injected
 by the platform; a secret manager (Vault, AWS Secrets Manager, sealed secrets)
 in production, ideally with rotation. Commit a `.env.example` documenting the
 names, never the values.
+
+**Q: You put a key in `.env`, the app still says 401. Where do you look?**
+First establish whether the key was ever *sent*: most consoles show a call count
+or last-used timestamp. Zero calls means the problem is local, not the
+credential. The usual cause is that `load_dotenv()` **does not override a
+variable already in the environment** — so something set it earlier: a shell
+profile, a Docker `-e` flag, a CI secret, or on Windows a permanent User-scope
+variable. Compare the two values by their last four characters, never by
+printing them.
+
+**Q: Why does `load_dotenv()` let the environment win? That seems unhelpful.**
+Because production injects real variables, and a `.env` accidentally baked into
+an image must never be able to override them. Development convenience must not
+outrank deployment configuration. The right response to the silence is to
+*detect and warn* on a conflict, not to flip the precedence.
 
 **Q: A secret got committed to git. What now?**
 **Revoke it immediately** — that's the only step that truly matters, because it

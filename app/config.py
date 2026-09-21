@@ -10,6 +10,7 @@ request, hours later.
 """
 
 import os
+import sys
 from pathlib import Path
 
 import yaml
@@ -21,6 +22,47 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 CONFIG_PATH = PROJECT_ROOT / "config.yaml"
 
 TIER_NAMES = ("small", "mid", "large")
+
+
+def load_env() -> None:
+    """Load .env, and SHOUT if the environment already disagrees with it.
+
+    `load_dotenv()` does not override a variable that is already set. That is
+    correct 12-factor precedence -- the real environment should win over a dev
+    convenience file -- but it is SILENT, and silence cost this project weeks.
+
+    A stale `GROQ_API_KEY` left in the Windows user environment shadowed every
+    new key pasted into .env. The console showed "0 API Calls" while the app
+    reported "Invalid API Key", because the new key was never sent. Nothing in
+    either place said the two disagreed.
+
+    Precedence is unchanged. The difference is that a shadowed value now
+    announces itself.
+    """
+    from dotenv import dotenv_values, load_dotenv
+
+    file_values = dotenv_values()
+    shadowed = [
+        name for name, value in file_values.items()
+        if value and os.environ.get(name) not in (None, value)
+    ]
+
+    load_dotenv()
+
+    for name in shadowed:
+        env_tail = os.environ.get(name, "")[-4:]
+        file_tail = (file_values.get(name) or "")[-4:]
+        clear = ("[Environment]::SetEnvironmentVariable('" + name
+                 + "', $null, 'User'); Remove-Item Env:" + name)
+        print("", file=sys.stderr)
+        print(f"[env] WARNING: {name} is set in the environment AND in .env,",
+              "and they differ.", file=sys.stderr)
+        print(f"[env]   environment wins: ...{env_tail}"
+              f"   (.env has ...{file_tail})", file=sys.stderr)
+        print("[env]   To use the .env value, clear the variable:",
+              file=sys.stderr)
+        print(f"[env]     PowerShell: {clear}", file=sys.stderr)
+        print("", file=sys.stderr)
 
 
 class ConfigError(Exception):
@@ -83,6 +125,26 @@ class Config:
         if not providers:
             raise ConfigError(f"tier '{tier}' has no providers configured")
         return providers[0]
+
+    def cost_for_provider(self, tier: str, provider_name: str,
+                          tokens_in: int, tokens_out: int) -> float:
+        """Cost priced by the provider that ACTUALLY answered.
+
+        `cost_usd()` below prices by tier, which means `providers[0]`. That is
+        correct only while no within-tier fallback has fired. The moment the
+        second provider in a tier serves a request -- which is exactly what the
+        provider LIST exists for (D4) -- pricing by `providers[0]` bills the
+        request to a provider that never ran, at a rate that may differ by
+        orders of magnitude.
+
+        Falls back to the tier price if the name is not in this tier, so a
+        caller can never get an exception instead of a number.
+        """
+        for entry in self.tiers[tier].get("providers") or []:
+            if entry["name"] == provider_name:
+                return (tokens_in / 1000 * entry["cost_per_1k_input"]
+                        + tokens_out / 1000 * entry["cost_per_1k_output"])
+        return self.cost_usd(tier, tokens_in, tokens_out)
 
     def cost_usd(self, tier: str, tokens_in: int, tokens_out: int) -> float:
         """Cost of a call, counting input and output separately.

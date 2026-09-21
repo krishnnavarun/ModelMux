@@ -328,3 +328,45 @@ def test_trail_records_every_attempt(cfg):
     providers_tried = [a.provider for a in result.trail]
     assert "groq" in providers_tried and "anthropic" in providers_tried
     assert any(a.error for a in result.trail), "failures must be recorded"
+
+
+def test_the_reported_error_names_the_cause_not_the_skip(cfg):
+    """A request that dies after a breaker opened must still report WHY.
+
+    Once groq's circuit trips, every later entry in the trail reads "circuit
+    open -- skipped". That is true and useless: it names the symptom. The
+    reported error has to be the last provider actually CALLED, or an operator
+    reading the failure row learns nothing about the outage.
+
+    Regression test for the bug that appeared the moment the large tier gained
+    a second provider (DECISIONS.md D30, D34).
+    """
+    broken = MockProvider(fail_with="server_error")
+    breakers = CircuitBreakers(cfg)
+
+    # Open groq's breaker, then make groq the ONLY provider. Every tier will
+    # skip it, so the final trail entry is a skip rather than a failure.
+    for _ in range(cfg.resilience["circuit_failure_threshold"]):
+        breakers.record_failure("groq", "mock 500")
+
+    with pytest.raises(resilience.AllProvidersFailed) as exc:
+        _dispatch(cfg, {"groq": broken}, breakers)
+
+    assert exc.value.all_open is True, "nothing was called, so this is a 503"
+    # Nothing was ever called, so the skip IS the only thing to report.
+    assert "circuit open" in str(exc.value)
+
+    # Now the case that actually regressed: one real failure, THEN skips.
+    breakers2 = CircuitBreakers(cfg)
+    with pytest.raises(resilience.AllProvidersFailed) as exc2:
+        _dispatch(cfg, {"groq": broken, "anthropic": broken}, breakers2)
+
+    message = str(exc2.value)
+    assert "mock 500" in message, (
+        "the reported error must name the real failure, not the circuit skip "
+        f"that followed it; got: {message}")
+
+    # The skips are not discarded -- they are just not the headline.
+    trail = exc2.value.trail
+    assert any(a.skipped for a in trail), "skips must still be recorded"
+    assert any(a.error and not a.skipped for a in trail)

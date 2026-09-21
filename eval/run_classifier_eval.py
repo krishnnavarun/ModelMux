@@ -29,6 +29,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app import config as config_module  # noqa: E402
+
+config_module.load_env()   # .env, with a warning if the environment shadows it
 from app import router, tokens  # noqa: E402
 from app.classifier import embedding  # noqa: E402
 

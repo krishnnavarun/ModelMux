@@ -14,13 +14,14 @@ never have to be rewritten around it.
 
 import hashlib
 import json
+import os
+import sys
 import time
 import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
 import httpx
-from dotenv import load_dotenv
 from fastapi import BackgroundTasks, FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
 
@@ -32,7 +33,9 @@ from app.providers.base import ProviderError  # noqa: F401  (re-exported for tes
 from app.schemas import ChatRequest
 
 # Read .env into the environment before anything reads os.environ.
-load_dotenv()
+# Lives in config.py so the eval scripts -- which never import main --
+# get the same loading AND the same shadowing warning.
+config_module.load_env()
 
 # Loaded at import so a broken config.yaml stops the process immediately with
 # a clear message, rather than surfacing as a KeyError on the first request.
@@ -453,7 +456,10 @@ async def chat(request: ChatRequest, background: BackgroundTasks,
         return JSONResponse(status_code=status_code, content=body)
 
     # --- Cost -------------------------------------------------------------
-    cost_usd = config.cost_usd(tier, result.tokens_in, result.tokens_out)
+    # Priced by the provider that ACTUALLY answered, not by the tier's first
+    # entry -- within-tier fallback means those can differ.
+    cost_usd = config.cost_for_provider(
+        tier, dispatched.provider_name, result.tokens_in, result.tokens_out)
 
     # The counterfactual: what this exact exchange would have cost on the
     # baseline tier. Every savings claim in the README is a sum of the gap

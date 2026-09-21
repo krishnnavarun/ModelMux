@@ -80,5 +80,12 @@ Ranked by how much they demonstrate:
 | Two required features missing for 4 days past 113 green tests | Tests verify what you wrote, not what you failed to write |
 | Large-tier price was a previous generation's rate, flagged UNVERIFIED for 2 weeks | A known-unverified number in a load-bearing position is a bug with a comment on it |
 | Exported a blind spot-check that nothing could read back | Half a mechanism is a gesture at the problem, not a solution |
+| Chased a 401 across three keys for weeks; a User-scope env var was shadowing `.env` | Reading evidence for what it RULES OUT: "0 API calls" means that key was never sent |
+| Published cost numbers inflated 40x, from pricing every call at the tier's first provider | A bug in the thing that measures cost is worse than one in the thing that spends it |
+| The savings % looked fine because both terms were inflated alike | A ratio can survive a bug that destroys both of its terms |
+| A reasoning model returned HTTP 200 with empty content, and it nearly got cached as a win | The cheapest answer is silence — a cost optimiser must not be paid for it |
+| Mock-provider runs poisoned the real Redis with canned answers | A guard that announces itself on write and stays silent on read is half a guard |
+| The eval harness had never loaded `.env` in its life | The instrument gets less scrutiny than the thing it measures |
+| Guessed torch thread contention, wrote a probe that measured the GIL instead, recorded it as unknown | Refusing to promote an untested hypothesis into an explanation |
 
 Full write-ups in `01-project-timeline.md`.

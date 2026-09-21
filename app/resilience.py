@@ -189,6 +189,10 @@ class Attempt:
     model: str
     tier: str
     error: str | None = None
+    # True when the provider was never called because its breaker was open.
+    # A skip is a CONSEQUENCE of earlier failures, not a failure itself, so it
+    # must not be reported as the reason the request died. See DECISIONS D34.
+    skipped: bool = False
 
 
 @dataclass
@@ -268,7 +272,7 @@ async def dispatch(prompt: str, tier: str, max_tokens: int, config,
             if not breakers.allows(name):
                 saw_open_circuit = True
                 trail.append(Attempt(name, entry["model"], current_tier,
-                                     "circuit open -- skipped"))
+                                     "circuit open -- skipped", skipped=True))
                 continue
 
             if tier_index > 0 or provider_index > 0:
@@ -295,7 +299,19 @@ async def dispatch(prompt: str, tier: str, max_tokens: int, config,
     # Nothing worked. If we never actually called anybody because every circuit
     # was open, that is a 503 ("try later"), not a 502 ("they broke").
     all_open = saw_open_circuit and not tried_any
-    last = trail[-1].error if trail else "no providers configured"
+
+    # Report the last provider that was actually CALLED, not the last entry in
+    # the trail. Once a breaker opens, every later entry is "circuit open --
+    # skipped" -- true, but it names the symptom and buries the cause. An
+    # operator reading the log needs "mock 500", not "we declined to try".
+    # Skips are still in the trail; they are just not the headline.
+    called = [a for a in trail if not a.skipped]
+    if called:
+        last = called[-1].error
+    elif trail:
+        last = trail[-1].error
+    else:
+        last = "no providers configured"
     raise AllProvidersFailed(
         f"all providers failed; last error: {last}",
         attempts=attempts, trail=trail, all_open=all_open,

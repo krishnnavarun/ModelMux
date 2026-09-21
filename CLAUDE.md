@@ -71,34 +71,68 @@ and move on.
 
 ## Current state (2026-09-21)
 
-**Every stage is built. Stages 1-5 complete; Stage 6 complete except its
-measurements, which need a working API key.**
+**All six stages built. The key finally worked** -- Stage 1's last criterion
+(a live `200`) closed on 2026-09-21, and cost and latency are measured rather
+than projected for the first time.
 
-`130 tests passing`, 26 decisions recorded, 19 learnings files.
+`131 tests passing`, 35 decisions recorded, 19 learnings files.
 
-### The one blocker, and it is not a code problem
+### The 401 that lasted weeks was never the key (D29)
 
-**No API key has ever worked.** The `GROQ_API_KEY` in `.env` is well-formed and
-returns 401; there are no Google or Anthropic keys at all. **No adapter has
-ever spoken to a live server** — all three are verified against synthetic
-responses only.
+A **Windows User-scope** `GROQ_API_KEY` shadowed `.env`. `load_dotenv()` does
+not overwrite a variable already in the environment, so every run kept the dead
+key. The Groq console's **"0 API Calls"** was the clue: a rejected key still
+records an attempt, so zero attempts meant that key was never sent.
 
-That blocks exactly three things:
+`config.load_env()` now warns loudly whenever the environment shadows a
+differing `.env` value -- printing the last four characters of each, never the
+key.
 
-1. Stage 1's last item (a live `200`)
-2. The README results table: cost per 1,000 requests, p50/p95 latency
-3. Answer quality
+### First live measurement (D33)
 
-Everything else is measured and reproducible without a key.
+32 held-out prompts, 0 failures, total spend $0.027.
 
-**When a key works, one command fills the table:**
+| | ModelMux | baseline | |
+|---|---|---|---|
+| p50 latency | **2,803 ms** | 6,973 ms | **2.5x faster** |
+| cost / 1k, measured | $0.4121 | $0.4411 | 6.6% saved |
+| cost / 1k, projected at configured tiers | $11.49 | $18.25 | 37.1% saved |
+
+**Quote the measured row, and say which ladder it used.** With one key the
+large tier falls back to `gpt-oss-120b` (D30) -- the same model as mid -- so
+the ladder compresses to 2x and 16 of 32 prompts route somewhere the baseline
+would have gone anyway. A router's savings are bounded by the price spread it
+is given.
+
+The projection reprices *measured* token counts at the configured rates. It is
+arithmetic, not simulation, and it is labelled as projected everywhere.
+
+**D3's bias, finally measured:** the baseline emitted 1.04x the routed tier's
+output tokens. Approximately unbiased.
+
+### Two things to know before trusting a number here
+
+- **Quality is still ungraded.** The blind spot-check is exported and
+  `eval/grade_quality.py` reads it; nobody has filled one in. No key needed.
+- **The classification budget test is flaky in the full suite (D35, OPEN).**
+  11-12ms alone, intermittently ~85ms in-suite against a 20ms budget. Cause
+  unknown -- not sampling noise, not the HTTP path, not ordering. My torch
+  thread-contention hypothesis was never confirmed; the probe measured the GIL
+  instead and was discarded. **Do not quote 11-12ms without saying it was an
+  idle process.**
+
+### Re-running the measurement
 
 ```powershell
+redis-cli FLUSHDB     # mock-provider runs poison the real cache with canned answers
 C:\dev\modelmux-venv\Scripts\python.exe eval/run_eval.py --set holdout.json
 ```
 
 It **refuses** to run against mock providers without `--simulated`, because a
-plausible fake in a results table is worse than no number at all.
+plausible fake in a results table is worse than no number at all. That guard
+did not stop it publishing figures inflated 40x from real data (D31) -- the
+eval priced every call at the tier's *first* provider while Groq answered all
+of them. Server and eval now share `config.cost_for_provider()`.
 
 ### Still open for the project owner
 
@@ -109,6 +143,12 @@ plausible fake in a results table is worse than no number at all.
 - ~~Anthropic's large-tier prices are UNVERIFIED~~ — **VERIFIED 2026-09-21**
   (D27). They were `claude-sonnet-5` at Sonnet **4.6** rates: wrong model, wrong
   generation's price. Now `claude-opus-5` at 0.005 / 0.025 per 1K.
+- **A second provider key** (Anthropic or Google). Everything runs on one Groq
+  key today, which is why the measured saving is 6.6% rather than the 37% the
+  configured ladder projects. This is the single input that would most improve
+  the result.
+- **D35, open:** the classification budget test's in-suite flake. Cause
+  unknown; a correct experiment is described at the end of the entry.
 
 ### Deliberately cut
 
@@ -188,10 +228,12 @@ outside this OneDrive-synced folder. See `DECISIONS.md` D7.
 - **Groq models and prices: VERIFIED 2026-09-08** against console.groq.com/docs/models.
   Small = `openai/gpt-oss-20b`, mid = `openai/gpt-oss-120b`. The Llama models
   are Enterprise/Contact-Sales and unusable on a developer key. (D14)
-- **Large tier (Anthropic): VERIFIED 2026-09-21** (D27). `claude-opus-5` at
-  0.005 / 0.025 per 1K. It previously read `claude-sonnet-5` at 0.003 / 0.015 —
-  which is Sonnet **4.6** pricing, so it was neither the model named nor any
-  current rate. Still no key, so no live call has been made; the *prices* are
-  verified, the *adapter* is not.
+- **Large tier (Anthropic): prices VERIFIED 2026-09-21** (D27).
+  `claude-opus-5` at 0.005 / 0.025 per 1K. It previously read
+  `claude-sonnet-5` at 0.003 / 0.015 — which is Sonnet **4.6** pricing, so it
+  was neither the model named nor any current rate.
+  **The adapter is still unverified**: there is no Anthropic key, so the large
+  tier is served by its Groq fallback (D30) and no Anthropic call has ever been
+  made. The *prices* are verified; the *adapter* is not.
 - Mid tier is **temporarily on Groq** so the router can be exercised with one
   key; the Google entry is commented in `config.yaml` ready to swap back.

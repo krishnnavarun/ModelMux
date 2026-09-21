@@ -2,10 +2,11 @@
 
 Cost-aware inference routing. ModelMux sits between your application and multiple LLM providers, classifies every incoming request, and dispatches it to the cheapest model tier that can actually handle it.
 
-> **Status:** in development. Stages 1-5 complete; Stage 6 partial.
-> Cost and latency remain unmeasured because no API key has ever worked --
-> see Results. Routing and cache figures below are real and reproducible
-> without a key.
+> **Status:** all six stages built. Cost and latency were measured live for
+> the first time on 2026-09-21, against Groq. Only one provider key exists, so
+> the large tier is served by a Groq fallback -- which makes the measured
+> savings much smaller than the configured ladder would give, and the README
+> reports both figures separately. Answer quality is still ungraded.
 
 ---
 
@@ -58,17 +59,54 @@ Every request that resolves from cache costs nothing and returns in milliseconds
 
 ## Results
 
-### What is measured
+Measured **2026-09-21** on the 32-prompt held-out set, live against Groq.
+Reproduce with `python eval/run_eval.py --set holdout.json`.
 
-These numbers come from `eval/run_classifier_eval.py` and
-`eval/tune_cache_threshold.py`, and need no API key — routing and cache
-matching are pure functions of the prompt.
+### Latency — the clearest win
 
-**Classifier accuracy**, held-out set (n=32), never used for tuning:
+| | ModelMux | Baseline (everything to the top tier) |
+|---|---|---|
+| p50 latency | **2,803 ms** | 6,973 ms |
+| p95 latency | 9,037 ms | 9,019 ms |
+
+**2.5× faster at the median.** Routing the easy half of the traffic to a
+smaller model halves typical response time. p95 is unchanged, and that is
+expected — the tail is dominated by the hard prompts, which route to the big
+model either way.
+
+### Cost — and why the honest number is small
+
+| | ModelMux | Baseline | Saved |
+|---|---|---|---|
+| **Measured** (one API key) | $0.4121 / 1k req | $0.4411 / 1k req | **6.6%** |
+| **Projected** (configured ladder) | $11.49 / 1k req | $18.25 / 1k req | **37.1%** |
+
+**The measured 6.6% is the real number, and it is small for a reason worth
+understanding.** Only a Groq key exists, so the large tier falls back to
+`gpt-oss-120b` — the same model the mid tier uses. That compresses the ladder to
+a 2× spread, and the router sent 16 of 32 prompts to the top tier, where routed
+and baseline are then *identical*. There is almost nothing left to save.
+
+The projection reprices the same measured token counts at the configured tiers
+(`gpt-oss-20b` → `gpt-oss-120b` → `claude-opus-5`). It is arithmetic on real
+measurements, not a simulation — but no Anthropic call was made, so it is a
+projection and labelled as one.
+
+**The lesson the measurement teaches: a router's savings are bounded by the
+price spread it has to work with.** Perfect classification earns nothing on a
+flat ladder.
+
+### Where the prompts went
+
+`small: 9 · mid: 7 · large: 16` — the classifier sends half the held-out set to
+the top tier, which is what a set built around hard reasoning prompts should
+produce.
+
+### Classifier accuracy, held-out (n=32)
 
 | mode | accuracy | routed too cheap | routed too expensive |
 |---|---|---|---|
-| token count only (the naive baseline) | 31% | 20 | 2 |
+| token count only (naive baseline) | 31% | 20 | 2 |
 | heuristic | **88%** | 4 | 0 |
 | embedding (k-NN) | 72% | 0 | 9 |
 | **hybrid — shipped** | 72% | **0** | 9 |
@@ -78,73 +116,64 @@ every too-cheap misroute, and a wrong cheap answer costs more in trust than a
 wrong expensive one costs in money. A single accuracy figure would have ranked
 the heuristic first and hidden that it sends hard prompts to weak models.
 
-**Cache**, measured on 35 labelled prompt pairs:
+### Cache
 
 | | |
 |---|---|
 | Hit rate on rephrasings | **80%** |
 | False hits on confusable pairs | **0%** |
 | Lookup at 10,000 entries | **11.2 ms** (budget 30 ms) |
-| Classification | **11–12 ms** p50 (budget 20 ms) |
+| Classification | **11–12 ms** p50 (budget 20 ms) — on an *idle* process; see below |
 
-### What is NOT measured, and why
+### The counterfactual bias, measured
 
-| Metric | Status |
-|---|---|
-| Cost per 1,000 requests | **Not measured** |
-| p50 / p95 latency, end to end | **Not measured** |
-| Answer quality | **Not measured** |
+`cost_if_large_usd` assumes the baseline would emit the same number of output
+tokens as the routed tier. `/v1/compare` and `run_eval.py` now check that
+instead of assuming it.
 
-**No API key has ever worked in this project.** Every provider adapter is
-verified against synthetic responses; none has spoken to a live server. Cost and
-latency figures require real calls, and a plausible-looking number produced from
-mock data would be worse than no number at all — so there isn't one.
+**Measured ratio: 1.04×** — the baseline was 4% more verbose, so the live
+savings figure understates reality by about that much. Approximately unbiased
+on this set. See `DECISIONS.md` D3.
 
-`eval/run_eval.py` **refuses to run** against mock providers unless
-`--simulated` is passed, and prefixes every line of such a run with
-`SIMULATED`. The moment a working key exists, one command fills this table:
+### Still not measured: answer quality
+
+**Nobody has graded the answers.** SPEC is explicit that *"cost savings mean
+nothing if the cheaper answers are worse"*, and that column is empty.
+
+`run_eval.py` exports a **blind** spot-check — which tier produced which answer
+is withheld from the grader and written to a separate key file —
+and `eval/grade_quality.py` scores it. Neither needs an API key.
 
 ```bash
-python eval/run_eval.py --set holdout.json
+python eval/grade_quality.py eval/results/spotcheck-<stamp>.json
 ```
 
-**Quality scoring is an undecided design question**, not a missing
-implementation — see `DECISIONS.md` D23. `run_eval.py` exports a blind
-spot-check file (which answer came from which tier is withheld from the grader
-and written to a separate key file) so quality can be graded by hand with no API
-access at all.
-
-### The savings figure carries a caveat
-
-`cost_if_large_usd` reprices **the token counts actually observed** at baseline
-rates. That is *"same tokens, baseline prices"* — not what the large tier would
-truly have cost, since a larger model usually answers at a different length.
-
-The caveat travels in the `/v1/stats` payload itself (`savings_caveat`) so no
-dashboard can drop it by accident, and `run_eval.py` **measures** the bias
-directly by comparing output-token counts from both tiers. See `DECISIONS.md`
-D3.
+Until that is filled in, the cost and latency figures above are half a result.
 
 ### Limitations worth stating plainly
 
-- **Quality has not been graded.** `eval/run_eval.py` exports a blind
-  spot-check and `eval/grade_quality.py` scores it — gradeable today, no key
-  needed — but nobody has filled one in.
+- **One API key.** No adapter has spoken to Google or Anthropic; the large tier
+  is served by a Groq fallback. The Anthropic *prices* are verified, the
+  *adapter* is not.
 - **Every accuracy number is measured against hand-labels written by one
-  person** — the same person who built the classifier. Treat them as an upper
-  bound.
-- **n=32 held out.** One prompt is three percentage points. These figures have
-  wide error bars.
+  person** — the same person who built the classifier. Treat as an upper bound.
+- **n=32 held out.** One prompt is three percentage points.
 - **35 cache pairs cannot map the space of confusable prompts.** Zero false hits
   *there* is not zero false hits in production.
-- **Semantic caching can serve one user's answer to another.** That is inherent
-  to shared caching, not a bug awaiting a fix. Mitigated by a measured
-  threshold, a lexical inversion guard, and a `bypass_cache` flag — and
-  demonstrated by a test that deliberately produces a wrong answer at a loose
-  threshold.
-- **Circuit breaker state is per process.** With several workers each keeps its
-  own view; the cost is uneven traffic to a failing provider, never incorrect
-  answers.
+- **Semantic caching can serve one user's answer to another.** Inherent to
+  shared caching, not a bug awaiting a fix — mitigated by a measured threshold,
+  a lexical inversion guard, and `bypass_cache`, and demonstrated by a test that
+  deliberately produces a wrong answer at a loose threshold.
+- **Circuit breaker and rate limiter state are per process.** With several
+  workers each keeps its own view.
+- **The 11–12 ms classification figure was measured on an idle process, and
+  the test that guards it is flaky in the full suite** — intermittently
+  reporting a median of 85 ms, five to eleven times the budget. The cause is
+  unknown: it is not sampling noise, not the HTTP path, and not test ordering.
+  It is recorded as open in `DECISIONS.md` D35 rather than tuned away, because
+  a busy process is exactly what production looks like.
+
+The whole evaluation run cost **$0.027**.
 
 ---
 
@@ -213,26 +242,38 @@ Tiers are defined in `config.yaml`:
 ```yaml
 tiers:
   small:
-    provider: groq
-    model: <model-name>
-    cost_per_1k_input: 0.00005
-  mid:
-    provider: google
-    model: <model-name>
-    cost_per_1k_input: 0.00030
+    providers:
+      - name: groq
+        model: openai/gpt-oss-20b
+        cost_per_1k_input: 0.000075
+        cost_per_1k_output: 0.0003
   large:
-    provider: anthropic
-    model: <model-name>
-    cost_per_1k_input: 0.00300
+    # A tier holds a LIST. The first reachable provider answers; the rest are
+    # within-tier fallback (DECISIONS.md D4). Anthropic is preferred here and
+    # fails fast without a key, so Groq serves the tier today.
+    providers:
+      - name: anthropic
+        model: claude-opus-5
+        cost_per_1k_input: 0.005
+        cost_per_1k_output: 0.025
+      - name: groq
+        model: openai/gpt-oss-120b
+        cost_per_1k_input: 0.00015
+        cost_per_1k_output: 0.0006
 
 cache:
-  similarity_threshold: 0.92
+  similarity_threshold: 0.88   # measured, not guessed -- DECISIONS.md D16
   ttl_seconds: 86400
 
-routing:
+classifier:
+  mode: hybrid
   escalate_on_low_confidence: true
-  confidence_threshold: 0.6
+  confidence_threshold: 0.60
 ```
+
+Cost is attributed to the provider that **actually answered**, not to the
+tier's first entry — otherwise a fallback would be billed at the price of the
+model it replaced. See `config.cost_for_provider()`.
 
 The cache similarity threshold is the most consequential setting in the project. Too loose and semantically different prompts share an answer; too tight and the hit rate collapses. See `DECISIONS.md` for how the current value was chosen.
 
@@ -305,7 +346,8 @@ app/
 eval/
   prompts.json       Evaluation set
   run_eval.py        Cost and quality benchmarking
-dashboard/           React frontend
+dashboard/
+  index.html         The whole dashboard: one file, no build step (D24)
 ```
 
 ### Request logging

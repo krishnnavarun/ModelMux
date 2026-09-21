@@ -54,6 +54,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import httpx  # noqa: E402
 
 from app import config as config_module  # noqa: E402
+
+config_module.load_env()   # .env, with a warning if the environment shadows it
 from app import resilience, router, tokens  # noqa: E402
 from app.classifier import embedding  # noqa: E402
 from app.providers import build_all  # noqa: E402
@@ -96,8 +98,13 @@ async def _answer(prompt: str, tier: str, cfg, providers, breakers,
         "text": result.text,
         "tokens_in": result.tokens_in,
         "tokens_out": result.tokens_out,
-        "cost_usd": cfg.cost_usd(dispatched.tier, result.tokens_in,
-                                result.tokens_out),
+        # Priced by the provider that ACTUALLY answered. `cost_usd(tier)` uses
+        # providers[0], which with within-tier fallback bills the request to a
+        # provider that never ran. Here that meant pricing gpt-oss-120b output
+        # at Claude Opus 5 rates -- a ~40x error in BOTH columns of the report.
+        "cost_usd": cfg.cost_for_provider(
+            dispatched.tier, dispatched.provider_name,
+            result.tokens_in, result.tokens_out),
         "complexity_score": score,
         "latency_ms": (time.perf_counter() - started) * 1000,
     }

@@ -70,11 +70,25 @@ tiers:
     #
     # Cheaper alternative, if the large tier should be less expensive:
     #   claude-sonnet-5   0.002 / 0.010 per 1K   ($2 / $10 per 1M)
+    # TWO providers, which is what the provider LIST was built for (D4).
+    # Anthropic is preferred. With no ANTHROPIC_API_KEY it fails fast with
+    # ProviderBadRequest (never retried -- deterministic), and within-tier
+    # fallback serves the request from Groq's largest available model instead.
+    #
+    # That is what lets the whole evaluation run on ONE key. The cost is
+    # attributed to whichever provider actually answered -- see
+    # config.cost_for_provider(). Savings measured this way are "vs
+    # gpt-oss-120b", a far smaller spread than "vs Claude Opus 5"; the report
+    # must say which baseline it used.
     providers:
       - name: anthropic
         model: claude-opus-5          # VERIFIED 2026-09-21
         cost_per_1k_input: 0.005      # VERIFIED  $5.00 / 1M
         cost_per_1k_output: 0.025     # VERIFIED  $25.00 / 1M
+      - name: groq
+        model: openai/gpt-oss-120b    # reachable fallback; VERIFIED 2026-09-08
+        cost_per_1k_input: 0.00015
+        cost_per_1k_output: 0.0006
 
 # Which tier the counterfactual "what would this have cost on the big model"
 # figure is priced against. Every savings claim in the README derives from this.

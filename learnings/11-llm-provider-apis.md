@@ -80,6 +80,32 @@ cost = (tokens_in / 1000 * rate_in) + (tokens_out / 1000 * rate_out)
 Providers return the authoritative counts in the response. **Use those for
 billing**, never a local estimate.
 
+### Reasoning models bill for tokens you never see
+
+A reasoning model (OpenAI's `o`-series and `gpt-oss-*`, Claude with extended
+thinking, DeepSeek-R1) generates an internal chain of thought before its
+answer. That reasoning is **billed as output tokens** and is usually **not**
+returned in the content field.
+
+```jsonc
+{
+  "choices": [{"message": {"content": "", "reasoning": "..."},
+               "finish_reason": "length"}],
+  "usage": {"completion_tokens": 20,
+            "completion_tokens_details": {"reasoning_tokens": 20}}
+}
+```
+
+Two consequences that surprise people:
+
+1. **`max_tokens` is a budget for reasoning *and* answer.** Set it too low and
+   reasoning consumes all of it, leaving `content` empty — a successful,
+   fully-billed response containing nothing.
+2. **Cost per answer is higher than the visible output suggests.** Any
+   cost model that counts characters returned will understate spend.
+
+`finish_reason: "length"` alongside empty content is the signature.
+
 ### Failure modes
 
 | Status | Meaning | Retry? |
@@ -90,6 +116,7 @@ billing**, never a local estimate.
 | 500/503 | provider broken | Yes |
 | 529 | Anthropic "overloaded" | Yes (non-standard code) |
 | 200 with no content | safety block (Gemini) | No — handle explicitly |
+| 200 with no content | reasoning ate `max_tokens` | Not as-is — raise the budget |
 
 ---
 
@@ -114,6 +141,34 @@ except (KeyError, IndexError, ValueError) as exc:
 
 **A 200 whose body isn't the shape you expect is still a failure.** Checking
 status alone isn't enough.
+
+### The empty answer we nearly counted as a win
+
+The first live call this project ever made returned **HTTP 200 with
+`content: ""`**. `openai/gpt-oss-*` are reasoning models and `max_tokens` was
+20 — the whole budget went to reasoning.
+
+```python
+# app/providers/groq.py
+choice = body["choices"][0]
+text = choice["message"]["content"]
+if not text:
+    raise ProviderServerError(
+        f"groq returned empty content (finish_reason={choice.get('finish_reason')}); "
+        "the token budget was likely consumed by reasoning tokens -- raise max_tokens")
+```
+
+**Why raise rather than return `""`?** Because an empty string is
+indistinguishable from an answer to every layer above it. It would have been
+**cached** — poisoning that prompt for the whole TTL — **logged as a success**,
+and **counted in the savings figure as a cheap win**.
+
+> The cheapest possible answer is the one that says nothing. A cost-optimising
+> router that treats silence as success has its incentives pointing the wrong
+> way.
+
+Raising routes it into machinery that already exists: retry, then within-tier
+fallback, then a logged failure row. See `DECISIONS.md` D32.
 
 ### Anthropic's content blocks
 
@@ -182,6 +237,21 @@ in `specs.md`, and in DECISIONS.md D3.
 ---
 
 ## 4. Interview questions
+
+**Q: A provider returns 200 and an empty string. Is that success?**
+No. Status describes the transport, not the result. For a reasoning model the
+usual cause is `max_tokens` being consumed by internal reasoning tokens, which
+are billed but never appear in `content` — a fully paid-for response with
+nothing in it. Treat it as a provider error so retry, fallback and failure
+logging all apply. **In a cost-optimising system this matters twice over: the
+cheapest answer is silence, so silence must never be allowed to look like a
+win.**
+
+**Q: How does billing work for reasoning models?**
+Reasoning tokens are billed as output tokens and are reported separately, in
+`usage.completion_tokens_details.reasoning_tokens`. Always bill from the
+provider's `usage` block, never from the length of the text you got back — for
+these models the two can differ by the entire response.
 
 **Q: How do you design a system that talks to multiple LLM providers?**
 An adapter per provider behind one interface, returning a normalised result and
