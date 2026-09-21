@@ -1001,12 +1001,30 @@ ordering. Not this session's changes.
 
 I guessed torch thread contention and wrote a probe to measure it. **The probe
 was wrong** — it generated load with pure-Python busy loops, which contend on
-the GIL rather than on torch's thread pool. It hung, produced no reading, and
-was killed rather than tuned.
+the GIL rather than on torch's thread pool.
+
+It ran long enough that I assumed it had hung and killed it. One of its two
+runs had actually finished:
+
+```
+idle          median   11.2 ms
+under load    median 76105.1 ms
+```
+
+**76 seconds is not a finding.** Torch pinned to one thread, every core running
+a GIL-bound loop — the measured thread was starved of the interpreter lock.
+That number describes my load generator. The idle 11.2ms, measured outside
+pytest entirely, does independently confirm the 11-12ms figure.
 
 > **So the cause is recorded as unknown.** Writing the untested hypothesis into
 > the project as the explanation would be the same category of error as the
 > pricing bug above: a confident claim nobody re-derived. (**D35**)
+
+> And a second lesson from the same hour: **a failed experiment mistaken for a
+> result is worse than no experiment.** "76 seconds under load" would read as a
+> dramatic finding to anyone who did not know how it was produced — and I
+> nearly recorded the run as having produced nothing at all, which was equally
+> untrue.
 
 ### Files touched
 
@@ -1032,3 +1050,34 @@ was killed rather than tuned.
 >
 > **The instrument gets less scrutiny than the thing it measures, and it is the
 > instrument that decides what you believe.**
+
+### Postscript: `learnings/` vanished from disk, minutes after the commit
+
+Immediately after committing, `learnings/` was gone. `git status` showed all
+**19 files deleted**, and an empty directory named `learning/` — singular —
+had appeared in its place, timestamped 19:25.
+
+Nothing in this session renamed it. The project folder is under **OneDrive**,
+and the most likely explanation is a sync-side rename or a partially-applied
+folder operation.
+
+Recovery was one command, because the work had been committed minutes earlier:
+
+```bash
+git checkout -- learnings/      # 19 files back, this session's edits intact
+```
+
+> **This is the argument for committing at the end of a unit of work, stated as
+> an incident rather than a principle.** Had the same thing happened fifteen
+> minutes earlier, the entire session's documentation — the timeline, the
+> index, two extended learnings files — would have existed only on a disk that
+> had just stopped holding it.
+
+It is also the second time OneDrive has shaped a decision here. **D7** moved
+the SQLite database to `%LOCALAPPDATA%` because OneDrive syncing a locked
+database file can corrupt it, and SPEC 13 says regenerable binaries do not
+belong in a synced folder. Source files were assumed to be the safe case.
+
+The empty `learning/` directory was left in place rather than deleted: it is
+untracked and harmless, and deleting things in a folder that had just lost 19
+files unasked is not the moment to start guessing.

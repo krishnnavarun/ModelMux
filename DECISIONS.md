@@ -1636,14 +1636,38 @@ regime, not a bad draw.
 ### What I guessed, tried to measure, and could not confirm
 
 The hypothesis was CPU contention in torch's intra-op thread pool, with
-`torch.set_num_threads(1)` as the standard mitigation. The probe written to
-test it **was wrong**: it generated load with pure-Python busy loops, which
-contend on the GIL rather than on torch's thread pool, and it hung without
-producing a reading. It was killed rather than tuned.
+`torch.set_num_threads(1)` as the standard mitigation.
 
-**So the cause is recorded as unknown.** The hypothesis is plausible and
-untested, and writing it into the project as if it were the explanation would
-be the same category of error as D31 — a confident number nobody re-derived.
+**The probe written to test it was wrong.** It generated load with
+`os.cpu_count()` pure-Python busy loops, which contend on the **GIL**, not on
+torch's thread pool. It ran long enough to be assumed dead and the process was
+killed; one of its two runs had in fact completed, and its output is worth
+recording precisely because of what it does *not* show:
+
+```
+torch threads: 1   (PIN_THREADS=True)
+idle          median   11.2 ms
+under load    median 76105.1 ms
+```
+
+**The 76-second figure is meaningless.** With torch pinned to one thread and
+every core running a GIL-bound Python loop, the measured thread is starved of
+the interpreter lock. That number measures my load generator, not
+classification.
+
+The useful half: **11.2 ms idle, measured outside pytest entirely**, which
+independently reproduces the 11-12ms figure quoted throughout this project.
+That much is confirmed.
+
+**So the cause of the in-suite flake is recorded as unknown.** The hypothesis
+is plausible and still untested. Writing it in as the explanation would be the
+same category of error as D31 — a confident number nobody re-derived — and the
+one reading I have argues only that the *experiment* was bad.
+
+> A failed experiment that is mistaken for a result is worse than no
+> experiment. The 76-second number is exactly the kind of figure that would
+> have looked like a dramatic finding if quoted without knowing how it was
+> produced.
 
 ### Why the test is not being loosened
 

@@ -117,8 +117,10 @@ output tokens. Approximately unbiased.
 - **The classification budget test is flaky in the full suite (D35, OPEN).**
   11-12ms alone, intermittently ~85ms in-suite against a 20ms budget. Cause
   unknown -- not sampling noise, not the HTTP path, not ordering. My torch
-  thread-contention hypothesis was never confirmed; the probe measured the GIL
-  instead and was discarded. **Do not quote 11-12ms without saying it was an
+  thread-contention hypothesis was never confirmed: the probe measured GIL
+  starvation instead, and its "76s under load" figure describes the load
+  generator, not the classifier. Its idle reading (11.2ms, outside pytest) does
+  confirm the headline number. **Do not quote 11-12ms without saying it was an
   idle process.**
 
 ### Re-running the measurement
