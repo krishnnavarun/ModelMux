@@ -56,6 +56,16 @@ Every file's section 3 contains real bugs from this project. Learn those. A
 story about a silent connection leak that only surfaced when a temp file would
 not delete is worth more than a textbook definition of ACID.
 
+## See also: `learning/` — the study guide
+
+This folder is the **reference library, keyed by technology**. The sibling
+folder `learning/` is the **study guide, keyed by how you'll be asked**:
+project walkthrough, build stages, every constraint and limit, the decisions
+as talking points, war stories in STAR form, a question bank, the system-design
+version, and a cheat sheet.
+
+Start at `learning/00-START-HERE.md`.
+
 ## The mistakes worth telling in an interview
 
 Ranked by how much they demonstrate:

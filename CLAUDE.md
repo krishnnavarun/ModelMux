@@ -48,6 +48,7 @@ That file is the point of the project as much as the code is.
 | `specs.md` | The authoritative spec. Amendments are made in place, marked. |
 | `DECISIONS.md` | Choices not in the spec, with reasoning and costs. |
 | `learnings/` | Reference library keyed by **technology**. See `learnings/00-INDEX.md`. |
+| `learning/` | Study guide + interview prep, keyed by how it gets asked. See `learning/00-START-HERE.md`. **Note the singular/plural distinction.** |
 | `PLAN.md` | Status, blockers, and the day-by-day delivery plan. |
 | `README.md` | The outward-facing description. No placeholder metrics by Stage 6. |
 
