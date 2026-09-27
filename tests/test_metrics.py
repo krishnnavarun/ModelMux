@@ -8,6 +8,7 @@ while missing whether the request path records the right thing.
 
 import pytest
 
+from app import config as config_module
 from app import metrics
 from conftest import rows
 
@@ -176,7 +177,16 @@ def test_health_providers_lists_every_configured_provider(client):
     body = client.get("/health/providers").json()
     names = {p["provider"] for p in body["providers"]}
 
-    assert {"groq", "anthropic"} <= names
+    # Every CONFIGURED provider must appear, whoever they are. Read from
+    # config rather than hardcoding names -- this test is about completeness,
+    # not about which vendor happens to serve a tier (D38).
+    cfg = config_module.load()
+    configured = {
+        p["name"]
+        for tier in cfg.tiers.values()
+        for p in (tier.get("providers") or [])
+    }
+    assert configured <= names
     assert all(p["state"] == "closed" for p in body["providers"])
     assert "cache_available" in body
     assert "classifier_mode" in body

@@ -162,12 +162,15 @@ of them. Server and eval now share `config.cost_for_provider()`.
 - ~~Anthropic's large-tier prices are UNVERIFIED~~ — **VERIFIED 2026-09-21**
   (D27). They were `claude-sonnet-5` at Sonnet **4.6** rates: wrong model, wrong
   generation's price. Now `claude-opus-5` at 0.005 / 0.025 per 1K.
-- **`ANTHROPIC_API_KEY` -- the single highest-value input left.** One line
-  in `.env`; no config change needed, since `config.yaml` already lists
-  anthropic first under `tiers.large`. It simultaneously widens the ladder
-  from 2x to ~33x (fixing D36's noise problem), takes the quality sample from
-  n=8 to n=30 (fixing D37's main limitation), and gives the Anthropic adapter
-  its first live call. See `SETUP.md`.
+- **`GOOGLE_API_KEY` -- free, five minutes, and the single highest-value
+  input left (D38).** The large tier is now `gemini-3.1-pro-preview` with
+  Groq as the within-tier fallback, so nothing breaks without the key -- it
+  just keeps falling back to the mid tier's own model. With it, the ladder
+  goes 1x -> 40x on output (fixing D36's noise problem) and the quality
+  sample goes n=8 -> n=30 (fixing D37's main limitation). Get one at
+  aistudio.google.com/apikey; no card. See `SETUP.md`.
+  **Anthropic is NOT free** -- Claude Pro does not include API credits. It
+  stays commented in `config.yaml` with verified prices.
 - **A human grader for 30 answers** (~40 min, no key). D23 asked for a human
   spot-check AND LLM-as-judge as separate columns; only the second is filled.
 - **D35, still open but narrowed:** the classification budget test's
@@ -264,5 +267,9 @@ outside this OneDrive-synced folder. See `DECISIONS.md` D7.
   **The adapter is still unverified**: there is no Anthropic key, so the large
   tier is served by its Groq fallback (D30) and no Anthropic call has ever been
   made. The *prices* are verified; the *adapter* is not.
-- Mid tier is **temporarily on Groq** so the router can be exercised with one
-  key; the Google entry is commented in `config.yaml` ready to swap back.
+- Mid tier is **on Groq** (`gpt-oss-120b`). The Google entry that used to sit
+  here commented has moved to the **large** tier instead (D38), where a
+  capable model was actually needed.
+- **Gemini prices VERIFIED 2026-09-27** against ai.google.dev pricing:
+  `gemini-3.1-pro-preview` at 0.002 / 0.012 per 1K. **The adapter is still
+  unverified** -- written, guarded, never live. Same distinction as D27.

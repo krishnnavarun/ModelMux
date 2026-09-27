@@ -1,6 +1,7 @@
 """Google Gemini adapter (SPEC section 8.6).
 
-The mid tier. Unlike Groq, Gemini is **not** OpenAI-compatible -- different
+Serves the **large** tier (DECISIONS.md D38); it was originally specced for
+mid. Unlike Groq, Gemini is **not** OpenAI-compatible -- different
 URL shape, different request body, different response body, and the API key
 goes in a header rather than an Authorization bearer token.
 
@@ -63,25 +64,89 @@ class GoogleProvider(Provider):
         if response.status_code != 200:
             raise _translate_error(response)
 
+        body = {}
         try:
             body = response.json()
             candidate = body["candidates"][0]
             text = candidate["content"]["parts"][0]["text"]
             usage = body.get("usageMetadata", {})
-            return ProviderResult(
-                text=text,
-                model=body.get("modelVersion", model),
-                tokens_in=usage.get("promptTokenCount", 0),
-                tokens_out=usage.get("candidatesTokenCount", 0),
-                raw_latency_ms=raw_latency_ms,
-            )
         except (KeyError, IndexError, ValueError) as exc:
             # Gemini returns 200 with no `parts` when it blocks a response on
-            # safety grounds. That is a real, reachable case -- not defensive
-            # padding -- and it must not surface as a raw KeyError.
+            # safety grounds, and ALSO when a thinking model spends the whole
+            # output budget reasoning. Both are real, reachable cases -- not
+            # defensive padding -- and neither must surface as a raw KeyError.
+            #
+            # `body` is pre-bound above so this message still works when it
+            # was response.json() itself that raised.
             raise ProviderServerError(
-                f"unexpected google response shape: {exc}"
+                f"unexpected google response shape: {exc} "
+                f"(finish_reason={_finish_reason(body)})"
             ) from exc
+
+        # Same guard as groq.py, for the same reason (DECISIONS.md D32).
+        # Gemini 3 models think by default; if `maxOutputTokens` is consumed
+        # by reasoning, the API returns 200 with empty text AND STILL BILLS
+        # for the thinking tokens. An empty string is indistinguishable from
+        # a real answer to every layer above -- it would be cached, logged as
+        # a success, and counted in the savings figure as a cheap win.
+        if not text:
+            raise ProviderServerError(
+                f"google returned empty content "
+                f"(finish_reason={_finish_reason(body)}); the output budget was "
+                f"likely consumed by thinking tokens -- raise max_tokens or "
+                f"lower thinkingLevel"
+            )
+
+        return ProviderResult(
+            text=text,
+            model=body.get("modelVersion", model),
+            tokens_in=usage.get("promptTokenCount", 0),
+            tokens_out=_billable_output_tokens(usage),
+            raw_latency_ms=raw_latency_ms,
+        )
+
+
+def _finish_reason(body: dict) -> str:
+    try:
+        return str(body["candidates"][0].get("finishReason", "unknown"))
+    except (KeyError, IndexError, TypeError):
+        return "unknown"
+
+
+def _billable_output_tokens(usage: dict) -> int:
+    """Output tokens as GOOGLE BILLS them, not as it labels them.
+
+    Gemini thinking models report reasoning separately from the answer, but
+    charge for both at the output rate: "response pricing is the sum of output
+    tokens and thinking tokens". Reading `candidatesTokenCount` alone
+    therefore UNDERSTATES cost on every thinking model -- and this project's
+    entire claim is a cost comparison, so that error would flow straight into
+    the headline (the D31 failure mode).
+
+    The field has been spelled `thoughtsTokenCount` and `total_thought_tokens`
+    across API versions, so both are checked.
+
+    The `totalTokenCount` reconciliation is the safety net: if Google reports
+    a total larger than the parts we recognise, those tokens were billed to
+    somebody and it was us. Attributing the remainder to output OVERSTATES
+    our cost slightly, which makes the savings figure look WORSE. That is the
+    honest direction to be wrong in.
+    """
+    prompt = usage.get("promptTokenCount", 0) or 0
+    answer = usage.get("candidatesTokenCount", 0) or 0
+    thinking = (
+        usage.get("thoughtsTokenCount")
+        or usage.get("total_thought_tokens")
+        or 0
+    )
+    out = answer + thinking
+
+    total = usage.get("totalTokenCount") or 0
+    unattributed = total - (prompt + out)
+    if unattributed > 0:
+        out += unattributed
+
+    return out
 
 
 def _translate_error(response: httpx.Response) -> Exception:

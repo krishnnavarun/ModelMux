@@ -41,6 +41,17 @@ def cfg():
     return c
 
 
+def large_provider(cfg) -> str:
+    """The name of whoever serves the large tier, read from config.
+
+    These tests do not care WHICH provider it is -- only that it is a second,
+    distinct one that escalation and fallback can reach. Hardcoding the name
+    coupled them to a config value they never tested, and they all broke when
+    the large tier moved from Anthropic to Google (D38).
+    """
+    return cfg.tiers["large"]["providers"][0]["name"]
+
+
 # ---------------------------------------------------------------------------
 # Circuit breaker state machine -- every transition
 # ---------------------------------------------------------------------------
@@ -241,12 +252,12 @@ def test_tier_exhaustion_escalates_a_tier(cfg):
     """SPEC 8.7: when a tier has no other provider, escalate rather than fail.
 
     small -> groq (broken), mid -> groq (same instance, also broken),
-    large -> anthropic (healthy). So the answer comes from the large tier.
+    large -> a healthy second provider. So the answer comes from the large tier.
     """
     broken = MockProvider(fail_with="server_error")
     healthy = MockProvider(text="from the large tier")
 
-    result, _ = _dispatch(cfg, {"groq": broken, "anthropic": healthy})
+    result, _ = _dispatch(cfg, {"groq": broken, large_provider(cfg): healthy})
 
     assert result.result.text == "from the large tier"
     assert result.tier == "large"
@@ -262,7 +273,7 @@ def test_escalation_can_be_switched_off(cfg):
     healthy = MockProvider(text="never reached")
 
     with pytest.raises(resilience.AllProvidersFailed):
-        _dispatch(cfg, {"groq": broken, "anthropic": healthy})
+        _dispatch(cfg, {"groq": broken, large_provider(cfg): healthy})
 
     assert healthy.calls == 0, "escalation was disabled; large must not be used"
 
@@ -279,7 +290,7 @@ def test_open_circuit_is_skipped_and_the_next_tier_answers(cfg):
         breakers.record_failure("groq", "forced down")
     assert breakers.for_provider("groq").state is CircuitState.OPEN
 
-    result, _ = _dispatch(cfg, {"groq": broken, "anthropic": healthy}, breakers)
+    result, _ = _dispatch(cfg, {"groq": broken, large_provider(cfg): healthy}, breakers)
 
     assert result.result.text == "still serving"
     assert broken.calls == 0, "an open circuit must not be called at all"
@@ -290,12 +301,12 @@ def test_all_circuits_open_is_flagged_for_503(cfg):
     """Nothing was tried, so "come back later" is honest -- distinct from
     "we tried and they broke"."""
     breakers = CircuitBreakers(cfg)
-    for name in ("groq", "anthropic"):
+    for name in ("groq", large_provider(cfg)):
         for _ in range(cfg.resilience["circuit_failure_threshold"]):
             breakers.record_failure(name, "down")
 
     with pytest.raises(resilience.AllProvidersFailed) as exc:
-        _dispatch(cfg, {"groq": MockProvider(), "anthropic": MockProvider()},
+        _dispatch(cfg, {"groq": MockProvider(), large_provider(cfg): MockProvider()},
                   breakers)
 
     assert exc.value.all_open is True
@@ -323,10 +334,10 @@ def test_trail_records_every_attempt(cfg):
     broken = MockProvider(fail_with="server_error")
     healthy = MockProvider(text="ok")
 
-    result, _ = _dispatch(cfg, {"groq": broken, "anthropic": healthy})
+    result, _ = _dispatch(cfg, {"groq": broken, large_provider(cfg): healthy})
 
     providers_tried = [a.provider for a in result.trail]
-    assert "groq" in providers_tried and "anthropic" in providers_tried
+    assert "groq" in providers_tried and large_provider(cfg) in providers_tried
     assert any(a.error for a in result.trail), "failures must be recorded"
 
 
@@ -359,7 +370,7 @@ def test_the_reported_error_names_the_cause_not_the_skip(cfg):
     # Now the case that actually regressed: one real failure, THEN skips.
     breakers2 = CircuitBreakers(cfg)
     with pytest.raises(resilience.AllProvidersFailed) as exc2:
-        _dispatch(cfg, {"groq": broken, "anthropic": broken}, breakers2)
+        _dispatch(cfg, {"groq": broken, large_provider(cfg): broken}, breakers2)
 
     message = str(exc2.value)
     assert "mock 500" in message, (

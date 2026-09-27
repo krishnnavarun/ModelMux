@@ -2001,3 +2001,121 @@ real large tier, all 30 pairs would compare different models and the sample
 would go from 8 to 30 overnight.
 
 ---
+
+## D38 — The large tier is Google Gemini, because it is the only capable model with a free tier
+
+**Date:** 2026-09-27 · **Stage:** 6 · **Changes:** `config.yaml`,
+`app/providers/google.py`, 3 test files · **Supersedes:** D30's provider order
+
+### The decision
+
+The large tier is now:
+
+```yaml
+providers:
+  - name: google
+    model: gemini-3.1-pro-preview    # $2 / $12 per 1M -> 0.002 / 0.012 per 1K
+  - name: groq
+    model: openai/gpt-oss-120b       # reachable fallback (D4/D30)
+  # anthropic claude-opus-5 kept commented, verified
+```
+
+Prices **VERIFIED 2026-09-27** against `ai.google.dev/gemini-api/docs/pricing`.
+
+### Why not Anthropic
+
+**A Claude Pro subscription does not include API credits.** They are
+separately billed products — Pro covers claude.ai and Claude Code; the API
+runs on prepaid credits bought in the Console. Verified against Anthropic's
+own help centre, not assumed.
+
+So Anthropic costs real money (~$0.30-0.60 per eval run at Opus 5 rates) and
+**Google AI Studio has a genuine free tier.** For a project whose remaining
+blocker is *"we need a second, more capable model"*, the vendor is
+irrelevant and the price is not.
+
+Anthropic stays in the config, commented, with its verified prices, for
+whoever has a key.
+
+### What this buys — the whole point
+
+| | before | after |
+|---|---|---|
+| large tier model | `gpt-oss-120b` **(= the mid tier's own model)** | `gemini-3.1-pro-preview` |
+| ladder, input | 1× | **27×** |
+| ladder, output | 1× | **40×** |
+| cost A/B | noise-dominated, 3-4% signal vs ±5 pt variance (D36) | signal should clear noise |
+| quality sample | **n=8** — 22 of 30 pairs compared a model with itself (D37) | **n=30** |
+
+**One config change fixes the root cause of both D36 and D37.** Those were
+never separate problems: they were the same missing provider, showing up in
+two different measurements.
+
+### Two traps found before they bit, not after
+
+**1. Gemini 3 reasons by default, and bills thinking as output.** Google's
+docs are explicit: *"response pricing is the sum of output tokens and
+thinking tokens"*. Reading `candidatesTokenCount` alone would have
+**understated cost on every single large-tier call** — flowing straight into
+the headline, which is precisely the D31 failure.
+
+`_billable_output_tokens()` now sums the answer and the thinking tokens
+(`thoughtsTokenCount` / `total_thought_tokens`, spelled differently across
+API versions), and reconciles against `totalTokenCount`. Unattributed tokens
+are charged to output, which **overstates** our cost and makes the savings
+look **worse** — the honest direction to be wrong in.
+
+**2. A thinking model that runs out of budget returns empty, and still
+bills.** Google's docs again: it *"returns truncated or empty output (while
+still billing for any thinking tokens generated)"*. That is **D32 verbatim**,
+in a second adapter.
+
+`google.py` now raises `ProviderServerError` rather than returning `""`. Left
+alone it would have been cached for 24 hours, logged as a success, and
+counted in the savings figure as a cheap win.
+
+> **The same bug, in a different provider, eight days later.** D32 was fixed
+> in `groq.py` only. A lesson written down in one adapter is not a lesson
+> applied to the codebase — it is a comment in one file.
+
+### `max_tokens_default` raised 1000 → 4000
+
+Both remaining providers are thinking models, and reasoning spends the same
+budget as the answer. At 1000 a hard prompt can burn the whole allowance
+thinking and return nothing, billed in full. Google's own guidance is to give
+thinking room rather than clamp the budget.
+
+**This is a ceiling, not a target** — raising it costs nothing unless a model
+actually emits more, and cost is computed from tokens actually used.
+
+### Five tests broke, and they were wrong to have passed
+
+`test_tier_exhaustion_escalates_a_tier`, `test_open_circuit_is_skipped...`,
+`test_trail_records_every_attempt`, `test_force_tier_overrides...` and
+`test_health_providers_lists_every_configured_provider` all failed, every one
+because it hardcoded `"anthropic"`.
+
+None of them is about Anthropic. They test escalation, circuit skipping,
+trail recording, forced tiers and health completeness.
+
+> **They were asserting on a config value they never cared about** — so a
+> configuration change broke tests of behaviour that had not changed. Each now
+> reads the provider name from config. The tests got *more* correct, not just
+> greener.
+
+### Cost, and what stays unverified
+
+- `gemini-3.1-pro-preview` is a **preview model**. Preview names get renamed
+  and retired; a 404 here means the model moved, not that the key is broken.
+  `gemini-3.8-flash` (0.00075 / 0.00375 per 1K, also free tier) is the stable
+  alternative with a narrower ladder.
+- **The Google adapter has still never made a live call.** It is written,
+  now guarded, and verified against synthetic responses only. The prices are
+  verified; the adapter is not — the same distinction D27 drew for Anthropic.
+- The free tier has **rate limits**, and the Pro model's free access is
+  described as limited. Retry and backoff absorbed Groq's TPM limits at
+  32/32 (D36's re-run), so the machinery exists, but a large eval may be slow.
+- Nothing changes without a `GOOGLE_API_KEY`: the tier falls back to Groq and
+  behaves exactly as before. **The upgrade is opt-in by setting one variable.**
+
+---

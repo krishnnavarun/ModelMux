@@ -103,7 +103,8 @@ def test_force_tier_overrides_but_still_scores(config):
     decision = router.select_tier("What is 2+2?", config, force_tier="large")
     assert decision.tier == "large"
     assert decision.forced is True
-    assert decision.provider["name"] == "anthropic"
+    # Whoever config says serves the large tier -- not a hardcoded name.
+    assert decision.provider["name"] == config.tiers["large"]["providers"][0]["name"]
     assert decision.complexity_score < 0.1      # score still computed
     assert "would have chosen 'small'" in decision.reason
 

@@ -93,62 +93,80 @@ $env:MODELMUX_MOCK_PROVIDERS=""      # unset when done, then FLUSHDB
 
 ## Part 2 — What only you can do
 
-Three items. **The first two are the same single action**, and the third
-needs a person rather than a key.
+Three items. **The first is free and takes five minutes**, the second is
+optional and costs money, and the third needs a person rather than a key.
 
-### ① Add `ANTHROPIC_API_KEY` — the highest-value thing left
+### ① Get a free Google AI Studio key — 5 minutes, $0
 
-**This one line unblocks more than everything else combined.**
+**Exactly how:**
+
+1. Go to **https://aistudio.google.com/apikey**
+2. Sign in with any Google account
+3. Click **"Create API key"**
+4. Pick a Google Cloud project when asked, or let it create one — the free
+   tier needs **no billing account and no card**
+5. Copy the key (it starts `AIza...`)
+6. Paste it into `.env`:
 
 ```
-# in .env
-ANTHROPIC_API_KEY=sk-ant-...
+GOOGLE_API_KEY=AIza...
 ```
 
-No config change is needed. `config.yaml` already lists `anthropic` first
-under `tiers.large`, so it takes effect immediately and Groq stops being the
-fallback.
+7. **Open a new terminal** — see the failure mode at the bottom of this file
+8. Verify it took effect:
 
-**Get it:** https://console.anthropic.com/settings/keys (paid, prepaid credit)
+```powershell
+C:\dev\modelmux-venv\Scripts\python.exe eval/explain.py "Prove there are infinitely many primes."
+```
 
-**What it fixes:**
+The `provider/model` line should read `google / gemini-3.1-pro-preview`. If
+it says `groq`, the key is not being seen.
 
-| Currently | With the key |
-|---|---|
-| Tier ladder is **2×** (large falls back to the mid tier's model) | Ladder is **~33×** |
-| Cost saving is **3-4%**, and un-measurable by A/B because noise is ±5 points | Projected **~37%**, comfortably above the noise |
-| Quality graded on **n=8** — 22 of 30 pairs compared a model with itself | **n=30**, every pair a real comparison |
-| Anthropic adapter has **never made a live call** | Verified end to end |
-| 16 of 32 held-out prompts route somewhere identical to the baseline | The router is actually exercised |
-
-**What it costs:** roughly **$0.30–0.60 per full eval run** at `claude-opus-5`
-rates. To spend about a fifth of that, switch the large tier to
-`claude-sonnet-5` in `config.yaml` — the cheaper alternative is already
-recorded there with its prices.
-
-**Then re-run, and please run it more than once:**
+9. Run the real thing:
 
 ```powershell
 wsl redis-cli FLUSHDB
 C:\dev\modelmux-venv\Scripts\python.exe eval/run_eval.py --set holdout.json
 ```
 
-D36 exists because a single run was published and did not reproduce. **Three
-to five runs** would give the first honest variance estimate this project has
-had.
+**No config change is needed.** `config.yaml` already lists google first
+under `tiers.large`.
 
-### ② `GOOGLE_API_KEY` — optional, and needs a config edit too
+#### What it fixes
 
-Lower value than ①. Setting the key **alone does nothing**: the mid tier is
-pinned to Groq and the google entry is commented out.
+| Without the key | With it |
+|---|---|
+| large tier = `gpt-oss-120b` = **the mid tier's own model** | `gemini-3.1-pro-preview` |
+| ladder **1×** | **27× input / 40× output** |
+| cost saving 3-4%, unmeasurable by A/B (±5 pt noise) | signal clears the noise |
+| quality **n=8** — 22 of 30 pairs compared a model with itself | **n=30** |
 
-To use it: set the key **and** uncomment the `google` provider under
-`tiers.mid` in `config.yaml`. Its prices there are marked **UNVERIFIED** —
-check them against https://ai.google.dev/pricing first, because every
-`cost_if_large_usd` figure downstream depends on tier prices being right
-(this exact class of error is D27).
+#### Things to know
 
-**Get it:** https://aistudio.google.com/apikey (free tier available)
+- **It is a preview model.** `-preview` names get renamed and retired. A 404
+  means the model moved, not that your key is bad — check the model list.
+  `gemini-3.8-flash` is the stable alternative (narrower ladder, also free).
+- **Free tier is rate-limited** per minute and per day. Retry and backoff
+  absorb it; a full eval may just run slower.
+- **Gemini 3 thinks by default and bills thinking as output.** The adapter
+  accounts for that and raises rather than returning an empty answer if the
+  budget runs out (D38). `max_tokens_default` was raised to 4000 to give
+  reasoning room.
+- **Please run the eval 3-5 times.** D36 exists because one run was published
+  and did not reproduce.
+
+### ② Anthropic — optional, not free
+
+**A Claude Pro subscription does not include API credits.** Pro covers
+claude.ai and Claude Code; the API is separately billed via prepaid credits
+at [console.anthropic.com](https://console.anthropic.com/settings/keys).
+
+New API accounts do receive a small free credit grant — worth checking your
+balance, since a 32-prompt run costs roughly **$0.30-0.60** at `claude-opus-5`
+rates, or about a fifth of that on `claude-sonnet-5`.
+
+To use it: uncomment the `anthropic` provider under `tiers.large` in
+`config.yaml` (its prices are already verified) and set `ANTHROPIC_API_KEY`.
 
 ### ③ Grade 30 answers by hand — no key needed, ~40 minutes
 
