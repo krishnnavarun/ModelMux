@@ -2119,3 +2119,84 @@ trail recording, forced tiers and health completeness.
   behaves exactly as before. **The upgrade is opt-in by setting one variable.**
 
 ---
+
+### AMENDMENT 2026-09-27 — first live Google calls, and three things measured
+
+A real free-tier key arrived. **The adapter's first live call refuted the
+model choice within a minute**, and two config values turned out to be wrong.
+
+#### The Pro model has no usable free quota
+
+`gemini-3.1-pro-preview` returned **429 quota exceeded on the very first
+call**. Note the status: 429 means the key *authenticated* and the quota was
+zero, not that anything was misconfigured. "Free tier includes limited
+access" meant closer to none.
+
+Probed five models on the real key:
+
+| model | result |
+|---|---|
+| `gemini-3.1-pro-preview` | **429** no free quota |
+| `gemini-3.8-flash` | **503** "high demand" |
+| **`gemini-3.5-flash`** | **OK** ← shipped |
+| `gemini-2.5-flash` | **400** no longer available to new users |
+| `gemini-2.5-flash-lite` | **400** no longer available to new users |
+
+> **The two 400s are the interesting ones.** `gemini-2.0-flash` sat commented
+> in `config.yaml` for weeks as the "ready to swap back" mid-tier option. It
+> would have failed exactly this way. **An unverified config value is not a
+> spare tyre** — it is a guess with a comment on it, which is D27 again.
+
+Shipped `gemini-3.5-flash` at 0.0015 / 0.009 per 1K (VERIFIED). Ladder:
+**30× output**, 20× input. Narrower than Pro's 40× and entirely real.
+
+#### The request timeout was too low, and only measurement showed it
+
+Three hard prompts on `gemini-3.5-flash`:
+
+```
+32.1s   in=9    out=2369   visible=170 chars
+19.5s   in=11   out=2651   visible=4071 chars
+32.4s   in=9    out=3996   visible=8566 chars   <- hit the 4000 cap
+```
+
+`request_timeout_seconds` was **30**. **Two of three would have timed out** —
+on precisely the prompts the large tier exists to answer. Even
+*"reply with the word pong"* took 22.6s and 37.5s on two later attempts.
+
+Thinking models spend most of their wall-clock reasoning before emitting a
+single visible token, so a timeout tuned for a non-thinking model is simply
+the wrong shape. Raised to **120s** (~4× measured worst case). The cost: a
+genuinely hung request now takes 2 minutes to fail, 6 with retries.
+
+#### `max_tokens` was truncating answers
+
+The third prompt used **3,996 of 4,000**. It was cut off. A truncated answer
+is still an answer, so failing it would throw away work already billed — but
+it is a quality defect, and a quality comparison that silently includes
+truncated answers is measuring the cap, not the model.
+
+Raised to **8,000**, and `google.py` now prints a stderr warning when
+`finishReason` is `MAX_TOKENS`. **Warn, do not fail**: the answer has value,
+the reader needs to know it is incomplete.
+
+#### The free tier is genuinely flaky, and that is fine
+
+Four calls to the same model, minutes apart: **SUCCESS, SUCCESS, 503, 503**.
+`ProviderServerError` is retryable in the taxonomy (Stage 2), so retry with
+jittered backoff absorbs it, and within-tier fallback to Groq catches the
+rest. This is the resilience layer meeting a real flaky upstream rather than
+`MockProvider.fail_with` — the second such test after Groq's rate limiter.
+
+#### What the thinking-token fix is actually worth
+
+*"Reply with exactly the word: pong"* returned **102 output tokens** for a
+four-character answer. Over 99% of the billed output was invisible thinking.
+
+> Counting only `candidatesTokenCount` would have priced that call at roughly
+> **one hundredth** of its real cost. On a project whose entire claim is a
+> cost comparison, the fix made the difference between a measurement and a
+> fiction — and it was written from the docs *before* the first live call,
+> which is the only reason it was never wrong in a published number.
+
+---

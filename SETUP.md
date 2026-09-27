@@ -141,11 +141,19 @@ under `tiers.large`.
 | cost saving 3-4%, unmeasurable by A/B (±5 pt noise) | signal clears the noise |
 | quality **n=8** — 22 of 30 pairs compared a model with itself | **n=30** |
 
-#### Things to know
+#### Things to know (all measured on a real free key, 2026-09-27)
 
-- **It is a preview model.** `-preview` names get renamed and retired. A 404
-  means the model moved, not that your key is bad — check the model list.
-  `gemini-3.8-flash` is the stable alternative (narrower ladder, also free).
+- **The model is `gemini-3.5-flash`, not a Pro model.**
+  `gemini-3.1-pro-preview` returns **429 quota exceeded** on the free tier —
+  its free access is effectively zero. `gemini-2.5-flash` and `-lite` return
+  400 "no longer available to new users".
+- **The free tier returns intermittent 503s.** Four calls minutes apart went
+  SUCCESS, SUCCESS, 503, 503. Retry and fallback absorb it; a long eval may
+  just take a while.
+- **It is slow, because it thinks.** Hard prompts measured 19-32s, and even
+  *"reply with the word pong"* took 22-37s. `request_timeout_seconds` was
+  raised 30 → 120 because two of three hard prompts would otherwise have
+  timed out.
 - **Free tier is rate-limited** per minute and per day. Retry and backoff
   absorb it; a full eval may just run slower.
 - **Gemini 3 thinks by default and bills thinking as output.** The adapter

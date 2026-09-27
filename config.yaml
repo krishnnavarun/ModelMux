@@ -54,9 +54,24 @@ tiers:
       #   cost_per_1k_output: 0.00060
 
   large:
-    # GEMINI 3.1 PRO, VERIFIED 2026-09-27 against ai.google.dev/gemini-api/docs/pricing
+    # GEMINI 3.5 FLASH, VERIFIED 2026-09-27 against ai.google.dev/gemini-api/docs/pricing
     #
-    #   gemini-3.1-pro-preview   $2.00 / $12.00 per 1M  ->  0.002 / 0.012 per 1K
+    #   gemini-3.5-flash   $1.50 / $9.00 per 1M  ->  0.0015 / 0.009 per 1K
+    #
+    # WHY NOT THE PRO MODEL. `gemini-3.1-pro-preview` was configured first and
+    # returned 429 QUOTA EXCEEDED on the very first call -- its "free tier" is
+    # limited enough to be unusable. A probe across five models on a real free
+    # key on 2026-09-27 gave:
+    #
+    #   gemini-3.1-pro-preview   429  no free quota
+    #   gemini-3.8-flash         503  "high demand" (transient, may recover)
+    #   gemini-3.5-flash         OK   <- this one
+    #   gemini-2.5-flash         400  no longer available to new users
+    #   gemini-2.5-flash-lite    400  no longer available to new users
+    #
+    # Note the last two: the `gemini-2.0-flash` entry that sat commented in
+    # this file for weeks would have failed the same way. An unverified config
+    # value is not a spare tyre.
     #
     # WHY GOOGLE AND NOT ANTHROPIC (DECISIONS.md D38):
     # Anthropic has no free tier and a Claude Pro subscription does NOT include
@@ -66,15 +81,15 @@ tiers:
     # commented, for whoever has a key.
     #
     # THE LADDER THIS BUYS (output tokens, per 1K):
-    #   small  0.0003   ->  large 0.012   =  40x
-    #   mid    0.0006   ->  large 0.012   =  20x
+    #   small  0.0003   ->  large 0.009   =  30x
+    #   mid    0.0006   ->  large 0.009   =  15x
     # versus the 1x it had when large fell back to the mid tier's own model.
     # That spread is what makes the cost measurement mean anything (D36).
     #
-    # !! PREVIEW MODEL !! `-preview` names get renamed and retired. If this
-    # starts returning 404, check the model list before assuming the key is
-    # broken. `gemini-3.8-flash` (0.00075 / 0.00375 per 1K, also free tier) is
-    # the stable fallback -- a narrower ladder but it will not vanish.
+    # IF THIS STOPS WORKING: Google retires model names for new users without
+    # much notice (see the two 400s above). A 400 saying "no longer available"
+    # means the model moved, not that the key is broken. Re-probe the model
+    # list before touching anything else.
     #
     # !! THINKING MODEL !! Gemini 3 reasons by default and BILLS THINKING AS
     # OUTPUT. google.py counts those tokens (see _billable_output_tokens) and
@@ -82,9 +97,9 @@ tiers:
     # both lessons from D32/D31, applied before they could bite again here.
     providers:
       - name: google
-        model: gemini-3.1-pro-preview   # VERIFIED 2026-09-27
-        cost_per_1k_input: 0.002        # VERIFIED  $2.00 / 1M
-        cost_per_1k_output: 0.012       # VERIFIED  $12.00 / 1M
+        model: gemini-3.5-flash         # MEASURED WORKING 2026-09-27
+        cost_per_1k_input: 0.0015       # VERIFIED  $1.50 / 1M
+        cost_per_1k_output: 0.009       # VERIFIED  $9.00 / 1M
       # Within-tier fallback (D4/D30). Reachable on the Groq key alone, so the
       # system still answers if the Google key is missing, rate-limited, or the
       # preview model disappears. Cost is attributed to whoever actually
@@ -137,7 +152,15 @@ cache:
   max_entries: 10000
 
 resilience:
-  request_timeout_seconds: 30
+  # RAISED FROM 30 ON 2026-09-27, FROM MEASUREMENT (D38).
+  # Three hard prompts on gemini-3.5-flash took 32.1s, 19.5s and 32.4s --
+  # two of the three would have timed out at 30s, on exactly the prompts the
+  # large tier exists to answer. Thinking models spend most of that time
+  # reasoning before a single visible token appears.
+  # 120 is ~4x the measured worst case. The cost of it being generous: a
+  # genuinely hung request now takes 2 minutes to fail, and up to 6 with
+  # retries.
+  request_timeout_seconds: 120
   connect_timeout_seconds: 5
   max_retries: 2
   backoff_base_seconds: 0.5
@@ -151,13 +174,16 @@ resilience:
 
 limits:
   max_prompt_chars: 100000
-  # RAISED FROM 1000 ON 2026-09-27 (D38). This is a CEILING, not a target:
-  # raising it does not cost anything unless a model actually emits more.
-  # Gemini 3 and gpt-oss both reason before answering, and that reasoning is
-  # spent from this same budget -- at 1000 a hard prompt can burn the whole
-  # allowance thinking and return EMPTY, billed in full. Google's own guidance
-  # is to give thinking room rather than clamp the budget.
-  max_tokens_default: 4000
+  # RAISED 1000 -> 4000 -> 8000 ON 2026-09-27 (D38), the last step MEASURED.
+  # This is a CEILING, not a target: raising it costs nothing unless a model
+  # actually emits more, and cost is computed from tokens actually used.
+  #
+  # Gemini 3 and gpt-oss both reason before answering, out of this same
+  # budget. At 1000 a hard prompt burns the whole allowance thinking and
+  # returns EMPTY, billed in full. At 4000 a measured hard prompt used 3996 --
+  # it hit the cap and was truncated. Google's own guidance is to give
+  # thinking room rather than clamp the budget.
+  max_tokens_default: 8000
   rate_limit_per_minute: 60
 
 database:

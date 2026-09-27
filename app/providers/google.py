@@ -10,6 +10,7 @@ contained here; `router.py` and `main.py` do not change to accommodate it.
 """
 
 import os
+import sys
 import time
 
 import httpx
@@ -95,6 +96,18 @@ class GoogleProvider(Provider):
                 f"(finish_reason={_finish_reason(body)}); the output budget was "
                 f"likely consumed by thinking tokens -- raise max_tokens or "
                 f"lower thinkingLevel"
+            )
+
+        # Truncation is NOT an error -- a cut-off answer is still an answer,
+        # and failing it would throw away work already paid for. But it IS a
+        # quality defect that would silently degrade any answer comparison,
+        # so it gets said out loud rather than swallowed.
+        if _finish_reason(body).upper() in ("MAX_TOKENS", "LENGTH"):
+            print(
+                f"[google] WARNING: response truncated at max_tokens "
+                f"({usage.get('candidatesTokenCount', '?')} answer tokens). "
+                f"The answer is incomplete -- raise limits.max_tokens_default.",
+                file=sys.stderr,
             )
 
         return ProviderResult(
