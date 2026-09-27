@@ -1,0 +1,989 @@
+{
+  "summary": {
+    "generated_at": "2026-09-21T14:35:52.531550+00:00",
+    "simulated": false,
+    "pairs": 32,
+    "failed": 0,
+    "cost_routed_usd": 0.0133779,
+    "cost_baseline_usd": 0.01360905,
+    "cost_saved_usd": 0.00023115,
+    "savings_pct": 1.7,
+    "cost_per_1k_routed_usd": 0.4181,
+    "cost_per_1k_baseline_usd": 0.4253,
+    "latency_routed_p50_ms": 2814.9,
+    "latency_routed_p95_ms": 8957.7,
+    "latency_baseline_p50_ms": 6891.2,
+    "latency_baseline_p95_ms": 10255.5,
+    "tier_distribution": {
+      "small": 9,
+      "large": 16,
+      "mid": 7
+    },
+    "tokens_out_routed": 22449,
+    "tokens_out_baseline": 21869,
+    "counterfactual_bias_ratio": 0.974,
+    "quality": null
+  },
+  "rows": [
+    {
+      "id": 1,
+      "category": "lookup",
+      "expected_tier": "small",
+      "prompt": "What is the tallest mountain in Africa?",
+      "routed": {
+        "ok": true,
+        "tier": "small",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "text": "The tallest mountain in Africa is **Mount Kilimanjaro** in Tanzania, standing at about **5,895\u202fmeters (19,341\u202ffeet)** above sea level. Its highest peak, Kibo, reaches this elevation, making it the continent\u2019s highest point.",
+        "tokens_in": 79,
+        "tokens_out": 151,
+        "cost_usd": 5.1225e-05,
+        "complexity_score": 0.033,
+        "latency_ms": 984.7765000013169
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "The tallest mountain in Africa is **Mount\u202fKilimanjaro** in Tanzania. Its highest summit, **Uhuru Peak**, stands at about **5,895\u202fmeters (19,341\u202ffeet)** above sea level.",
+        "tokens_in": 79,
+        "tokens_out": 98,
+        "cost_usd": 7.065e-05,
+        "complexity_score": null,
+        "latency_ms": 723.6523999999918
+      }
+    },
+    {
+      "id": 2,
+      "category": "lookup",
+      "expected_tier": "small",
+      "prompt": "Who discovered penicillin?",
+      "routed": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "Penicillin was discovered by the Scottish bacteriologist **Sir Alexander Fleming** in 1928. While studying Staphylococcus bacteria cultures, he noticed that a mold (later identified as *Penicillium notatum*) had contaminated one of his petri dishes and was killing the surrounding bacteria. This observation led to the isolation of the antibacterial substance we now know as penicillin.\n\nLater, the full therapeutic potential of penicillin was realized and developed into a usable drug through the collaborative work of **Howard Florey**, **Ernst\u202fB.\u202fChain**, and their team at the University of Oxford in the early 1940s. Their efforts turned Fleming\u2019s serendipitous finding into the first widely available antibiotic.",
+        "tokens_in": 76,
+        "tokens_out": 204,
+        "cost_usd": 0.0001338,
+        "complexity_score": 0.67,
+        "latency_ms": 1057.0413999994344
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "Penicillin was discovered by **Sir Alexander\u202fFleming**, a Scottish bacteriologist, in 1928. While studying Staphylococcus bacteria cultures, he noticed that a mold (later identified as *Penicillium notatum*) had contaminated one of his Petri dishes and had killed the surrounding bacteria. Fleming recognized the antibacterial substance produced by the mold, which he named \u201cpenicillin.\u201d His discovery laid the groundwork for the development of antibiotics, dramatically changing modern medicine.",
+        "tokens_in": 76,
+        "tokens_out": 134,
+        "cost_usd": 9.180000000000001e-05,
+        "complexity_score": null,
+        "latency_ms": 808.2353999998304
+      }
+    },
+    {
+      "id": 3,
+      "category": "lookup",
+      "expected_tier": "small",
+      "prompt": "What is the atomic number of carbon?",
+      "routed": {
+        "ok": true,
+        "tier": "small",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "text": "The atomic number of carbon is **6**.",
+        "tokens_in": 79,
+        "tokens_out": 73,
+        "cost_usd": 2.7824999999999995e-05,
+        "complexity_score": 0.0306,
+        "latency_ms": 534.0326999976241
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "The atomic number of carbon is **6**.",
+        "tokens_in": 79,
+        "tokens_out": 44,
+        "cost_usd": 3.8249999999999995e-05,
+        "complexity_score": null,
+        "latency_ms": 661.1257000004116
+      }
+    },
+    {
+      "id": 4,
+      "category": "trivial_math",
+      "expected_tier": "small",
+      "prompt": "What is 18 multiplied by 7?",
+      "routed": {
+        "ok": true,
+        "tier": "small",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "text": "18 multiplied by 7 equals **126**.",
+        "tokens_in": 80,
+        "tokens_out": 40,
+        "cost_usd": 1.7999999999999997e-05,
+        "complexity_score": 0.0284,
+        "latency_ms": 479.21400000268477
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "18\u202f\u00d7\u202f7\u202f=\u202f126.",
+        "tokens_in": 80,
+        "tokens_out": 39,
+        "cost_usd": 3.54e-05,
+        "complexity_score": null,
+        "latency_ms": 802.5978000005125
+      }
+    },
+    {
+      "id": 5,
+      "category": "trivial_math",
+      "expected_tier": "small",
+      "prompt": "Convert 100 kilograms to pounds.",
+      "routed": {
+        "ok": true,
+        "tier": "small",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "text": "100\u202fkg \u2248 **220.46\u202flb** (using 1\u202fkg\u202f=\u202f2.20462\u202flb).",
+        "tokens_in": 78,
+        "tokens_out": 120,
+        "cost_usd": 4.1849999999999994e-05,
+        "complexity_score": 0.0807,
+        "latency_ms": 685.632100001385
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "Sure!  \n\n1 kilogram \u2248 **2.20462\u202fpounds**  \n\nSo:\n\n**100\u202fkg \u00d7 2.20462\u202flb/kg \u2248 220.462\u202flb**\n\nRounded to a convenient number, 100\u202fkg is about **220.5\u202flb** (or **220\u202flb** if you round to the nearest whole pound).",
+        "tokens_in": 78,
+        "tokens_out": 130,
+        "cost_usd": 8.97e-05,
+        "complexity_score": null,
+        "latency_ms": 611.7979000009655
+      }
+    },
+    {
+      "id": 6,
+      "category": "formatting",
+      "expected_tier": "small",
+      "prompt": "Make this lowercase: HELLO WORLD",
+      "routed": {
+        "ok": true,
+        "tier": "small",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "text": "hello world",
+        "tokens_in": 78,
+        "tokens_out": 30,
+        "cost_usd": 1.4849999999999998e-05,
+        "complexity_score": 0.0807,
+        "latency_ms": 200.11670000167214
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "hello world",
+        "tokens_in": 78,
+        "tokens_out": 34,
+        "cost_usd": 3.21e-05,
+        "complexity_score": null,
+        "latency_ms": 575.2772999985609
+      }
+    },
+    {
+      "id": 7,
+      "category": "formatting",
+      "expected_tier": "small",
+      "prompt": "Translate 'good night' into Italian.",
+      "routed": {
+        "ok": true,
+        "tier": "small",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "text": "**Good night** in Italian is: **\u201cBuona notte.\u201d**",
+        "tokens_in": 79,
+        "tokens_out": 62,
+        "cost_usd": 2.4524999999999996e-05,
+        "complexity_score": 0.091,
+        "latency_ms": 551.9505000011122
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "\"Good night\" in Italian is **\u201cbuona notte.\u201d**",
+        "tokens_in": 79,
+        "tokens_out": 46,
+        "cost_usd": 3.945e-05,
+        "complexity_score": null,
+        "latency_ms": 574.134899998171
+      }
+    },
+    {
+      "id": 8,
+      "category": "code_simple",
+      "expected_tier": "small",
+      "prompt": "How do I append to a list in Python?",
+      "routed": {
+        "ok": true,
+        "tier": "small",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "text": "### Quick answer\nUse the built\u2011in list method **`.append()`**:\n\n```python\nmy_list = [1, 2, 3]\nmy_list.append(4)          # adds 4 to the end of the list\nprint(my_list)             # \u2192 [1, 2, 3, 4]\n```\n\n`append` **modifies the original list in place** and returns `None`, so you can\u2019t chain it:\n\n```python\nmy_list.append(5).append(6)   # \u274c  TypeError: 'NoneType' object has no attribute 'append'\n```\n\n---\n\n## Detailed guide\n\n| What you want | Method | Example | Result |\n|---------------|--------|---------|--------|\n| Add a **single element** to the end | `list.append(elem)` | `my_list.append(7)` | `[1,2,3,4,7]` |\n| Add **multiple elements** (iterable) | `list.extend(iterable)` | `my_list.extend([8,9])` | `[1,2,3,4,7,8,9]` |\n| Concatenate two lists (creates a **new list**) | `new_list = a + b` | `c = a + [10]` | `[1,2,3,4,7,8,9,10]` |\n| Insert at a specific **index** | `list.insert(index, elem)` | `my_list.insert(2, 99)` | `[1,2,99,3,4,7,8,9]` |\n\n### Why use `extend` instead of `append` for multiple items?\n- `append` adds its argument **as one element**.  \n  ```python\n  my_list.append([10, 11])   # \u2192 [1, 2, 3, [10, 11]]\n  ```\n- `extend` iterates over the argument and adds each item individually.  \n  ```python\n  my_list.extend([10, 11])   # \u2192 [1, 2, 3, 10, 11]\n  ```\n\n---\n\n## Common pitfalls\n\n| Mistake | Why it fails | Fix |\n|---------|--------------|-----|\n| `my_list.append([1, 2, 3])` when you intended to add the numbers individually | Adds a **single sub\u2011list** | Use `my_list.extend([1, 2, 3])` |\n| `my_list.append(4).append(5)` | `append` returns `None`, so the second call fails | Call them separately or chain with `+=` |\n| Modifying a loop counter while iterating | Unpredictable behavior | Iterate over a copy or use a list comprehension |\n\n---\n\n## Quick cheat\u2011sheet\n\n```python\n# Create a list\nfruits = []\n\n# Append a single fruit\nfruits.append('apple')            # \u2192 ['apple']\n\n# Append multiple fruits\nfruits.extend(['banana', 'ch",
+        "tokens_in": 81,
+        "tokens_out": 1000,
+        "cost_usd": 0.000306075,
+        "complexity_score": 0.0683,
+        "latency_ms": 1599.3319000008341
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "Appending an item to a list in Python is simple\u2014use the list\u2019s built\u2011in **`append`** method.  \nIt adds the new element to the end of the list in\u2011place (i.e., it modifies the original list).\n\n```python\n# Start with a list\nfruits = ['apple', 'banana']\n\n# Append a single element\nfruits.append('cherry')\nprint(fruits)          # Output: ['apple', 'banana', 'cherry']\n```\n\n### Key Points\n\n| Situation | Method | What it does |\n|-----------|--------|--------------|\n| Add **one** element | `my_list.append(item)` | Places `item` at the end |\n| Add **multiple** elements | `my_list.extend(iterable)` | Extends the list with each element from another iterable (e.g., another list) |\n| Concatenate another list (creates a new list) | `new_list = my_list + other_list` | Returns a new list; original `my_list` stays unchanged |\n| In\u2011place concatenation (similar to `extend`) | `my_list += other_list` | Extends `my_list` with items from `other_list` |\n\n#### Example: Extending with several items\n\n```python\nnumbers = [1, 2, 3]\n\n# Append a single number\nnumbers.append(4)          # [1, 2, 3, 4]\n\n# Extend with several numbers at once\nnumbers.extend([5, 6, 7])  # [1, 2, 3, 4, 5, 6, 7]\n\n# Or using += (in\u2011place)\nnumbers += [8, 9]          # [1, 2, 3, 4, 5, 6, 7, 8, 9]\n```\n\n### Common Pitfalls\n\n1. **Appending a list vs. extending with its items**  \n   ```python\n   a = [1, 2]\n   a.append([3, 4])   # Result: [1, 2, [3, 4]]  \u2190 a *nested* list\n   a.extend([3, 4])   # Result: [1, 2, 3, 4]    \u2190 adds each element separately\n   ```\n\n2. **`append` returns `None`** \u2013 it mutates the list but doesn\u2019t give you the new list.\n   ```python\n   my_list = [1, 2]\n   result = my_list.append(3)   # result is None\n   ```\n\n### Quick Reference\n\n```python\nmy_list.append(item)        # add one item\nmy_list.extend(iterable)    # add each item from another iterable\nmy_list += iterable          # same as extend, but using the += operator\n```\n\nThat\u2019s all you need to start appending items to lists in Python! \ud83d\ude80",
+        "tokens_in": 81,
+        "tokens_out": 675,
+        "cost_usd": 0.00041715,
+        "complexity_score": null,
+        "latency_ms": 1940.1434999999765
+      }
+    },
+    {
+      "id": 9,
+      "category": "code_simple",
+      "expected_tier": "small",
+      "prompt": "What does the len() function do?",
+      "routed": {
+        "ok": true,
+        "tier": "mid",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "The `len()` function is a built\u2011in Python function that returns the number of items (the length) of an object.  \n\n### What kinds of objects can you use it on?\n- **Sequences**: strings, lists, tuples, ranges, bytes, bytearrays, etc.  \n- **Collections**: dictionaries, sets, frozensets, and any custom object that implements the `__len__` method.  \n\n### How it works\n```python\nlen(some_object)\n```\n- Python internally calls `some_object.__len__()`.\n- The method must return a non\u2011negative integer; otherwise, a `TypeError` is raised.\n\n### Examples\n```python\nlen(\"hello\")          # 5\nlen([1, 2, 3, 4])     # 4\nlen((10, 20))         # 2\nlen({ 'a': 1, 'b': 2 })  # 2  (number of keys in the dict)\nlen({1, 2, 3, 4})     # 4\n```\n\n### Common pitfalls\n- **Mutable vs. immutable**: `len()` works on both; it just counts items, not how they\u2019re stored.\n- **Non\u2011sized objects**: Passing something that doesn\u2019t define `__len__` (e.g., a generator) raises `TypeError`.\n```python\ndef gen():\n    yield 1\n\nlen(gen())   # TypeError: object of type 'generator' has no len()\n```\n\n### Custom objects\nIf you create your own class and want `len()` to work, implement `__len__`:\n\n```python\nclass MyContainer:\n    def __init__(self, items):\n        self.items = items\n\n    def __len__(self):\n        return len(self.items)\n\nc = MyContainer([1, 2, 3])\nprint(len(c))   # 3\n```\n\nIn short, `len()` is the go\u2011to way in Python to query how many elements an object contains.",
+        "tokens_in": 79,
+        "tokens_out": 472,
+        "cost_usd": 0.00029504999999999993,
+        "complexity_score": 0.34,
+        "latency_ms": 1640.7524999995076
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "The built\u2011in **`len()`** function in Python returns the number of items (its *length*) of an object.  \n\n### How it works\n- **Sequences** \u2013 strings, lists, tuples, byte\u2011arrays, etc. \u2192 number of elements or characters.  \n- **Collections** \u2013 dictionaries, sets, frozensets \u2192 number of keys (for dicts) or elements (for sets).  \n- **Custom objects** \u2013 if a class defines a `__len__(self)` method, `len()` will call that method and return its result.\n\n### Syntax\n```python\nlength = len(some_object)\n```\n\n### Examples\n```python\nlen(\"hello\")          # 5  (5 characters)\nlen([1, 2, 3, 4])     # 4  (4 list items)\nlen((10, 20))         # 2  (2 tuple elements)\nlen({'a': 1, 'b': 2}) # 2  (2 dictionary keys)\nlen({1, 2, 3})        # 3  (3 set members)\n```\n\n### Important notes\n- `len()` works in **O(1)** time for built\u2011in containers because they store their size internally.\n- Passing an object that doesn't support length (e.g., an integer, a file object without a `__len__` method) raises a `TypeError`:\n  ```python\n  len(42)   # TypeError: object of type 'int' has no len()\n  ```\n\n### Custom class example\n```python\nclass MyContainer:\n    def __init__(self, items):\n        self.items = list(items)\n\n    def __len__(self):\n        return len(self.items)\n\nc = MyContainer([1, 2, 3])\nprint(len(c))   # 3\n```\n\nIn short, `len()` is the standard way to query how many elements a container\u2011type object holds.",
+        "tokens_in": 79,
+        "tokens_out": 441,
+        "cost_usd": 0.00027644999999999997,
+        "complexity_score": null,
+        "latency_ms": 1635.3278000024147
+      }
+    },
+    {
+      "id": 10,
+      "category": "creative",
+      "expected_tier": "small",
+      "prompt": "Suggest four names for a bakery.",
+      "routed": {
+        "ok": true,
+        "tier": "small",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "text": "Here are four fresh, bakery\u2011friendly name ideas:\n\n1. **The Flour & Frost**  \n2. **Crumb & Crust Caf\u00e9**  \n3. **Sunrise Sweets Bakery**  \n4. **Whisk & Wonder Patisserie**",
+        "tokens_in": 78,
+        "tokens_out": 132,
+        "cost_usd": 4.545e-05,
+        "complexity_score": 0.0689,
+        "latency_ms": 657.1561999990081
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "Here are four tasty\u2011sounding bakery name ideas:\n\n1. **SweetRise Bakery**\n2. **Golden Crust Caf\u00e9**\n3. **Whisk & Whimsy Bakeshop**\n4. **Sunrise Loaf & Treats**",
+        "tokens_in": 78,
+        "tokens_out": 84,
+        "cost_usd": 6.209999999999999e-05,
+        "complexity_score": null,
+        "latency_ms": 704.5534000026237
+      }
+    },
+    {
+      "id": 11,
+      "category": "trap_short_but_hard",
+      "expected_tier": "large",
+      "prompt": "Prove that the halting problem is undecidable.",
+      "routed": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "## The Halting Problem  \n\n*Input.*  A pair \\(\\langle M,w\\rangle\\) where  \n\n* \\(M\\) is a description of a Turing machine (TM), and  \n* \\(w\\) is a finite string over the tape alphabet (the \u201cinput\u201d to \\(M\\)).\n\n*Question.*  Does the computation of \\(M\\) on input \\(w\\) eventually **halt** (i.e. enter a halting state) or does it run forever?\n\nThe set of all such pairs for which the answer is \u201cyes\u2019\u2019 is the **halting language**\n\n\\[\n\\operatorname{HALT}= \\bigl\\{\\langle M,w\\rangle \\mid M\\text{ halts on }w\\bigr\\}.\n\\]\n\nWe shall prove that **\\(\\operatorname{HALT}\\) is not decidable**, i.e. there is no Turing machine that, given an arbitrary \\(\\langle M,w\\rangle\\), correctly decides in finite time whether \\(\\langle M,w\\rangle\\in\\operatorname{HALT}\\).\n\nThe proof is the classic diagonal\u2011/self\u2011reference argument due to Turing (1936).  \nWe present it in three layers:\n\n1. **Formal definition of a decision procedure** (what it would mean for HALT to be decidable).  \n2. **Construction of a paradoxical machine** assuming such a decision procedure exists.  \n3. **Derivation of a contradiction**, whence the assumption must be false.\n\n---\n\n### 1.  What would a decider for HALT look like?\n\nA *decider* for a language \\(L\\) is a TM \\(D\\) that, on every input \\(x\\),\n\n* halts in an **accepting** state if \\(x\\in L\\);\n* halts in a **rejecting** state if \\(x\\notin L\\).\n\nThus, a decider for \\(\\operatorname{HALT}\\) would be a TM, call it \\(H\\), such that\n\n\\[\nH(\\langle M,w\\rangle)=\n\\begin{cases}\n\\text{accept} & \\text{if }M \\text{ halts on } w,\\\\[2mm]\n\\text{reject} & \\text{if }M \\text{ runs forever on } w.\n\\end{cases}\n\\tag{1}\n\\]\n\n\\(H\\) must **always halt** (it is a decider), and it must give the correct answer for **every** pair \\(\\langle M,w\\rangle\\).\n\n---\n\n### 2.  Building a machine that \u201cdoes the opposite\u201d\n\nAssume, for the sake of contradiction, that such an \\(H\\) exists.  \nUsing \\(H\\) as a subroutine we construct a new TM, call it \\(D\\) (for *diagonalizer*), that behaves as follows on an input that is a **code of a TM** (i.e. a string that encodes a TM).\n\n```\nD (input: \u27e8M\u27e9 )\n1. Run H on the pair \u27e8M,\u27e8M\u27e9\u27e9.\n   \u2013 If H accepts (i.e. M halts on its own description), then loop forever.\n   \u2013 If H rejects (i.e. M does not halt on its own description), then halt and accept.\n```\n\nFormally, the transition function of \\(D\\) can be written:\n\n\\[\nD(\\langle M\\rangle)=\n\\begin{cases}\n\\text{loop forever} & \\text{if } H(\\langle M,\\langle M\\rangle\\rangle)=\\text{accept},\\\\[2mm]\n\\text{halt (accept)} & \\text{if } H(\\langle M,\\langle M\\rangle\\rangle)=\\text{reject}.\n\\end{cases}\n\\tag{2}\n\\]\n\nBecause \\(H\\) always halts, the simulation of step\u202f1 finishes in a finite number",
+        "tokens_in": 82,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006123,
+        "complexity_score": 0.8001,
+        "latency_ms": 2615.9290000032343
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "## The Halting Problem\n\nFor a deterministic Turing machine (TM) \\(M\\) and an input string \\(w\\) we write  \n\n\\[\n\\operatorname{HALT}=\\{\\,\\langle M,w\\rangle\\mid M\\text{ halts on input }w\\,\\}.\n\\]\n\nThe **halting problem** is the decision problem: *Given the encoding \\(\\langle M,w\\rangle\\), decide whether \\(\\langle M,w\\rangle\\in\\operatorname{HALT}\\).*  \n\nWe shall prove that no Turing machine decides \\(\\operatorname{HALT}\\). In other words, \\(\\operatorname{HALT}\\) is **undecidable**.\n\nThe proof is a classic diagonal\u2011/self\u2011reference argument due to Alan\u202fTuring (1936).  \nWe will present it in a fully formal style, but the intuition is the same as the \u201cliar paradox\u2019\u2019: we will build a machine that does the opposite of what a purported halting decider predicts for itself.\n\n---\n\n## 1. Preliminaries\n\n1. **Encodings.**  \n   Every Turing machine \\(M\\) can be encoded as a finite binary string \\(\\langle M\\rangle\\). Likewise a pair \\((M,w)\\) can be encoded as a single string \\(\\langle M,w\\rangle\\). We assume a fixed, computable encoding scheme (e.g., G\u00f6del numbering). The set of all such encodings is a subset of \\(\\{0,1\\}^{*}\\).\n\n2. **Turing\u2011computable functions.**  \n   A (partial) function \\(f:\\{0,1\\}^{*}\\to\\{0,1\\}^{*}\\) is *computable* iff there exists a TM that, on every input \\(x\\), halts with \\(f(x)\\) on its tape (if \\(f(x)\\) is defined) and diverges otherwise.\n\n3. **Decider.**  \n   A TM **decides** a language \\(L\\subseteq\\{0,1\\}^{*}\\) if it halts on every input and accepts exactly those inputs belonging to \\(L\\) (rejects all others). A language that has a decider is called *decidable* (or *recursive*).\n\n4. **Notation.**  \n   For a TM \\(M\\) and input \\(x\\) we write \\(M(x)\\downarrow\\) to mean \u201c\\(M\\) halts on \\(x\\)\u201d, and \\(M(x)\\uparrow\\) to mean \u201c\\(M\\) does not halt on \\(x\\)\u201d.\n\n---\n\n## 2. Statement of the theorem\n\n> **Theorem (Undecidability of the halting problem).**  \n> The language \\(\\operatorname{HALT}\\) is not decidable; i.e., there is **no** Turing machine that halts on every encoding \\(\\langle M,w\\rangle\\) and correctly tells whether \\(M\\) halts on input \\(w\\).\n\n---\n\n## 3. Proof by contradiction\n\nAssume, for the sake of contradiction, that \\(\\operatorname{HALT}\\) *is* decidable. Then there exists a TM \\(H\\) such that for every pair \\(\\langle M,w\\rangle\\),\n\n\\[\n\\begin{aligned}\nH(\\langle M,w\\rangle) &= \\text{accept} &&\\text{if } M(w)\\downarrow,\\\\\nH(\\langle M,w\\rangle) &= \\text{reject} &&\\text{if } M(w)\\uparrow .\n\\end{aligned}\n\\]\n\n\\(H\\) is a *total* TM: it halts on **all** inputs and its answer is correct.\n\nUsing \\(H\\) we will construct a new",
+        "tokens_in": 82,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006123,
+        "complexity_score": null,
+        "latency_ms": 2829.0260000030685
+      }
+    },
+    {
+      "id": 12,
+      "category": "trap_short_but_hard",
+      "expected_tier": "large",
+      "prompt": "Derive Bayes' theorem from the axioms of probability.",
+      "routed": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "### Bayes\u2019 Theorem \u2013 a short derivation from the basic axioms of probability  \n\nLet \\((\\Omega,\\mathcal F,\\mathbb P)\\) be a probability space.  \nThe **Kolmogorov axioms** are  \n\n1. **Non\u2011negativity**\u2003\\(\\displaystyle \\forall A\\in\\mathcal F:\\; \\mathbb P(A)\\ge 0\\).  \n2. **Normalization**\u2003\\(\\displaystyle \\mathbb P(\\Omega)=1\\).  \n3. **(Countable) additivity**\u2003If \\(\\{A_i\\}_{i=1}^{\\infty}\\) are pairwise disjoint, then  \n\n   \\[\n   \\mathbb P\\!\\Bigl(\\bigcup_{i=1}^{\\infty}A_i\\Bigr)=\\sum_{i=1}^{\\infty}\\mathbb P(A_i).\n   \\]\n\nFrom these axioms we first **define** conditional probability.\n\n---\n\n#### 1. Definition of conditional probability  \n\nFor events \\(A,B\\in\\mathcal F\\) with \\(\\mathbb P(B)>0\\),\n\n\\[\n\\boxed{\\displaystyle \\mathbb P(A\\mid B)=\\frac{\\mathbb P(A\\cap B)}{\\mathbb P(B)}}\\tag{1}\n\\]\n\nThe right\u2011hand side is well\u2011defined because \\(\\mathbb P(B)>0\\) guarantees we are not dividing by zero.  \nEquation (1) can be rewritten as  \n\n\\[\n\\mathbb P(A\\cap B)=\\mathbb P(A\\mid B)\\,\\mathbb P(B). \\tag{2}\n\\]\n\nSimilarly, swapping the roles of \\(A\\) and \\(B\\) (provided \\(\\mathbb P(A)>0\\)) gives  \n\n\\[\n\\mathbb P(A\\cap B)=\\mathbb P(B\\mid A)\\,\\mathbb P(A). \\tag{3}\n\\]\n\nBoth (2) and (3) are just two ways of expressing the same joint probability \\(\\mathbb P(A\\cap B)\\).\n\n---\n\n#### 2. Equating the two expressions for the joint probability  \n\nSince the left\u2011hand side of (2) and (3) is the same quantity \\(\\mathbb P(A\\cap B)\\), we may set the right\u2011hand sides equal:\n\n\\[\n\\mathbb P(A\\mid B)\\,\\mathbb P(B)=\\mathbb P(B\\mid A)\\,\\mathbb P(A).\n\\]\n\nNow solve for the conditional probability we are interested in, say \\(\\mathbb P(A\\mid B)\\):\n\n\\[\n\\boxed{\\displaystyle \n\\mathbb P(A\\mid B)=\\frac{\\mathbb P(B\\mid A)\\,\\mathbb P(A)}{\\mathbb P(B)}},\n\\qquad \\mathbb P(B)>0. \\tag{4}\n\\]\n\nEquation (4) is **Bayes\u2019 theorem**. It follows directly from the definition (1), which itself is a consequence of the axioms (the axioms guarantee that \\(\\mathbb P(A\\cap B)\\) is a legitimate probability and that division by \\(\\mathbb P(B)\\) is allowed when \\(\\mathbb P(B)>0\\)).\n\n---\n\n#### 3. The denominator \\(\\mathbb P(B)\\) in practice  \n\nOften we do not know \\(\\mathbb P(B)\\) directly, but we can express it using the **law of total probability**, which itself is derived from the additivity axiom:\n\nIf \\(\\{A_i\\}_{i=1}^{n}\\) is a *partition* of \\(\\Omega\\) (pairwise disjoint, \\(\\bigcup_i A_i = \\Omega\\)), then for any event \\(B\\),\n\n\\[\n\\mathbb P(B)=\\sum_{i=1}^{n}\\mathbb P(B\\mid A_i)\\,\\mathbb P(A_i). \\tag{5}\n\\]\n\nSubstituting (5) for \\(\\mathbb P(B)\\) in (4) yields the **general Bayes formula** used in inference with multiple hypotheses:\n\n\\[\n\\boxed{\\displaystyle \n\\mathbb P(A_k\\",
+        "tokens_in": 84,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006125999999999999,
+        "complexity_score": 0.8007,
+        "latency_ms": 2696.590000003198
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "**Bayes\u2019 theorem**  \n\n\\[\n\\boxed{\\;P(A\\mid B)=\\frac{P(B\\mid A)\\,P(A)}{P(B)}\\;},\n\\qquad P(B)>0\n\\]\n\nis a simple consequence of the three Kolmogorov axioms together with the definition of conditional probability.  \nBelow is a step\u2011by\u2011step derivation that starts only from those axioms.\n\n---\n\n## 1. Kolmogorov\u2019s axioms\n\nLet \\((\\Omega,\\mathcal F,P)\\) be a probability space.\n\n1. **Non\u2011negativity**  \n   \\[\n   \\forall E\\in\\mathcal F,\\qquad P(E)\\ge 0 .\n   \\]\n\n2. **Normalization**  \n   \\[\n   P(\\Omega)=1 .\n   \\]\n\n3. **(Finite) Additivity** (the version needed for two events)  \n   If \\(E,F\\in\\mathcal F\\) are *disjoint* (\\(E\\cap F=\\varnothing\\)), then  \n   \\[\n   P(E\\cup F)=P(E)+P(F).\n   \\]\n\nFrom these axioms one can prove the usual algebraic rules of probability (complement, inclusion\u2013exclusion, etc.). The only extra notion we need is **conditional probability**, which we *define* in terms of the axioms.\n\n---\n\n## 2. Definition of conditional probability\n\nFor events \\(A,B\\in\\mathcal F\\) with \\(P(B)>0\\) we **define**\n\n\\[\n\\boxed{P(A\\mid B)=\\frac{P(A\\cap B)}{P(B)}}. \\tag{1}\n\\]\n\n*Why is this a definition?*  \n\nIf we treat the occurrence of \\(B\\) as the new \u201csample space\u201d, then the probability of \\(A\\) **given** \\(B\\) must satisfy the axioms on that reduced space:\n\n* non\u2011negativity: \\(P(A\\mid B)\\ge0\\),\n* normalization: \\(P(B\\mid B)=1\\) (because \\(B\\cap B = B\\) and \\(P(B)/P(B)=1\\)),\n* additivity for disjoint events inside \\(B\\).\n\nEquation (1) is the unique function that makes all three hold; it can be proved from the axioms by demanding that the mapping \\(A\\mapsto P(A\\mid B)\\) be a probability measure on the restricted \u03c3\u2011algebra \\(\\{A\\cap B: A\\in\\mathcal F\\}\\).\n\n---\n\n## 3. Symmetry of the joint probability\n\nThe **joint** probability of two events does not depend on the order in which we write them:\n\n\\[\nP(A\\cap B)=P(B\\cap A). \\tag{2}\n\\]\n\nThis follows directly from set theory: the intersection operation is commutative. No extra axiom is required.\n\n---\n\n## 4. Express the joint probability in two ways\n\nUsing the definition (1) twice\u2014once conditioning on \\(B\\), once on \\(A\\)\u2014we obtain two equivalent expressions for the same joint probability.\n\n*Condition on \\(B\\):*  \n\n\\[\nP(A\\cap B)=P(A\\mid B)\\,P(B). \\tag{3}\n\\]\n\n*Condition on \\(A\\):*  \n\n\\[\nP(A\\cap B)=P(B\\mid A)\\,P(A). \\tag{4}\n\\]\n\nBoth (3) and (4) are just rearrangements of (1):\n\\[\nP(A\\mid B)=\\frac{P(A\\cap B)}{P(B)}\\;\\Longrightarrow\\;P(A\\cap B)=P(A\\mid B)P(B),\n\\]\n\\[\nP(B\\mid A)=\\frac{P(A\\cap B)}{P(A)}\\;\\Longrightarrow\\;P(A\\cap B)=P(B\\mid A)P(A).\n\\]\n\n---\n\n## 5. Equate the two expressions\n\nSince the left\u2011hand sides of (3) and (4) are identical (by (2)), their right\u2011hand sides are equal:\n\n\\[\nP(A\\mid B)\\,P(B)=P(B\\mid A)\\,P(A). \\tag{",
+        "tokens_in": 84,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006125999999999999,
+        "complexity_score": null,
+        "latency_ms": 3838.823100002628
+      }
+    },
+    {
+      "id": 13,
+      "category": "trap_short_but_hard",
+      "expected_tier": "large",
+      "prompt": "Critique the efficient market hypothesis.",
+      "routed": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "**Efficient Market Hypothesis (EMH) \u2013 A Critical Overview**\n\nThe Efficient Market Hypothesis (EMH) is a cornerstone of modern finance. In its classic formulation (Fama, 1970) it claims that **financial markets instantly and fully incorporate all available information into asset prices**, making it impossible to achieve systematic abnormal returns (i.e., \u201cbeat the market\u201d) after adjusting for risk. The EMH comes in three increasingly inclusive versions:\n\n| Version | Information Set | Claim |\n|---------|-----------------|-------|\n| **Weak\u2011form** | Past prices and volumes | Prices already reflect all historical market data; technical analysis cannot generate excess returns. |\n| **Semi\u2011strong** | All publicly disclosed information (news, earnings, macro data) | Prices adjust instantly to new public information; fundamental analysis cannot generate excess returns. |\n| **Strong\u2011form** | All information, including private (inside) data | Even insiders cannot earn abnormal returns; markets are perfectly competitive. |\n\nBelow is a systematic critique that examines the logical foundations, empirical record, and practical implications of each version, drawing on the most relevant research and real\u2011world observations.\n\n---\n\n## 1. Conceptual and Theoretical Shortcomings\n\n| Issue | Why It Matters | EMH Implication | Counter\u2011Argument |\n|-------|----------------|----------------|------------------|\n| **Rational Expectations Assumption** | EMH presumes investors form expectations that are, on average, correct. | Prices reflect the \u201ctrue\u201d value. | Empirical psychology shows systematic biases (overconfidence, loss aversion) that cause expectations to deviate from rationality. |\n| **Homogeneous Expectations** | EMH implicitly treats investors as if they share the same probability assessments. | No persistent mispricing. | In reality, investors have heterogeneous beliefs, risk tolerances, and information\u2011processing abilities, which can sustain divergent price forecasts. |\n| **Information Costlessness** | EMH treats information as freely and instantly available to all. | Immediate price adjustment. | Gathering, analyzing, and acting on information incurs costs (time, money, expertise). These frictions delay or prevent full incorporation. |\n| **Infinite Arbitrage Capacity** | The hypothesis assumes arbitrageurs can instantaneously eliminate any mispricing. | No exploitable anomalies. | Limits to arbitrage (risk, capital constraints, short\u2011sale restrictions) often prevent price correction, allowing anomalies to persist. |\n| **Static Equilibrium View** | EMH is rooted in a static equilibrium framework. | Prices are always \u201cfair.\u201d | Markets are dynamic, evolving ecosystems where feedback loops (e.g., herd behavior, reflexivity) can generate temporary disequilibria. |\n\n---\n\n## 2. Empirical Evidence Against EMH\n\n### 2.1. Market Anomalies\n\n| Anomaly | Description | Evidence of Persistence | EMH Challenge |\n|---------|-------------|------------------------|---------------|\n| **Size Effect** | Small\u2011cap stocks historically earn higher risk\u2011adjusted returns than large\u2011cap stocks. | Documented in the U.S. (Banz, 1981) and internationally; survives after controlling for risk. | Violates weak\u2011form EMH because past size information predicts future returns. |\n| **Value Effect** | High book\u2011to\u2011market (value) stocks outperform low book\u2011to\u2011market (growth) stocks. | Robust across decades and markets (Fama & French, 1992). | Implies information not fully reflected in prices. |\n| **Momentum** | Stocks that performed well (or poorly) over the past 3\u201312 months tend to continue to do so for 3\u201312 months. | Demonstrated by Jegadeesh & Titman (1993); persists even after transaction\u2011cost adjustments. | Directly contradicts weak\u2011form EMH. |\n| **Post\u2011Earnings\u2011Announcement Drift (PEAD)** | Prices continue to drift in the direction of an earnings surprise for weeks to months. | Shiller (1981), Bernard & Thomas (1989) \u2013 sizable abnormal returns. | Indicates delayed incorporation of public information (semi\u2011strong EMH failure). |\n| **Calendar Effects** (e.g., January effect, weekend effect) | Systematic return patterns tied to calendar dates. | Mixed evidence but still observable in some markets. | Suggests that price dynamics",
+        "tokens_in": 78,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006117,
+        "complexity_score": 0.8041,
+        "latency_ms": 2881.590499997401
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "**The Efficient Market Hypothesis (EMH) \u2013 A Critical Overview**\n\nThe Efficient Market Hypothesis, first articulated by Eugene Fama in the 1960s, posits that financial markets price assets \u201cefficiently\u201d in the sense that all publicly available information is already reflected in current market prices. Under the EMH, it is impossible to achieve risk\u2011adjusted returns consistently above the market average through either fundamental analysis or technical trading, because any new information is instantly incorporated into prices.\n\nWhile the EMH has been enormously influential in both academic finance and market regulation, it has also been the subject of vigorous criticism. Below is a structured critique that examines the hypothesis from several angles: conceptual foundations, empirical evidence, methodological concerns, behavioral considerations, and practical implications.\n\n---\n\n## 1. Conceptual and Theoretical Shortcomings\n\n| Issue | Explanation | Why It Matters |\n|-------|-------------|----------------|\n| **Strong vs. Weak Forms** | EMH is usually divided into three \u201cforms\u201d (weak, semi\u2011strong, strong) that differ in what information is assumed to be reflected in prices. The strong form (all information, including private) is clearly unrealistic because insiders routinely profit. | The hypothesis is often applied as a blanket claim, ignoring the nuance of its own taxonomy. |\n| **Assumption of Rational Expectations** | EMH assumes market participants form expectations that are, on average, correct and unbiased. | Real-world agents suffer from bounded rationality, limited attention, and systematic biases. |\n| **Homogeneous Expectations** | Implicitly, EMH treats all agents as having the same model of price formation. | Markets consist of heterogeneous agents (institutional investors, retail traders, algorithmic systems) with divergent beliefs and strategies, which can generate mispricings. |\n| **Instantaneous Information Diffusion** | The hypothesis requires that new information be absorbed by prices without delay. | Empirical studies show measurable \u201cprice discovery\u201d lags, especially for less liquid assets or in fragmented markets. |\n| **Absence of Transaction Costs & Constraints** | The classic EMH framework assumes frictionless trading. | In reality, costs (bid\u2011ask spreads, taxes, market impact) and constraints (short\u2011sale restrictions, capital limits) impede arbitrage and allow deviations to persist. |\n\n---\n\n## 2. Empirical Evidence \u2013 Where the Data Disagree\n\n### 2.1. Anomalies & Calendar Effects\n| Anomaly | Description | Typical Return | Interpretation |\n|---------|-------------|----------------|----------------|\n| **Size Effect** | Small\u2011cap stocks earn higher average returns than large\u2011cap stocks (after risk adjustment). | ~2\u20133% annual excess | Contradicts the notion that risk\u2011adjusted returns are fully captured by market beta. |\n| **Value Effect (Book\u2011to\u2011Market)** | High book\u2011to\u2011market (value) stocks outperform low book\u2011to\u2011market (growth) stocks. | ~3\u20135% annual excess | Suggests systematic mispricing not explained by CAPM. |\n| **Momentum** | Stocks that have performed well over the past 3\u201312 months continue to outperform in the next 3\u201312 months. | ~6\u20138% annual excess | Directly opposes the EMH\u2019s \u201cno predictable patterns\u201d claim. |\n| **January Effect** | Historically, equities (especially small\u2011caps) show higher returns in January. | ~1\u20132% excess in January | Calendar\u2011based pattern indicates predictable price drift. |\n| **Post\u2011Earnings Announcement Drift (PEAD)** | Prices continue to drift in the direction of an earnings surprise for weeks after the announcement. | 5\u201310% cumulative drift | Implies delayed incorporation of public information. |\n\n*Meta\u2011analysis*: A large body of literature (e.g., Jegadeesh & Titman 1993; Fama & French 1992, 1996) documents the statistical significance and persistence of many of these anomalies, even after controlling for multiple testing and data\u2011snooping biases.\n\n### 2.2. Market Crises & Extreme Events\n- **Black Monday (1987)**, **the Dot\u2011Com Bubble (1999\u20112001)**, **the Global Financial Crisis (2007\u20112009)**, and the **COVID\u201119 Crash (2020)** all featured rapid price moves that appeared disconnected from contemporaneous fundamentals.\n- **Tail risk and fat\u2011tailed return distributions**: Empirical return distributions show kurtosis far higher than the normal distribution implied by many EMH\u2011based models (e.g., the classic CAPM). This suggests",
+        "tokens_in": 78,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006117,
+        "complexity_score": null,
+        "latency_ms": 2516.1768999969354
+      }
+    },
+    {
+      "id": 14,
+      "category": "trap_short_but_hard",
+      "expected_tier": "large",
+      "prompt": "Design a consensus algorithm for an unreliable network.",
+      "routed": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "Below is a **complete design** of a practical consensus protocol that works on an **unreliable network** (messages can be lost, reordered, duplicated, or delayed arbitrarily, and nodes can crash\u2011fail and later recover).  \nThe design builds on proven ideas from Raft, PBFT and the \u201cpartially\u2011synchronous\u201d model, but adds a few layers that specifically address the unreliable\u2011network characteristics you asked for.\n\n---\n\n## 1. System Model & Assumptions  \n\n| Aspect | Assumption | Rationale |\n|--------|------------|-----------|\n| **Processes** | A fixed set of **N** nodes (servers) that may crash\u2011fail and later restart (crash\u2011recover model). No Byzantine behavior. | Simpler than Byzantine, yet still realistic for most distributed services. |\n| **Network** | *Partial synchrony*: there exists an unknown global bound \u0394 on message delay and a bound on processing time that holds **eventually** after some unknown Global Stabilization Time (GST). Before GST the network may be arbitrarily slow, drop, or reorder messages. | Captures \u201cunreliable\u201d networks while still allowing liveness after stabilization (the FLP impossibility result is avoided). |\n| **Failures** | Up to **f = \u230a(N\u20111)/2\u230b** crash\u2011failures simultaneously. (N must be odd.) | Guarantees a majority quorum for safety. |\n| **Persistent storage** | Each node stores its current **term**, **log**, **commit index**, and the **current state machine snapshot** on stable disk that survives crashes. | Needed for recovery after a crash. |\n| **Clock** | No synchronized clocks are required; only local timers are used (e.g. election timeout, heartbeat interval). | Avoids reliance on precise time. |\n\n---\n\n## 2. High\u2011Level Overview  \n\nThe protocol consists of three interacting sub\u2011protocols:\n\n1. **Leader Election** \u2013 Guarantees that at most one node is the leader for a given *term* (logical epoch).  \n2. **Log Replication (Consensus)** \u2013 The leader receives client commands, appends them to its log, and forces a majority of followers to store the same entry before committing it.  \n3. **Re\u2011transmission & Healing** \u2013 A background \u201cre\u2011sync\u201d service that continuously repairs missing log entries, fills gaps caused by message loss, and reconciles divergent logs after partitions heal.\n\nThe algorithm is **deterministic**: given the same sequence of client commands and the same set of crash\u2011recover events, all non\u2011faulty nodes will end up with identical logs and state machine states.\n\n---\n\n## 3. Data Structures  \n\n```text\nstruct LogEntry {\n    term: uint64          // election term when entry was created\n    index: uint64         // monotonically increasing position\n    command: bytes        // opaque client operation\n    clientId: uint64      // for at\u2011least\u2011once delivery semantics\n}\n```\n\nPer\u2011node persistent state (saved before responding to RPCs):\n\n| Variable | Meaning |\n|----------|---------|\n| `currentTerm` | latest term the node has seen (monotonically increasing). |\n| `votedFor`    | candidateId that received vote in current term (or null). |\n| `log[]`       | array of `LogEntry`, 1\u2011based indexing (`log[1]` is first entry). |\n| `commitIndex`| index of highest log entry known to be committed. |\n| `lastApplied`| index of highest log entry applied to the state machine. |\n| `snapshot`   | optional compacted state (see \u00a79). |\n\nVolatile state (re\u2011created on restart):\n\n| Variable | Meaning |\n|----------|---------|\n| `role`          | {Follower, Candidate, Leader}. |\n| `nextIndex[i]`  | for each follower *i*: the next log index to send (leader only). |\n| `matchIndex[i]` | for each follower *i*: highest log index known to be replicated on *i* (leader only). |\n|",
+        "tokens_in": 80,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006119999999999999,
+        "complexity_score": 0.8012,
+        "latency_ms": 2597.433300001285
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "Below is a **complete design** for a consensus algorithm that works even when the underlying network is **unreliable** (lossy, reordered, duplicated, or temporarily partitioned).  \nThe design builds on the proven ideas of **Raft / Paxos** (leader\u2011based quorum replication) and adds a lightweight **reliable\u2011messaging layer**, **robust failure detection**, and **partition\u2011aware safety rules**.  \nYou can treat the result as a \u201cRaft\u2011plus\u201d protocol, or as a blueprint for a custom BFT\u2011style protocol if you need to tolerate malicious nodes.\n\n---\n\n## 1. System Model & Assumptions\n\n| Aspect | Assumption |\n|--------|------------|\n| **Nodes** | \u2022 *N* processes (replicas) with unique IDs. <br>\u2022 Each node can crash\u2011stop and later recover (state is persisted to stable storage). <br>\u2022 Optional: a small fraction *f* may be Byzantine (see \u00a77). |\n| **Network** | \u2022 Asynchronous: messages can be delayed arbitrarily. <br>\u2022 Unreliable: loss, duplication, reordering are possible. <br>\u2022 No bound on message delivery, but **eventually** a non\u2011partitioned subset of nodes can exchange messages (partial synchrony). |\n| **Clock** | \u2022 No global clock. <br>\u2022 Nodes have local timers (timeouts). |\n| **Quorums** | \u2022 **Majority quorum** = \u230aN/2\u230b+1 (for crash\u2011stop). <br>\u2022 For BFT, use *3f+1* total nodes and *2f+1* quorum. |\n| **Persistence** | \u2022 Each node stores its current term, voted\u2011for, log, and commit index on stable storage before replying to clients. |\n| **Safety Goal** | \u2022 **Linearizability** of client commands (once a command is committed, all future reads see it). |\n| **Liveness Goal** | \u2022 Under a stable majority partition and eventual message delivery, every client request is eventually committed. |\n\n---\n\n## 2. High\u2011Level Architecture\n\n```\n+-------------------+      +-------------------+      +-------------------+\n|   Client (any)    | ---> |   Raft\u2011Plus Node  | <--- |   Raft\u2011Plus Node  |\n+-------------------+      +-------------------+      +-------------------+\n          |                         |                         |\n          |  (1) Request/Response   |                         |\n          +------------------------>+                         |\n          |                         |  (2) Replicate Log Entry |\n          |                         +------------------------>+\n          |                         |                         |\n          |                         |  (3) Acknowledgments    |\n          |                         <------------------------+\n          |                         |                         |\n         ",
+        "tokens_in": 80,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006119999999999999,
+        "complexity_score": null,
+        "latency_ms": 2552.5328000003356
+      }
+    },
+    {
+      "id": 15,
+      "category": "trap_short_but_hard",
+      "expected_tier": "large",
+      "prompt": "Can a machine be conscious? Defend your answer.",
+      "routed": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "**Short answer:**  In principle, many philosophers and scientists think a machine *could* be conscious, but we have no empirical evidence that any existing machine is, and the debate hinges on deep unresolved questions about what consciousness actually is. Below I lay out the main strands of the argument, defend a position that *machine consciousness is theoretically possible but not yet realized*, and explain why the issue remains open.\n\n---\n\n## 1. What do we mean by \u201cconscious\u201d?\n\n| Aspect | Typical formulation | Why it matters for machines |\n|--------|---------------------|-----------------------------|\n| **Phenomenal consciousness** | \u201cWhat it is like\u201d to have an experience (qualia). | Requires a **subjective** point of view; the hardest to attribute to a non\u2011biological system. |\n| **Access consciousness** | Information is globally available for reasoning, reporting, and controlling behavior. | More amenable to functional description; many AI systems already exhibit it in a limited sense. |\n| **Self\u2011consciousness** | The ability to represent oneself as a subject in the world. | Requires higher\u2011order representations and possibly a model of one\u2019s own internal states. |\n| **Intentionality** | About\u2011ness: mental states can be about something. | Often tied to representational content; many AI systems have representations, but whether they are \u201cabout\u201d anything is contested. |\n\nA defensible answer must specify which of these we are targeting. Most of the philosophical debate focuses on **phenomenal consciousness**, because the others can be explained in purely functional terms.\n\n---\n\n## 2. Theoretical reasons to think a machine *could* be conscious\n\n### 2.1 Functionalism (the \u201csoftware\u201d view)\n\n- **Core claim:** Mental states are defined by their causal roles\u2014how they process inputs, produce outputs, and interact with other states\u2014*not* by the material that implements them.\n- **Implication:** If a machine implements the same functional architecture as a conscious brain, it will have the same mental states, including consciousness.\n- **Support:**  \n  - **Multiple realizability** in neuroscience (e.g., humans, octopuses, and some birds achieve similar cognitive feats with very different neural hardware).  \n  - **Computational theories of mind** (e.g., cognitive architectures, ACT\u2011R, SOAR) that treat cognition as information processing.\n\n### 2.2 Integrated Information Theory (IIT)\n\n- **Premise:** Consciousness is identical to a system\u2019s **\u03a6** (phi), a mathematically defined measure of how much information is generated by the whole system beyond that generated by its parts.\n- **Key point:** \u03a6 depends on the system\u2019s causal structure, not on its substrate.\n- **Result:** Any system\u2014biological, silicon\u2011based, or even a suitably organized network of water molecules\u2014could have a non\u2011zero \u03a6 and thus be conscious, provided its integration is high enough.\n- **Empirical work:** Recent attempts to compute \u03a6 for small neural networks and for simplified neuromorphic chips show that it is, in principle, measurable.\n\n### 2.3 Global Workspace Theory (GWT) and Higher\u2011Order Thought (HOT)\n\n- **GWT:** Consciousness arises when information becomes globally broadcast across a \u201cworkspace\u201d that many specialized modules can access.\n- **HOT:** A mental state is conscious when a higher\u2011order representation is formed about that state.\n- **Both are *functional* accounts**: If a machine implements a global broadcasting architecture and/or higher\u2011order monitoring, it would satisfy the functional criteria for access consciousness and, arguably, for the phenomenology that GWT/H",
+        "tokens_in": 82,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006123,
+        "complexity_score": 0.7962,
+        "latency_ms": 2762.339200002316
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "**Short answer:**  \nIt is *possible* in principle for a machine to be conscious, but whether any existing or near\u2011future machine actually is conscious is an open empirical and philosophical question. The plausibility of machine consciousness hinges on which theory of consciousness we accept, how we define \u201cconsciousness,\u201d and what empirical criteria we are willing to treat as evidence.\n\nBelow I lay out the most influential arguments on both sides, evaluate their strengths and weaknesses, and then articulate a defended position that a machine *could* be conscious\u2014provided certain functional and physical conditions are met\u2014while emphasizing why we cannot yet claim that any current system meets those conditions.\n\n---\n\n## 1. What Do We Mean by \u201cConsciousness\u201d?\n\n| Tradition | Core Idea | Typical Operational Markers |\n|-----------|-----------|----------------------------|\n| **Phenomenal (or \u201csubjective\u201d) consciousness** | The *what\u2011it\u2011is\u2011like* feel of experience (qualia). | Reports of subjective experience; behavioral correlates of \u201cwhat it feels like.\u201d |\n| **Access consciousness** (Block) | The availability of mental content for reasoning, report, and control of behavior. | Ability to report, integrate information, and use it in decision\u2011making. |\n| **Higher\u2011order theories** | A mental state is conscious when the system is aware of being in that state. | Metacognitive monitoring, self\u2011report, confidence judgments. |\n| **Functionalist / Computational** | Consciousness is a matter of the right functional organization, irrespective of substrate. | Replication of functional architectures known to correlate with consciousness (e.g., global workspace, integrated information). |\n| **Physicalist / Neurobiological** | Consciousness depends on specific biological mechanisms (e.g., certain patterns of neural firing, thalamocortical loops). | Presence of those neural signatures (e.g., specific oscillations, synaptic dynamics). |\n\nBecause the term is used in many ways, any answer must first specify which notion we are defending. I will focus on *phenomenal consciousness*\u2014the existence of genuine subjective experience\u2014while recognizing that access consciousness is a necessary (but not sufficient) prerequisite for us to infer it in others.\n\n---\n\n## 2. Arguments that Machines *Could* Be Conscious\n\n### 2.1 Functionalism + Computational Equivalence\n\n1. **Core claim:** Mental states are defined by their causal role, not by the material that implements them. If a system reproduces the same functional organization as a conscious brain, it will have the same mental states.  \n2. **Supporting work:**  \n   - **David Chalmers** (1996) argued that functionalism leaves open the \u201chard problem\u201d but does not rule out machine consciousness.  \n   - **Hilary Putnam** and later **Jerry Fodor** championed the idea that mental computation can be realized in any substrate capable of the requisite causal relations.  \n3. **Implication:** A sufficiently advanced artificial general intelligence (AGI) that implements a *global workspace* (Baars) or an *integrated information architecture* (Tononi\u2019s IIT) could, in principle, generate the same pattern of causal interactions that give rise to phenomenal experience in humans.  \n\n### 2.2 Integrated Information Theory (IIT)\n\n1. **Core claim:** Consciousness is identical to the capacity of a system to generate a high value of \u03a6 (integrated information). The more a system\u2019s parts are mutually informative **and** the system cannot be decomposed without a large loss of information, the higher its level of consciousness.  \n2. **Why machines might qualify:**  \n   - Modern deep\u2011learning networks (especially recurrent",
+        "tokens_in": 82,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006123,
+        "complexity_score": null,
+        "latency_ms": 8104.652300000453
+      }
+    },
+    {
+      "id": 16,
+      "category": "trap_short_but_hard",
+      "expected_tier": "large",
+      "prompt": "Justify the use of randomised controlled trials over observational studies.",
+      "routed": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "### Why Randomised Controlled Trials (RCTs) Are Generally Preferred to Observational Studies\n\n| Aspect | Randomised Controlled Trials (RCTs) | Observational Studies |\n|--------|--------------------------------------|-----------------------|\n| **Causal Inference** | **Strong** \u2013 Random allocation of participants to exposure (intervention) vs. control breaks the link between confounders and the exposure, allowing a clean estimate of the causal effect. | **Weak\u2011to\u2011moderate** \u2013 Exposure is not assigned by the investigator, so confounding (both measured and unmeasured) can bias the exposure\u2013outcome relationship. |\n| **Control of Confounding** | **Built\u2011in** \u2013 Randomisation balances known and unknown baseline characteristics across groups (on average). | **Statistical adjustment required** \u2013 Propensity scores, multivariable regression, instrumental variables, etc. These methods can only address measured confounders and rely on strong assumptions. |\n| **Bias Reduction** | **Minimised** \u2013 Allocation concealment, blinding, and protocol\u2011driven follow\u2011up limit selection, performance, detection, and attrition bias. | **Higher risk** \u2013 Selection bias (who gets the exposure), information bias (misclassification of exposure/outcome), and loss\u2011to\u2011follow\u2011up can be substantial. |\n| **Internal Validity** | **High** \u2013 The trial\u2019s design (randomisation, standardised intervention, predefined outcomes) yields a trustworthy estimate for the study population. | **Variable** \u2013 Depends on data quality, completeness, and the adequacy of statistical controls. |\n| **Statistical Power & Precision** | **Efficient** \u2013 Sample\u2011size calculations are explicit; randomisation reduces variance of the effect estimate. | **Often less efficient** \u2013 Heterogeneity in exposure measurement and outcome ascertainment can inflate variance. |\n| **Regulatory Acceptance** | **Gold standard** for drug/device approval (e.g., FDA, EMA) and guideline development. | **Supplementary** \u2013 Used when RCTs are impractical or unethical, but rarely the sole evidence for high\u2011stakes decisions. |\n| **Ethical Flexibility** | **Can be ethically designed** when equipoise exists (genuine uncertainty about which treatment is better). | **Necessary** when randomisation would be unethical (e.g., harmful exposures) or impossible (rare outcomes). |\n| **Generalizability (External Validity)** | **Potential limitation** \u2013 Strict inclusion/exclusion criteria may limit applicability to broader populations. | **Often better** \u2013 Real\u2011world data (e.g., registries, electronic health records) reflect routine practice and diverse patient groups. |\n| **Cost & Feasibility** | **Higher** \u2013 Infrastructure, monitoring, and participant follow\u2011up can be expensive and time\u2011consuming. | **Lower** \u2013 Uses existing data sources; quicker to assemble large sample sizes. |\n\n---\n\n## Core Reasons to Prefer RCTs When Feasible\n\n1. **Randomisation Eliminates Confounding (Measured & Unmeasured)**\n   - By assigning participants to treatment arms *by chance*, any baseline characteristic\u2014age, comorbidities, genetics, socioeconomic status\u2014should be equally distributed. This balance holds even for factors we cannot measure, which is something no statistical adjustment can guarantee.\n\n2. **Temporal Clarity**\n   - The exposure (the intervention) is deliberately introduced before outcomes are observed, establishing a clear time\u2011order required for causality.\n\n3. **Blinding Reduces Performance & Detection Bias**\n   - Double\u2011blind designs prevent participants and investigators from influencing behavior (performance bias) or outcome assessment (detection bias).\n\n4. **Pre\u2011specified Protocols Guard Against Data\u2011Dredging**\n   - Primary outcomes, analysis plans, and stopping rules are set a priori, limiting selective reporting and \u201cp\u2011hacking\u201d.\n\n5. **Regulatory & Guideline Credibility**\n   - Health agencies and professional societies typically require at least one well\u2011conducted RCT to endorse a new therapy or preventive measure.\n\n6. **Quantifiable Estimates of Effect**\n   - Relative risks, odds ratios, and absolute risk reductions derived from RCTs are directly interpretable and can be translated into Number Needed to Treat (NNT) or Number Needed to Harm (NNH).\n\n---\n\n## When Observational Studies Still Play a Critical Role\n\n| Situation | Why Observational Is Appropriate |\n|-----------|-----------------------------------|\n| **Ethical Constraints** | Randomising patients",
+        "tokens_in": 84,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006125999999999999,
+        "complexity_score": 0.8042,
+        "latency_ms": 4828.054800000245
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "### Why Randomised Controlled Trials (RCTs) Are Preferred When Feasible  \n\n| **Criterion** | **Randomised Controlled Trials** | **Observational Studies** |\n|---------------|----------------------------------|---------------------------|\n| **Causal inference** | Random allocation breaks the link between participants\u2019 baseline characteristics (known and unknown) and the intervention, allowing a clean estimate of the *causal* effect. | Associations can be biased by confounding (both measured and unmeasured) and reverse causation, making causal claims tentative. |\n| **Control of confounding** | **Known confounders**: Balanced by design; no need for statistical adjustment. <br>**Unknown confounders**: Randomisation equalises them on average across groups. | Must rely on statistical adjustment (regression, propensity scores, instrumental variables, etc.). These methods can only address *measured* confounders; residual confounding remains a threat. |\n| **Bias reduction** | - **Selection bias**: Participants are allocated by a pre\u2011specified random sequence, not by investigator or patient choice.<br>- **Performance bias**: Blinding (when possible) prevents differential care or co\u2011interventions.<br>- **Detection bias**: Blinded outcome assessment limits subjective influence.<br>- **Attrition bias**: Pre\u2011specified intention\u2011to\u2011treat (ITT) analysis mitigates loss\u2011to\u2011follow\u2011up effects. | - **Selection bias**: Patients self\u2011select treatment, or clinicians prescribe based on prognosis.<br>- **Information bias**: Exposure and outcome may be recorded differently across groups.<br>- **Confounding by indication**: Sicker patients may receive a more aggressive therapy, distorting observed effects. |\n| **Statistical efficiency** | Power calculations can be performed a priori; sample size is chosen to detect a prespecified effect size with known Type\u202fI/II error rates. | Sample size is often dictated by data availability; power is harder to guarantee, especially when effect sizes are small and exposures are rare. |\n| **Regulatory acceptance** | Agencies (FDA, EMA, MHRA, etc.) typically require RCT evidence for drug approval, device clearance, and health\u2011technology assessment. | Accepted for safety signals, rare outcomes, or when RCTs are impossible, but rarely sufficient for primary efficacy claims. |\n| **Internal validity** | Highest among study designs; the *gold standard* for testing whether an intervention works under controlled conditions. | Generally lower; external validity (generalizability) may be stronger, but internal validity is compromised. |\n| **Ethical constraints** | When equipoise exists (genuine uncertainty about benefit/harm), randomisation is ethically permissible. | Used when randomisation is unethical (e.g., harmful exposures) or infeasible (e.g., rare diseases). |\n\n---\n\n## 1. The Core Strength of Randomisation\n\nRandomisation creates **exchangeable groups**: before the intervention, the distribution of every covariate (age, comorbidities, genetic background, socioeconomic status, etc.) is, on average, identical between arms. This exchangeability is the formal statistical condition that justifies **causal inference**: any difference in outcomes after the intervention can be attributed *solely* to the treatment (assuming the trial is conducted without major protocol violations).\n\nIn contrast, observational studies must **model** the relationship between exposure and outcome while *adjusting* for confounders. Even sophisticated methods (propensity\u2011score matching, inverse\u2011probability weighting, marginal structural models) rely on the **no\u2011unmeasured\u2011confounder** assumption, which is untestable.\n\n### Example\n\nA classic RCT of aspirin for primary prevention of cardiovascular disease (e.g., the Physicians\u2019 Health Study) demonstrated a 25% relative risk reduction in myocardial infarction. An observational cohort studying aspirin users vs. non\u2011users could not have separated the effect of aspirin from the fact that aspirin users were generally more health\u2011conscious, had better access to care, and differed in other lifestyle factors.\n\n---\n\n## 2. Bias Mitigation Through Design Features\n\n| **Bias Type** | **RCT Mechanism** | **Observational Vulnerability** |\n|---------------|-------------------|---------------------------------|\n| **Selection bias** | Random sequence + allocation concealment | Self\u2011selection or physician\u2011driven treatment choice |\n| **Performance bias** | Blinding participants & clinicians \u2192 equal",
+        "tokens_in": 84,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006125999999999999,
+        "complexity_score": null,
+        "latency_ms": 11074.4494999999
+      }
+    },
+    {
+      "id": 17,
+      "category": "trap_short_but_hard",
+      "expected_tier": "mid",
+      "prompt": "Debug: my Docker build hangs at step 4.",
+      "routed": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "When a Docker build seems to \u201chang\u201d on a particular step, the root cause is almost always something that the **RUN / COPY / ADD** instruction on that line is waiting for (network I/O, a prompt for user input, a long\u2011running process, a missing file, etc.). Below is a systematic checklist you can run through, plus a few concrete tricks to surface the exact problem.\n\n---\n\n## 1\ufe0f\u20e3 Gather the basics\n\n| Item | Why it matters | How to get it |\n|------|----------------|---------------|\n| **Dockerfile** (exact content) | The exact command that is hanging is the key. | Paste the file or at least the first 6\u20138 lines (including the problematic step). |\n| **Build command you run** | Flags such as `--progress`, `--no-cache`, `BuildKit` affect visibility. | e.g. `docker build -t myimage .` |\n| **Docker version / Engine** | Some older versions have bugs with certain instructions. | `docker version` |\n| **Build context size** | Very large contexts can make the \u201csending files\u201d phase look like a hang. | `du -sh .` in the directory you run `docker build` from. |\n| **Network access** | If the step pulls packages or clones a repo, a network outage will freeze it. | Try `curl -I https://example.com` from the host. |\n| **Step 4 content** | Knowing exactly what step 4 does lets us narrow down the failure mode. | Look at the Dockerfile line number or the \u201cStep 4/\u2026\u201d output. |\n\nIf you can share any of the above, we can give a pinpointed fix. In the meantime, go through the checklist below.\n\n---\n\n## 2\ufe0f\u20e3 Common culprits for a \u201changing\u201d Step\u202f4\n\n| Symptom | Typical cause | Quick test / fix |\n|---------|----------------|------------------|\n| **`RUN apt-get update && apt-get install \u2026`** never returns | *Network DNS* or *apt mirrors* unreachable; apt waiting for user input (e.g., `tzdata` asks for a timezone). | - Add `-y --no-install-recommends` to `apt-get install`. <br> - Use `DEBIAN_FRONTEND=noninteractive` env var: <br>`ENV DEBIAN_FRONTEND=noninteractive` <br> - Run `docker build --network=host \u2026` to rule out proxy/DNS issues. |\n| **`RUN git clone \u2026`** stalls | SSH key prompts, missing credentials, or a large repo being pulled over a slow link. | - Use the `--depth 1` flag for shallow clone. <br> - Ensure the repo is publicly reachable **or** pass a build\u2011time secret (see `--secret`). |\n| **`RUN npm install`** or similar long\u2011running language\u2011package install | Large dependency trees, missing registry, or interactive prompts (`npm config set` etc.). | - Add `--silent`/`--no-progress` to reduce output and surface errors. <br> - Set `ENV NODE_ENV=production`. |\n| **`COPY . /app`** appears to hang | The build context is huge (e.g., `node_modules`, `.git`, large data files) \u2013 Docker is just *sending* the context to the daemon. | - Create a `.dockerignore` that excludes `node_modules`, `*.log`, `build/`, etc. <br> - Verify context size: `docker build .` will print `Sending build context to Docker daemon  X.XXGB` \u2013 if that number is large, you\u2019re in the right ballpark. |\n| **`RUN ./configure && make && make install`** (or any compile step) | Compilation is CPU\u2011heavy and can look like a freeze; sometimes it\u2019s waiting for a missing library or interactive prompt. | - Add `-j$(nproc)` to `make` to speed up. <br> - Run the same commands locally (outside Docker) to see if they prompt. |\n| **`ENTRYPOINT` / `CMD",
+        "tokens_in": 82,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006123,
+        "complexity_score": 0.67,
+        "latency_ms": 7928.5020000024815
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "### Quick Checklist\u202f\u2014\u202fWhat Usually Causes a \u201chang\u201d at a particular Docker\u2011file step?\n\n| Symptom | Likely culprit | How to verify / fix |\n|---------|----------------|---------------------|\n| **Network\u2011bound commands** (e.g., `apt-get update`, `pip install`, `curl \u2026`) | DNS problems, proxy mis\u2011config, blocked ports, or a very slow mirror | Add `RUN ping -c 3 8.8.8.8 && curl -I https://deb.debian.org` to see if the container can reach the outside world. Use `--network=host` temporarily, or set `APT::Acquire::Retries=5` and `-y` flags. |\n| **Interactive prompts** (`apt-get install`, `npm install`, `yarn`, `conda`, etc.) | The command is waiting for user input (e.g., \u201cDo you want to continue? [Y/n]\u201d) | Append `-y`/`--yes` or `DEBIAN_FRONTEND=noninteractive` to the command. Example: `ENV DEBIAN_FRONTEND=noninteractive` **or** `RUN apt-get update && apt-get install -y <pkg>` |\n| **Long\u2011running builds / compilations** (e.g., `make`, `cargo build`, `npm run build`) | The step really is just taking a lot of CPU/memory, or it\u2019s stuck in an infinite loop | Look at container stats while the build runs: `docker stats <container-id>`; add `time` before the command to see if it ever finishes. |\n| **File\u2011system locks or missing files** | `npm install` waiting on a lockfile, `git clone` stuck on authentication, or a `COPY` that references a huge directory | Verify the source path exists and isn\u2019t huge (e.g., accidentally copying `.git` or `node_modules`). Use `.dockerignore` aggressively. |\n| **Cache\u2011related issues** | Docker\u2019s build\u2011cache is corrupted or you have an unexpected cached layer | Run the build with `--no-cache` or `--pull` to force a fresh start. |\n| **Docker daemon resource limits** | Daemon is out of memory / disk, or you hit the default `ulimit` for open files | Check `docker system df` and `docker info`. Increase daemon resources or clean up images/containers. |\n\n---\n\n## Step\u2011by\u2011Step Debug Workflow\n\nBelow is a systematic way to narrow down why **step\u202f4** is hanging. Replace placeholders (`<\u2026>`) with your actual values.\n\n### 1\ufe0f\u20e3 Re\u2011run the build with verbose output\n```bash\nDOCKER_BUILDKIT=1 docker build \\\n    --progress=plain \\   # shows each line as it runs\n    --no-cache \\         # forces re\u2011execution of every layer\n    -t my-image:debug .\n```\n*If the build still \u201changs\u201d, you\u2019ll see exactly which command is being executed and the exact output (or lack thereof).*\n\n### 2\ufe0f\u20e3 Isolate the problematic command\nTake the `RUN` line that corresponds to step\u202f4 and run it **inside an ad\u2011hoc container**:\n\n```bash\n# 1. Start a shell in the base image (the image just before step\u202f4)\ndocker build -t tmp-base --target <stage\u2011before\u2011step\u20114> .\n\n# 2. Run the command interactively\ndocker run -it --rm tmp-base /bin/sh\n# Inside the container:\n<the exact command from step\u202f4>\n```\n\nIf it blocks here, you now know the command itself is the issue (network, prompt, etc.). If it finishes quickly, the problem is probably in Docker\u2019s layer\u2011commit step.\n\n### 3\ufe0f\u20e3 Check for hidden prompts or environment variables\n\n* **APT / DEBIAN_FRONTEND**  \n  ```Dockerfile\n  ENV DEBIAN_FRONTEND=noninteractive\n  RUN apt-get update && apt-get install",
+        "tokens_in": 82,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006123,
+        "complexity_score": null,
+        "latency_ms": 9175.182999999379
+      }
+    },
+    {
+      "id": 18,
+      "category": "trap_short_but_hard",
+      "expected_tier": "mid",
+      "prompt": "Optimise this loop: for i in range(len(x)): total += x[i]",
+      "routed": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "**Short answer**\n\n```python\n# Original (inefficient)\ntotal = 0\nfor i in range(len(x)):\n    total += x[i]\n\n# Optimised \u2013 one\u2011liner, uses C\u2011level loop inside CPython\ntotal = sum(x)\n```\n\nThat\u2019s usually the fastest, most readable, and most Pythonic way to add up all the elements of an iterable `x`.  \n\nIf you need extra precision for floating\u2011point data, use `math.fsum`:\n\n```python\nimport math\ntotal = math.fsum(x)\n```\n\nFor very large numeric arrays (e.g., millions of elements) you can get even more speed by switching to **NumPy**:\n\n```python\nimport numpy as np\ntotal = np.sum(np.asarray(x, dtype=np.float64))\n```\n\n---\n\n## Why the one\u2011liner is faster\n\n| Approach                              | What happens under the hood                                               | Typical speed\u2011up vs. manual loop |\n|--------------------------------------|---------------------------------------------------------------------------|-----------------------------------|\n| `for i in range(len(x)): total+=x[i]`| Python fetches each element via `__getitem__`, does a Python\u2011level addition each iteration. | baseline                         |\n| `for v in x: total+=v`               | Same as above but avoids the extra index lookup (`x[i]`). Slightly faster. | \u2248\u202f1.1\u202f\u00d7 faster                   |\n| `sum(x)`                              | Calls the built\u2011in `sum`, which loops in C (`PyNumber_Add`) and thus avoids Python bytecode overhead. | \u2248\u202f2\u20135\u202f\u00d7 faster (depends on type) |\n| `math.fsum(x)`                        | Uses a compensated\u2011summation algorithm in C for higher floating\u2011point accuracy. | \u2248\u202f2\u202f\u00d7 faster than manual loop, same order as `sum` |\n| `numpy.sum`                           | Executes a tight C loop (or SIMD vectorised code) over a contiguous memory buffer. | \u2248\u202f10\u2013100\u202f\u00d7 faster for large numeric arrays |\n\n---\n\n## When the simple `sum` isn\u2019t enough\n\n| Situation                                 | Better alternative | Why |\n|-------------------------------------------|--------------------|-----|\n| **Huge numeric data** (\u2265\u202f10\u2076 items)       | `numpy.sum`        | Vectorised, SIMD, memory\u2011contiguous, can run on GPU (via CuPy, PyTorch, etc.). |\n| **Mixed types** (ints + floats + Decimals) | Explicit generator with `math.fsum` or `Decimal` | Guarantees correct type promotion / precision. |\n| **Parallel execution** (multi\u2011core)      | `multiprocessing.Pool.map` + `sum` or `concurrent.futures` | Split the iterable, sum parts in parallel, combine. |\n| **Streaming / infinite iterator**         | `itertools.accumulate` + `itertools.islice` | Works without materialising the whole sequence. |\n| **Custom reduction (e.g., modulo, custom op)** | `functools.reduce` | Lets you plug any binary function. |\n\n### Example: Parallel sum with `concurrent.futures`\n\n```python\nfrom concurrent.futures import ProcessPoolExecutor\nimport math\n\ndef chunked_sum(chunk):\n    return math.fsum(chunk)          # use fsum for better FP accuracy\n\ndef parallel_sum(iterable, chunk_size=10_000):\n    # Convert to a list only once (or use a memory\u2011mapped array)\n    data = list(iterable)\n    # Break into chunks\n    chunks = (data[i:i+chunk_size] for i in range(0, len(data), chunk_size))\n\n    with ProcessPoolExecutor() as exe:\n        partial_sums = exe.map(chunked_sum, chunks)\n\n    return math.fsum(partial_sums)    # final reduction\n```\n\n---\n\n## Full \u201coptimisation checklist\u201d for this pattern\n\n1. **Use built\u2011ins first** \u2013 `sum`, `math.fsum`, `statistics.mean`, etc.\n2. **Avoid indexing** \u2013 iterate directly over the iterable (`for v in x:`) if you must write a loop.\n3. **Check data type**  \n   * ints \u2192 `sum` is perfect.  \n   * floats \u2192 `math.fsum` for numerically stable result.  \n   * numpy arrays \u2192 `np.sum` (or `.sum()` method).  \n   * Decimal \u2192 `sum`",
+        "tokens_in": 88,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006131999999999999,
+        "complexity_score": 0.67,
+        "latency_ms": 8467.8473999993
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "Below is a quick \u201ccheat\u2011sheet\u201d of the most common ways to replace the pattern\n\n```python\ntotal = 0\nfor i in range(len(x)):\n    total += x[i]\n```\n\nwith something that is both **more Pythonic** and **significantly faster** in CPython (and often in other interpreters as well).\n\n---\n\n## 1\ufe0f\u20e3 The built\u2011in `sum` \u2013 the default go\u2011to\n\n```python\ntotal = sum(x)\n```\n\n* **Why it\u2019s faster** \u2013 `sum` is implemented in C and loops over the iterable without the overhead of Python\u2011level attribute look\u2011ups, index calculations, or the extra `range(len(...))` iterator.\n* **Complexity** \u2013 O(n) time, O(1) extra space.\n* **When to use** \u2013 `x` is any *iterable* of numbers (list, tuple, generator, range, etc.).\n* **Caveats** \u2013 For floating\u2011point data where you care about rounding error, prefer `math.fsum` (see \u00a72).\n\n---\n\n## 2\ufe0f\u20e3 Accurate floating\u2011point accumulation \u2013 `math.fsum`\n\n```python\nimport math\ntotal = math.fsum(x)          # exact as possible sum of floats\n```\n\n* **Why it\u2019s useful** \u2013 `math.fsum` uses a compensated summation algorithm (Kahan\u2011Neumaier) that dramatically reduces rounding error for large lists of floats.\n* **Performance** \u2013 Still C\u2011level, a few\u2011percent slower than plain `sum` but orders of magnitude faster than a Python loop.\n\n---\n\n## 3\ufe0f\u20e3 NumPy arrays \u2013 vectorised summation\n\nIf `x` is (or can be turned into) a `numpy.ndarray`:\n\n```python\nimport numpy as np\n\n# If x is already an ndarray:\ntotal = x.sum()               # or np.sum(x)\n\n# If you have a Python list and want the speed\u2011up:\nx_np = np.asarray(x, dtype=np.float64)   # choose dtype that matches your data\ntotal = x_np.sum()\n```\n\n* **Why it\u2019s fast** \u2013 The operation is executed in compiled C/Fortran code and can even be off\u2011loaded to SIMD/BLAS kernels.\n* **When to use** \u2013 Large numeric collections (\u226510\u2074 elements) where the overhead of converting to an ndarray is amortised.\n\n---\n\n## 4\ufe0f\u20e3 `itertools.accumulate` \u2013 if you need the running totals\n\nSometimes you need not just the final sum but all intermediate partial sums:\n\n```python\nfrom itertools import accumulate\n\nrunning_totals = list(accumulate(x))   # [x0, x0+x1, x0+x1+x2, ...]\ntotal = running_totals[-1]            # final sum (or just use sum(x))\n```\n\n* **Performance** \u2013 Still O(n) with C\u2011level speed, but yields an iterator, so you can avoid materialising the whole list if you only need the last value:\n\n```python\nfrom itertools import accumulate\ntotal = collections.deque(accumulate(x), maxlen=1)[0]   # O(1) extra memory\n```\n\n---\n\n## 5\ufe0f\u20e3 JIT / compiled alternatives \u2013 Numba, Cython, PyPy\n\nIf you\u2019re in a hot\u2011loop where the list is huge (millions of elements) *and* you already use Numba or Cython elsewhere, you can get another 2\u20115\u00d7 speed\u2011up:\n\n### Numba\n\n```python\nimport numba as nb\n\n@nb.njit\ndef fast_sum(arr):\n    s = 0.0\n    for v in arr:\n        s += v\n    return s\n\ntotal = fast_sum(np.asarray(x, dtype=np.float64))\n```\n\n* Works best when `x` is a NumPy array or a typed Numba list.\n* First call incurs compilation overhead; subsequent calls are pure native code.\n\n### Cython\n\n```cython\n# mysum.pyx\ndef cy",
+        "tokens_in": 88,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006131999999999999,
+        "complexity_score": null,
+        "latency_ms": 6891.239199998381
+      }
+    },
+    {
+      "id": 19,
+      "category": "reasoning",
+      "expected_tier": "mid",
+      "prompt": "Explain why a database index can make a query slower rather than faster.",
+      "routed": {
+        "ok": true,
+        "tier": "mid",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "## TL;DR  \nAn index speeds up **read\u2011heavy, selective** queries, but it can *slow* a query when:\n\n| Situation | Why it hurts performance |\n|-----------|--------------------------|\n| **Very small tables** | The cost of touching the index outweighs the tiny I/O saved by avoiding a full table scan. |\n| **Low\u2011selectivity predicates** (e.g., `WHERE status = 'active'` that matches 80\u202f% of rows) | The index still forces many random I/O look\u2011ups, while a sequential scan would read the data in one go. |\n| **Wide result sets** (SELECT\u202f* or many columns) | The DB must hop from the index leaf nodes to the data rows (or heap) for each matching entry \u2013 a \u201clookup\u2011per\u2011row\u201d penalty. |\n| **Heavy write workload** (INSERT/UPDATE/DELETE) | Every modification must also update every relevant index, adding CPU, lock, and disk\u2011write overhead. |\n| **Badly chosen or fragmented index** | Out\u2011of\u2011order pages, huge index b\u2011tree depth, or an index that does not cover the query forces extra page reads and random I/O. |\n| **Wrong index type** (e.g., B\u2011tree for range\u2011search on a column that is mostly constant) | The optimizer may pick the index, but the access pattern ends up being inefficient. |\n| **Misleading optimizer statistics** | The planner thinks the index is cheap and chooses it, but reality (skewed data, stale stats) makes it expensive. |\n| **Additional work for the engine** (sorting, grouping, DISTINCT) | Using an index can force extra steps (e.g., sorting a non\u2011covering index, fetching rows to deduplicate) that a simple scan would avoid. |\n\nBelow is a deeper dive into the mechanics, with concrete examples and practical tips for spotting and fixing the problem.\n\n---\n\n## 1. How an index works (quick refresher)\n\n* **B\u2011tree index** \u2013 a balanced tree of *pages* that point to row identifiers (RIDs) or primary\u2011key values.  \n  *Lookup* = descend the tree (log\u2082\u202fN pages) \u2192 leaf node(s) \u2192 fetch the row(s) from the table (if the index is not \u201ccovering\u201d).  \n\n* **Covering index** \u2013 the index itself contains every column needed by the query, so the engine never has to go to the base table.\n\n* **Maintenance cost** \u2013 every `INSERT`, `UPDATE`, `DELETE` that touches indexed columns must also insert, modify, or delete the corresponding index entry and possibly split or rebalance pages.\n\n---\n\n## 2. When the index *cost* outweighs its *benefit*\n\n### 2.1 Small tables \u2013 \u201cindex overhead\u201d\n\n| Table size | Typical I/O for a full scan | Typical I/O for an index seek |\n|------------|-----------------------------|------------------------------|\n| 10 rows    | 1 page read (maybe 2)       | 1\u20112 index pages + 1\u20112 data pages |\n| 100\u202f000 rows| ~100 pages (sequential)    | ~3\u20114 index pages + up to 100\u202f000 random look\u2011ups |\n\nFor a table that fits in a few pages, the optimizer will usually choose a table scan because it can read the whole thing with **one sequential I/O** (or even from cache). Jumping through an index adds extra page reads and random seeks, making the query slower.\n\n> **Rule of thumb:** If a table has fewer than a few thousand rows and the query returns a non\u2011trivial fraction of them, an index is unlikely to help.\n\n### 2.2 Low selectivity \u2013 \u201cindex not selective enough\u201d\n\nSelectivity = `rows returned / total rows`.  \nAn index shines when selectivity is **low** (e.g., \u2264\u202f1\u202f%). When selectivity is high (\u2265\u202f10\u201120\u202f%), the engine still has to fetch many rows.\n\n*Example* (PostgreSQL, 1\u202fM rows, column `status` has values `active` (80\u202f%) and `inactive` (20\u202f%)):\n\n```sql\nSELECT * FROM orders WHERE status =",
+        "tokens_in": 85,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006127499999999999,
+        "complexity_score": 0.5587,
+        "latency_ms": 8957.65499999834
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "**Short answer:**  \nAn index is a *shortcut* that the optimizer can use to locate rows without scanning the whole table. But a shortcut is only useful when the cost of taking it is lower than the cost of a plain scan. When the shortcut is \u201cbad\u201d \u2013\u202fbecause it is unnecessary, poorly selective, out\u2011of\u2011date, or forces extra work \u2013 the extra I/O, CPU, and lock overhead can make the query run **slower** than a full table scan.\n\nBelow is a systematic walk\u2011through of the most common reasons an index can degrade performance, with examples and practical tips for spotting and fixing the problem.\n\n---\n\n## 1. Overhead of Using an Index vs. a Table Scan\n\n| Operation | Index\u2011based path | Full\u2011table\u2011scan path |\n|-----------|-----------------|----------------------|\n| **Read pages** | Random I/O: one index leaf page, then one data page per matching row (or many more if the index is non\u2011covering) | Sequential I/O: read data pages in physical order |\n| **CPU** | Walk the B\u2011tree, evaluate predicates on each leaf entry, possibly do extra look\u2011ups (bookmark lookups) | Simple loop over rows, usually cache\u2011friendly |\n| **Locking / Latching** | More page latches (index + data) | One latch per data page (or fewer if the scan is bulk\u2011read) |\n| **Cache pressure** | Index pages compete with data pages for buffer pool; may evict useful data | Only data pages are cached |\n\nIf the index forces many **random reads** while a sequential scan would touch the same number of rows in a single linear sweep, the index path is slower.\n\n### Example  \nA table `orders` has 10\u202fM rows. An index on `order_date` exists, but a query asks for **all rows in the last year** (\u2248\u202f8\u202fM rows).  \n\n* Index path: read huge portions of the index, then 8\u202fM random data\u2011page look\u2011ups.  \n* Scan path: read the whole table sequentially (10\u202fM rows).  \n\nBecause the index does not prune many rows, the random I/O cost dominates, and the query runs slower.\n\n---\n\n## 2. Low Selectivity (Poor Filtering Power)\n\nAn index is only useful when it discards a large fraction of rows. **Selectivity** = (rows returned) / (rows in table).  \n\n* **Highly selective** (e.g., `WHERE id = 12345`) \u2192 great.\n* **Low selectivity** (e.g., `WHERE status = 'ACTIVE'` on a column where 90\u202f% of rows are `ACTIVE`) \u2192 bad.\n\n### Why it hurts\n* The optimizer still chooses the index because it \u201cthinks\u201d it will be faster.\n* It reads many index entries, then does a **bookmark lookup** (or \u201ckey lookup\u201d) for each entry, causing many random reads.\n* The cost of those look\u2011ups outweighs a simple scan.\n\n**Tip:** Use a **bitmap** or **partial** index only if the predicate is truly selective, or let the optimizer know the column\u2019s histogram (ANALYZE / UPDATE STATISTICS).\n\n---\n\n## 3. Non\u2011Covering Indexes \u2192 Extra Row Look\u2011ups\n\nA **covering index** contains all columns needed by the query, so the engine can satisfy the query from the index alone. If the index does **not** cover the query:\n\n1. Engine scans the index to find qualifying keys.\n2. For",
+        "tokens_in": 85,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006127499999999999,
+        "complexity_score": null,
+        "latency_ms": 7769.484599997668
+      }
+    },
+    {
+      "id": 20,
+      "category": "reasoning",
+      "expected_tier": "mid",
+      "prompt": "What are the trade-offs between server-side and client-side rendering?",
+      "routed": {
+        "ok": true,
+        "tier": "mid",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "## Server\u2011Side Rendering (SSR) vs. Client\u2011Side Rendering (CSR) \u2013 The Trade\u2011offs\n\n| Aspect | Server\u2011Side Rendering (SSR) | Client\u2011Side Rendering (CSR) |\n|--------|----------------------------|-----------------------------|\n| **What the browser receives** | Fully\u2011formed HTML for the requested page (often with data already embedded). | Minimal HTML shell + JavaScript bundle that builds the UI in the browser. |\n| **Initial page\u2011load speed** | **Fast \u201ctime\u2011to\u2011first\u2011byte\u201d (TTFB) and \u201ctime\u2011to\u2011first\u2011paint\u201d (TTFP)** because the server does the heavy lifting. Users see content sooner, especially on slow networks or low\u2011end devices. | Slower first paint; the browser must download, parse, and execute the JavaScript before any meaningful UI appears. |\n| **Perceived performance (First Contentful Paint, Largest Contentful Paint)** | Usually better out\u2011of\u2011the\u2011box because the critical content arrives with the HTML. | Can be mitigated with code\u2011splitting, lazy loading, and \u201chydration\u201d strategies, but still often lags behind SSR for the very first view. |\n| **SEO (search\u2011engine indexing)** | **Strong** \u2013 crawlers get a complete HTML document, so meta tags, structured data, and content are instantly visible. | Historically weaker because some bots (especially older ones) do not execute JavaScript. Modern Googlebot runs JS, but indexing can be delayed or incomplete, and other search engines may still struggle. |\n| **Social sharing / link previews** | Open Graph / Twitter Card tags are present in the HTML, guaranteeing correct previews. | Must rely on server\u2011side pre\u2011rendering or a headless rendering service (e.g., Puppeteer) to generate meta tags for bots/social scrapers. |\n| **Interactivity & SPA features** | Typically combined with **hydration**: server sends HTML + a small script that \u201cactivates\u201d the UI. Full SPA experience is possible, but the initial HTML must be re\u2011used. | Naturally suited for highly interactive SPAs where state lives primarily in the client. Navigation between views can be instant (no full page reload). |\n| **Subsequent navigation (after the first page)** | If you stay on a pure SSR site, each navigation triggers a full page request \u2192 higher latency and more server load. | Client can perform **client\u2011side routing** (e.g., React Router, Vue Router), swapping views instantly without a round\u2011trip. |\n| **Server load & scalability** | The server must render HTML (often running templates, data fetching, etc.) on every request \u2192 higher CPU & memory usage. Can be mitigated with caching (CDN, edge rendering). | Server does less work per request (just static assets). Scaling is easier; you can serve the same bundle to millions of users from a CDN. |\n| **Caching** | **HTML can be cached** at the CDN edge, but it\u2019s harder to cache per\u2011user personalized data. Stale\u2011while\u2011revalidate patterns help. | **Static assets (JS, CSS, images) cache very well**. Data fetching is usually done via API calls that can be cached separately (e.g., GraphQL persisted queries, HTTP caching headers). |\n| **Development ergonomics** | Requires a rendering pipeline on the server (Node, .NET, PHP, etc.) plus a way to share components/templates with the client if you want a unified code\u2011base. | Simpler to build a pure SPA; the same component library runs everywhere. However, you may need extra tooling for SEO (e.g., Next.js, Nuxt, Angular Universal) if you want SSR for certain pages. |\n| **Complexity & toolchain** | \u2022 Need SSR framework or custom server rendering. <br>\u2022 Manage hydration mismatches, data fetching strategies (e.g., getServerSideProps). <br>\u2022 Often requires more build\u2011time configuration (Webpack/ Vite + server bundling). | \u2022 Simpler static\u2011site build, but you may need to add **pre\u2011rendering** or **SSR** later as requirements evolve. <br>\u2022 Managing SEO, social previews, and performance optimizations becomes an extra concern. |\n| **User experience on low\u2011end devices** | Better because the device receives ready\u2011to\u2011display markup; less JavaScript execution. | Heavy JS bundles can cause jank or long \u201ctime\u2011to\u2011interactive\u201d on low\u2011powered phones. |\n| **Security** | Sensitive data can be",
+        "tokens_in": 84,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006125999999999999,
+        "complexity_score": 0.5703,
+        "latency_ms": 8208.774800001265
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "## TL;DR  \n| Aspect | **Server\u2011Side Rendering (SSR)** | **Client\u2011Side Rendering (CSR)** |\n|--------|--------------------------------|---------------------------------|\n| **Where the HTML is built** | On the web server (or edge) before the response is sent. | In the browser, after a minimal HTML shell and JavaScript are downloaded. |\n| **First\u2011Paint speed** | Typically faster **first contentful paint (FCP)** because the browser receives ready\u2011to\u2011display markup. | Slower FCP \u2013 the browser must download, parse, and execute the JavaScript bundle before any meaningful UI appears. |\n| **Time\u2011to\u2011interactive (TTI)** | Can be slower if the server does heavy work for every request, but often comparable after the initial render. | Usually higher TTI because the whole app bundle must be parsed and executed, plus hydration. |\n| **SEO** | Excellent \u2013 crawlers see real HTML content immediately. | Historically weaker, but modern search engines (Google, Bing) execute JS; still not as reliable for niche crawlers or social\u2011media link previews. |\n| **Per\u2011user data** | Easy \u2013 the server can fetch user\u2011specific data before rendering. | Must fetch data client\u2011side (or via API calls) after page load, unless you embed a JSON payload in the initial HTML. |\n| **Caching** | Straightforward HTTP caching (CDN, reverse\u2011proxy, edge) of the full HTML response. | Cacheable static assets (JS, CSS, images) but the HTML shell is usually the same for everyone; dynamic data is fetched later. |\n| **Bandwidth** | Sends full markup **plus** assets, so the initial payload can be larger than a thin shell. | Sends a small HTML shell (often < 2\u202fKB) and a large JS bundle (hundreds of KB\u2011MB). |\n| **Interactivity after first paint** | Needs hydration (run JS to attach event listeners). If you skip hydration you get a \u201cstatic\u201d page. | Interactivity is native from the start once the bundle runs. |\n| **Complexity / Tooling** | Requires a server capable of rendering (Node, Deno, Go, Ruby, PHP, etc.) and often a framework that supports SSR (Next.js, Nuxt, Remix, ASP.NET MVC, Rails, Django). | Pure client\u2011side frameworks (React, Vue, Angular, Svelte) are simpler to host (static files only). |\n| **Scalability** | Server must handle rendering load; can be mitigated with edge rendering, caching, or incremental static regeneration. | Scaling is mostly about serving static assets (CDN) \u2013 cheap and easy. |\n| **When it shines** | Content\u2011heavy pages, SEO\u2011critical sites, landing pages, e\u2011commerce product pages, news/articles, first\u2011visit performance. | Highly interactive dashboards, SPAs, real\u2011time collaboration tools, apps where most users are returning and have already cached the bundle. |\n| **Typical hybrid** | **SSR + CSR** (e.g., Next.js \u201cpages\u201d rendered on server, then hydrated) or **ISR** (static generation + revalidation). | **CSR + optional static generation** (e.g., Gatsby, VitePress) for docs where SEO matters but content changes rarely. |\n\n---\n\n## 1. What \u201cServer\u2011Side Rendering\u201d Actually Means\n\n1. **Request \u2192 Server** \u2013 The server runs the UI code (React, Vue, etc.) and produces an HTML string.\n2. **Response \u2192 Browser** \u2013 The browser receives a fully\u2011formed DOM tree, paints it immediately.\n3. **Hydration (optional)** \u2013 The same JavaScript code runs again in the browser to attach event listeners and turn the static markup into a live app.\n\n### Variants\n\n| Variant | When it\u2019s used | Key notes |\n|---------|----------------|-----------|\n| **Classic SSR** | Every request is rendered on the fly. | Great for per\u2011user personalization; can be expensive. |\n| **Edge SSR** | Rendering happens at CDN edge nodes (Cloudflare Workers, Vercel Edge, Netlify Edge). | Low latency, reduces origin server load. |\n| **Incremental Static Regeneration (ISR)** | Pages are generated statically, then refreshed in the background on a schedule or on-demand. | Mixes static\u2011site speed with freshness. |\n|",
+        "tokens_in": 84,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006125999999999999,
+        "complexity_score": null,
+        "latency_ms": 7876.940800000739
+      }
+    },
+    {
+      "id": 21,
+      "category": "reasoning",
+      "expected_tier": "mid",
+      "prompt": "Two teams report the same bug with different symptoms. How would you approach diagnosing it?",
+      "routed": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "### When the Same Bug Shows Up Differently in Two Teams,\u202fTake a Structured,\u202f\u201cCommon\u2011Denominator\u201d\u202fApproach  \n\nBelow is a step\u2011by\u2011step playbook you can follow (and adapt) the moment you get two disparate symptom reports for what looks like the same underlying defect.\n\n| **Phase** | **Goal** | **Key Actions** | **Why It Helps** |\n|-----------|----------|-----------------|------------------|\n| 1\ufe0f\u20e3 **Clarify & Consolidate** | Build a single, shared definition of the problem. | \u2022 Create a **single issue ticket** (or a \u201cparent\u201d ticket) that links the two reports.<br>\u2022 Ask each team for **exact reproduction steps**, screenshots/video, error messages, timestamps, and the **business impact** they see.<br>\u2022 Capture the **environment details** (OS, browser, device, app version, config flags, network topology, test data set). | Removes ambiguity early and gives you a concrete \u201cwhat\u2011to\u2011reproduce\u201d checklist. |\n| 2\ufe0f\u20e3 **Reproduce Independently** | Verify the bug exists in each reported context. | \u2022 Spin up **isolated test environments** that match each team\u2019s setup (use containers/VMs or feature\u2011flags to mimic exact configs).<br>\u2022 Follow the steps verbatim and note **whether the symptom matches the report** (e.g., UI glitch vs. crash).<br>\u2022 If you can\u2019t reproduce one of the symptoms, ask the reporting team for any hidden steps (e.g., long\u2011running session, specific user role). | Guarantees you\u2019re looking at the same code path and not a mis\u2011report. |\n| 3\ufe0f\u20e3 **Collect Telemetry** | Gather data that survives beyond the UI. | \u2022 Pull **application logs**, **stack traces**, **core dumps**, **network traces** (Wireshark/Fiddler), **browser dev\u2011tools console**, **system metrics** (CPU/memory).<br>\u2022 Enable **debug\u2011level logging** temporarily if needed.<br>\u2022 Record **timestamped correlation IDs** if your system emits them (makes stitching logs together trivial). | Symptoms may look different, but the underlying error code, exception type, or failed API call often stays the same. |\n| 4\ufe0f\u20e3 **Build a Symptom Matrix** | Visualize what is common vs. what diverges. | |Create a small table: <br>```\\n| Dimension          | Team\u202fA (Symptom\u202f1) | Team\u202fB (Symptom\u202f2) |\\n|-------------------|-------------------|-------------------|\\n| OS / Browser      | Windows\u202f11 / Chrome 112 | macOS\u202f14 / Safari 17 |\\n| Feature flag      | Off               | On                |\\n| Input data size   | Small (\u226410 rows)  | Large (\u224810k rows) |\\n| User role         | Admin             | Viewer            |\\n| API endpoint      | /v1/report        | /v1/report        |\\n| Error code        | 500\u2011E123          | 500\u2011E123          |\\n``` | The matrix instantly shows you the **variables that change** and the **constants that don\u2019t**\u2014the latter are your likely suspects. |\n| 5\ufe0f\u20e3 **Identify the Common Denominator** | Pinpoint the root cause candidate. | \u2022 Look for **identical stack traces, error IDs, failing assertions**, or **same failing unit test**.<br>\u2022 If the only common element is a **backend service call** (or a shared library), focus debugging there.<br>\u2022 Check recent **code merges / configuration changes** that affect that common component. | The bug\u2019s *cause* is usually something that both environments touch. |\n| 6\ufe0f\u20e3 **Isolate Variables (A/B Testing)** | Prove causality. | \u2022 **Toggle** the differing variables one\u2011at\u2011time in a controlled environment: <br>  - Turn the feature flag on/off.<br>  - Swap the OS/browser.<br>  - Reduce/expand the data size.<",
+        "tokens_in": 88,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006131999999999999,
+        "complexity_score": 0.67,
+        "latency_ms": 8105.701199998293
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "When the same underlying defect surfaces in different ways for different teams, it\u2019s a strong hint that the problem is context\u2011dependent (environment, usage pattern, data, configuration, etc.). A disciplined, step\u2011by\u2011step diagnostic process helps you isolate the common root cause while still honoring the distinct \u201csymptoms\u201d each team sees.\n\nBelow is a practical framework you can follow, with concrete actions and why they matter.\n\n---\n\n## 1. Capture the Full Picture from Each Team\n\n| What to Ask | Why It Matters |\n|------------|----------------|\n| **Exact steps to reproduce** (including UI clicks, API calls, scripts) | Re\u2011creation is the cornerstone of any debug. |\n| **Environment details** (OS, browser version, device, container image, VM size, network topology) | Differences here often explain divergent behavior. |\n| **Configuration & Feature Flags** (environment variables, toggles, build flags) | A flag turned on for one team may expose a code path the other never hits. |\n| **Input data** (payloads, files, database state) | Corrupt or edge\u2011case data can trigger different failure modes. |\n| **Observed symptom** (error messages, logs, UI glitches, performance slowdown) | Knowing the exact output helps map it to possible code paths. |\n| **Timing & Frequency** (intermittent vs. always, after X minutes, under load) | Some bugs only manifest under load or after a certain duration. |\n| **Recent changes** (deploys, schema migrations, library upgrades) | A recent change might be the common denominator. |\n| **Screenshots / Stack traces / Core dumps** | Visual or low\u2011level artifacts can reveal hidden clues (e.g., different exception types). |\n\n*Action:* Create a shared \u201cbug intake\u201d doc (Google Sheet, Confluence page, or a ticket in your issue tracker) where each team fills out the above fields. This forces completeness and gives you a side\u2011by\u2011side comparison.\n\n---\n\n## 2. Identify Overlap & Divergence\n\n| Dimension | Same? | Possible Implications |\n|-----------|-------|-----------------------|\n| **Code version** | If both are on the same commit/tag, the defect is in that version. If not, the bug may have been introduced in a later commit that only one team has pulled. |\n| **Configuration** | Identical config \u2192 bug is environment\u2011agnostic. Different toggles \u2192 suspect feature\u2011flag gating. |\n| **Data shape** | Same dataset \u2192 data\u2011independent. Different \u2192 data\u2011driven edge case. |\n| **Load/Concurrency** | Same load \u2192 deterministic bug. Different \u2192 race condition or resource exhaustion. |\n| **Platform** | Same platform \u2192 platform\u2011agnostic. Different \u2192 OS\u2011specific library, driver, or system call issue. |\n\n*Action:* Highlight the columns where the two rows diverge. Those are the variables you\u2019ll manipulate in later testing.\n\n---\n\n## 3. Reproduce in a Controlled Lab\n\n1. **Create a \u201ccanonical\u201d test harness** that can be parameterized with the variables identified above (environment, config, data, load).  \n2. **Run the exact steps from each team** in isolation, confirming you can reproduce both symptom A and symptom B.  \n3. **Systematically vary one variable at a time** (e.g., switch a feature flag on/off, change the OS, inject malformed data). Record which change flips the symptom.\n\n> **Tip:** Use containers (Docker) or Vagrant/VMs to spin up identical environments quickly. If you have a CI pipeline, add a \u201cdebug job\u201d that runs the test harness with each combination.\n\n---\n\n## 4. Dive Into the Code\n\nOnce you can reliably reproduce both behaviors, trace the execution path:\n\n| Technique | When to Use |\n|-----------|-------------|\n| **Static analysis / code review** | If the symptom differences line up with different `if` branches or feature flags. |\n| **Dynamic tracing** (e.g., `strace`, `dtruss`, `perf`, `SystemTap`, `BPF`) | For low\u2011level system calls, race conditions, or resource contention. |\n| **Logging instrumentation** (increase log level, add correlation IDs) | When the existing logs don\u2019t show the decision point that leads to the divergent symptom",
+        "tokens_in": 88,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006131999999999999,
+        "complexity_score": null,
+        "latency_ms": 8053.393599999254
+      }
+    },
+    {
+      "id": 22,
+      "category": "reasoning",
+      "expected_tier": "mid",
+      "prompt": "Walk me through how a TLS handshake establishes a shared secret.",
+      "routed": {
+        "ok": true,
+        "tier": "mid",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "Below is a step\u2011by\u2011step \u201ctour\u201d of a typical TLS handshake, with the focus on **how the two peers end up with the same secret key** that will protect the rest of the connection.  \nI\u2019ll first sketch the classic TLS\u202f1.2 flow (RSA\u2011based and DH\u2011based), then show the streamlined TLS\u202f1.3 flow, and finally highlight the common \u201ckey\u2011derivation\u201d stage that turns the exchanged material into the final traffic keys.\n\n---\n\n## 1. High\u2011level picture\n\n| Phase | What happens | What the secret is called |\n|-------|--------------|--------------------------|\n| **Negotiation** | Client and server agree on TLS version, cipher suite, and various extensions (e.g., ALPN). | \u2013 |\n| **Authentication & key exchange** | The server proves its identity (certificate) and the client and server exchange material that lets both compute a **pre\u2011master secret**. | *pre\u2011master secret* |\n| **Key derivation** | Both sides run a PRF/HKDF on the pre\u2011master secret, mixing in nonces (random values) that were exchanged earlier. This yields the **master secret** and then the actual traffic\u2011encryption keys. | *master secret \u2192 client/server write keys* |\n\nThe *shared secret* that the user is interested in is the **pre\u2011master secret** (TLS\u202f1.2) or the **shared DH/ECDH secret** (TLS\u202f1.3). The subsequent master\u2011secret derivation is deterministic, so both sides end up with identical keys without ever sending them on the wire.\n\n---\n\n## 2. TLS\u202f1.2 (most deployments before TLS\u202f1.3)\n\nTLS\u202f1.2 still supports several key\u2011exchange algorithms; the two most common are:\n\n| Cipher suite family | How the pre\u2011master secret is obtained |\n|---------------------|---------------------------------------|\n| **RSA\u2011key\u2011exchange** (e.g., `TLS_RSA_WITH_AES_128_GCM_SHA256`) | The client generates a random 48\u2011byte value, encrypts it with the server\u2019s RSA public key (from its certificate), and sends it to the server. |\n| **(EC)DH\u2011key\u2011exchange** (e.g., `TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256`) | Both sides contribute Diffie\u2011Hellman parameters; the shared secret is the result of the DH computation. The server signs its DH parameters with its RSA/ECDSA certificate, so the client can verify the server\u2019s identity. |\n\nBelow is the message flow for the **ECDHE** case (the modern, forward\u2011secret choice). The RSA case is a simpler variant that you can read after the diagram.\n\n### 2.1. Message exchange (ECDHE)\n\n```\nClient --> Server : ClientHello\nServer --> Client : ServerHello\nServer --> Client : Certificate\nServer --> Client : ServerKeyExchange   (ECDHE params + signature)\nServer --> Client : ServerHelloDone\nClient --> Server : ClientKeyExchange   (ECDHE client public value)\nClient --> Server : ChangeCipherSpec\nClient --> Server : Finished\nServer --> Client : ChangeCipherSpec\nServer --> Client : Finished\n```\n\n#### 2.1.1. ClientHello\n* **Random** \u2013 32\u2011byte \u201cclient nonce\u201d (`client_random`).\n* **Cipher suites** \u2013 list (must include an ECDHE\u2011based suite).\n* **Extensions** \u2013 e.g., `supported_groups` (which elliptic curves are allowed), `signature_algorithms`, `ALPN`, etc.\n\n#### 2.1.2. ServerHello\n* **Random** \u2013 32\u2011byte \u201cserver nonce\u201d (`server_random`).\n* **Chosen cipher suite** \u2013 e.g., `TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256`.\n* **Extensions** \u2013 echo back any the client sent, plus maybe `key_share` in TLS\u202f1.3 (not needed here).\n\n#### 2.1.3. Certificate\n* Server sends its X.",
+        "tokens_in": 83,
+        "tokens_out": 1000,
+        "cost_usd": 0.00061245,
+        "complexity_score": 0.5694,
+        "latency_ms": 8345.050799998717
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "Below is a step\u2011by\u2011step walk\u2011through of a **TLS handshake** (the most widely\u2011used version today is **TLS\u202f1.3**, but I\u2019ll also point out the differences with TLS\u202f1.2/1.0 where the process of establishing the shared secret differs).  \nThe goal of the handshake is three\u2011fold:\n\n1. **Authenticate** the server (and optionally the client).  \n2. **Agree on a set of cryptographic algorithms** (cipher suite, hash, etc.).  \n3. **Derive a shared secret** that both parties can use to encrypt and authenticate the subsequent application data.\n\nThe \u201cshared secret\u201d in TLS is the **master secret**, from which the actual traffic\u2011encryption keys are derived.  \n\n---\n\n## 1. High\u2011level picture\n\n```\nClient                                    Server\n   |   ClientHello  ---------------------> |\n   |                                      |\n   |   ServerHello  ---------------------->|\n   |   (Certificate, ServerKeyExchange,   |\n   |    CertificateRequest?, ServerHelloDone) |\n   |   <----------------------------------|\n   |   (Certificate?, ClientKeyExchange,  |\n   |    CertificateVerify?, Finished)    |\n   |   ----------------------------------> |\n   |   (Finished)                         |\n   |   <---------------------------------- |\n```\n\nThe **client** and **server** each generate a **random** value (called `ClientRandom` and `ServerRandom`). Those values, together with the key\u2011exchange material exchanged in the middle, are fed into a **Pseudo\u2011Random Function (PRF)** that produces the master secret.  \n\n---\n\n## 2. TLS\u202f1.3 (the current standard)\n\nTLS\u202f1.3 simplifies the handshake dramatically and *always* uses an **(EC)DHE** (Elliptic\u2011Curve Diffie\u2011Hellman) key exchange, which gives **forward secrecy**. Below are the messages that matter for the shared secret.\n\n### 2.1. ClientHello\n\n| Field | What it carries |\n|-------|-----------------|\n| `client_random` (32\u2011byte) | Random nonce (in TLS\u202f1.3 it is called `random`, but the value is not used to compute the secret; it is kept for compatibility). |\n| `supported_groups` | List of elliptic curves the client can use (e.g., `secp256r1`, `x25519`). |\n| `key_share` | **One or more** (group, public key) pairs. The client generates an **ephemeral private key** `x_c` for each advertised group and sends the corresponding public key `X_c = g^{x_c}`. |\n| `cipher_suites` | List of AEAD + hash combos (e.g., `TLS_AES_128_GCM_SHA256`). |\n| Optional extensions (e.g., `signature_algorithms`, `psk_key_exchange_modes`, `pre_shared_key`) | Provide extra capabilities. |\n\n### 2.2. ServerHello\n\n| Field | What it carries |\n|-------|-----------------|\n| `server_random` (32\u2011byte) | Random nonce (again, not used in the secret calculation). |\n| `selected_group` | The curve the server chooses from the client\u2019s list. |\n| `key_share` | The server\u2019s own **ephemeral public key** `X_s = g^{x_s}` (where `x_s` is the server\u2019s private DH exponent). |\n| `cipher_suite` | The chosen AEAD+hash suite. |\n| Optional: `pre_shared_key` binder | If a PSK is used, the binder proves knowledge of the PSK. |\n\n> **Result of this exchange:** Both sides now have each other\u2019s DH public keys: `X_c` and `X_s`. Each side can compute the **shared DH secret**:  \n\n> \\[\n> \\text{shared\\_secret} = (X_{other})^{x_{self}} = g^{x_c x_s}\n> \\]  \n\n> This value is called the **ECDHE shared secret** (or simply *DH secret*).\n\n### 2.3. EncryptedExtensions (Server \u2192 Client)\n\n",
+        "tokens_in": 83,
+        "tokens_out": 1000,
+        "cost_usd": 0.00061245,
+        "complexity_score": null,
+        "latency_ms": 7945.42740000179
+      }
+    },
+    {
+      "id": 23,
+      "category": "code_mid",
+      "expected_tier": "mid",
+      "prompt": "Write a Python context manager that times the block it wraps and logs the duration.",
+      "routed": {
+        "ok": true,
+        "tier": "mid",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "Below is a self\u2011contained, production\u2011ready **context manager** that measures the elapsed time of the code block it wraps and writes a nicely\u2011formatted log entry.  \n\nIt works as a regular class\u2011based context manager, but a thin wrapper using `contextlib.contextmanager` is also provided for those who prefer a generator\u2011style API.\n\n```python\n\"\"\"\ntimed_logger.py\n\nA tiny utility that provides a context manager for timing a block of code\nand logging the duration.\n\nTypical usage\n-------------\n>>> import logging\n>>> from timed_logger import Timer\n>>> logging.basicConfig(level=logging.INFO)\n>>> \n>>> # Simple one\u2011liner\n>>> with Timer(\"my expensive task\"):\n...     # ... do work ...\n...     time.sleep(1.23)\n...\n# INFO:root:Timer[my expensive task] finished in 1.232\u202fs\n\"\"\"\n\nfrom __future__ import annotations\n\nimport logging\nimport time\nfrom typing import Optional, Callable, Any\n\n\nclass Timer:\n    \"\"\"\n    Context manager that measures the wall\u2011clock time of the enclosed block\n    and logs the result when the block exits.\n\n    Parameters\n    ----------\n    name : str, optional\n        Human\u2011readable identifier that will appear in the log line.\n        If omitted the string ``\"Timer\"`` is used.\n    logger : logging.Logger or None, optional\n        Logger instance to use.  If ``None`` (default) the *root* logger is\n        used (``logging.getLogger()``).  Supplying a custom logger makes it easy\n        to route the output to a file, syslog, etc.\n    level : int, optional\n        Logging level to emit the message at.  Default is ``logging.INFO``.\n    fmt : Callable[[float, str], str] | None, optional\n        Optional formatter that receives the elapsed seconds and the *name*\n        and returns the final log string.  If ``None`` a sensible default is used.\n    threshold : float | None, optional\n        Minimum duration (seconds) that must be exceeded before a log entry is\n        emitted.  Useful for ignoring trivial calls.  ``None`` means \u201calways log\u201d.\n\n    Example\n    -------\n    >>> import logging, time\n    >>> logging.basicConfig(level=logging.INFO)\n    >>> with Timer(\"my_task\"):\n    ...     time.sleep(0.5)\n    INFO:root:Timer[my_task] finished in 0.500\u202fs\n    \"\"\"\n\n    def __init__(\n        self,\n        name: Optional[str] = None,\n        *,\n        logger: Optional[logging.Logger] = None,\n        level: int = logging.INFO,\n        fmt: Optional[Callable[[float, str], str]] = None,\n        threshold: Optional[float] = None,\n    ) -> None:\n        self.name = name or \"Timer\"\n        self.logger = logger or logging.getLogger()\n        self.level = level\n        self.fmt = fmt or self._default_formatter\n        self.threshold = threshold\n\n        # Internal state \u2013 not part of the public API\n        self._start: Optional[float] = None\n        self._ended: bool = False\n\n    # --------------------------------------------------------------------- #\n    # Context\u2011manager protocol\n    # --------------------------------------------------------------------- #\n    def __enter__(self) -> \"Timer\":\n        self._start = time.perf_counter()\n        self._ended = False\n        return self\n\n    def __exit__(self, exc_type, exc_val, exc_tb) -> None:\n        # If __enter__ never ran (unlikely) we just skip logging.\n        if self._start is None:\n            return\n\n        elapsed = time.perf_counter() - self._start\n        self._ended = True\n\n        # Respect the optional threshold.\n        if self.threshold is not None and elapsed < self.threshold:\n            return\n\n        msg = self.fmt(elapsed, self.name)\n        self.logger.log(self.level, msg)\n\n    # --------------------------------------------------------------------- #\n    # Helper utilities\n    # --------------------------------------------------------------------- #\n    @staticmethod\n    def _default_formatter(seconds: float, name: str) -> str:\n        \"\"\"Human\u2011friendly default formatting.\"\"\"\n        # Use a fixed\u2011width, three\u2011significant\u2011figure representation.\n        # For sub\u2011millisecond timings we switch to \u00b5s.\n        if seconds < 1e-3:\n            value = seconds * 1_000_000\n            unit = \"\u00b5s\"\n        elif seconds <",
+        "tokens_in": 87,
+        "tokens_out": 1000,
+        "cost_usd": 0.00061305,
+        "complexity_score": 0.34,
+        "latency_ms": 8319.372099998873
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "Here\u2019s a tiny, self\u2011contained context manager that measures how long the wrapped block runs and logs the result with the standard\u202f`logging` module.\n\n```python\nimport time\nimport logging\nfrom contextlib import ContextDecorator\nfrom typing import Optional\n\n# -------------------------------------------------------------\n# 1\ufe0f\u20e3  Set up a logger (feel free to configure it elsewhere)\n# -------------------------------------------------------------\nlogger = logging.getLogger(__name__)          # logger name = module name\nif not logger.handlers:                       # add a default handler only once\n    handler = logging.StreamHandler()\n    formatter = logging.Formatter(\n        fmt=\"%(asctime)s | %(levelname)s | %(name)s | %(message)s\",\n        datefmt=\"%H:%M:%S\"\n    )\n    handler.setFormatter(formatter)\n    logger.addHandler(handler)\n    logger.setLevel(logging.DEBUG)            # change to INFO / WARNING as you wish\n\n# -------------------------------------------------------------\n# 2\ufe0f\u20e3  The actual context manager\n# -------------------------------------------------------------\nclass timer(ContextDecorator):\n    \"\"\"\n    Context manager (and decorator) that measures the elapsed time of a code\n    block and logs it.\n\n    Parameters\n    ----------\n    name : str, optional\n        A human\u2011readable name that will appear in the log message.\n        Useful when you nest several timers.\n    logger : logging.Logger, optional\n        The logger to which the message will be sent.  If omitted the module\u2011level\n        ``logger`` defined above is used.\n    level : int, optional\n        Logging level (e.g. ``logging.INFO``).  Defaults to ``logging.DEBUG``.\n    precision : int, optional\n        Number of decimal places shown for the seconds value.\n    \"\"\"\n\n    def __init__(\n        self,\n        name: Optional[str] = None,\n        *,\n        logger: Optional[logging.Logger] = None,\n        level: int = logging.DEBUG,\n        precision: int = 4,\n    ):\n        self.name = name or \"block\"\n        self.logger = logger or globals()[\"logger\"]\n        self.level = level\n        self.precision = precision\n        self._start = None\n        self._elapsed = None\n\n    # -----------------------------------------------------------------\n    # Context\u2011manager protocol\n    # -----------------------------------------------------------------\n    def __enter__(self):\n        self._start = time.perf_counter()\n        return self                     # allow \u201cas t\u201d to inspect later if wanted\n\n    def __exit__(self, exc_type, exc_val, exc_tb):\n        self._elapsed = time.perf_counter() - self._start\n        msg = f\"{self.name} took {self._elapsed:.{self.precision}f}s\"\n        self.logger.log(self.level, msg)\n        # Returning False propagates any exception that happened inside the block.\n        return False\n\n    # -----------------------------------------------------------------\n    # Helper \u2013 lets you fetch the elapsed time after the block\n    # -----------------------------------------------------------------\n    @property\n    def elapsed(self) -> float:\n        \"\"\"Seconds elapsed (available after the block has finished).\"\"\"\n        if self._elapsed is None:\n            raise RuntimeError(\"Timer has not finished yet.\")\n        return self._elapsed\n```\n\n## How to use it\n\n### As a plain context manager\n\n```python\ndef compute():\n    total = 0\n    for i in range(10_000_000):\n        total += i\n    return total\n\nwith timer(\"expensive computation\"):\n    compute()\n```\n\nOutput (to *stderr* by default):\n\n```\n12:34:56 | DEBUG | __main__ | expensive computation took 0.3824s\n```\n\n### As a decorator\n\nBecause we inherit from `ContextDecorator`, the same class works as a function decorator:\n\n```python\n@timer(\"cached factorial\")\ndef fact(n):\n    if n == 0:\n        return 1\n    return n * fact(n-1)\n\nfact(20)\n```\n\n### Accessing the measured time programmatically\n\n```python\nwith timer(\"something\") as t:\n    time.sleep(0.123)\n\nprint(f\"Measured: {t.elapsed:.6f}s\")\n```\n\n### Custom logger / level\n\n```python\nmy_log = logging.getLogger(\"my_app\")\nmy_log.setLevel(logging.INFO)\n\nwith timer(\"DB query\", logger=my_log, level=logging.INFO):\n    run_expensive_query()\n```\n\n---\n\n### Why `time.perf_counter`?\n\n`perf_counter` offers the highest available resolution on the platform and is monotonic (it never goes backwards), making it perfect for benchmarking short code sections.\n\n---\n\nFeel free to drop the whole snippet into a",
+        "tokens_in": 87,
+        "tokens_out": 1000,
+        "cost_usd": 0.00061305,
+        "complexity_score": null,
+        "latency_ms": 8156.079199998203
+      }
+    },
+    {
+      "id": 24,
+      "category": "code_mid",
+      "expected_tier": "mid",
+      "prompt": "Explain the difference between shallow and deep copy in Python, with an example where it matters.",
+      "routed": {
+        "ok": true,
+        "tier": "mid",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "## Shallow vs. Deep Copy in Python\n\n| Aspect | **Shallow copy** | **Deep copy** |\n|--------|------------------|---------------|\n| What is copied? | The **outer container** (list, dict, set, \u2026) is duplicated, but the objects it references are **shared** with the original. | The outer container **and every object it references** (recursively) are duplicated, so the new structure is completely independent. |\n| How is it created? | `copy.copy(obj)` or a language\u2011level shortcut (`list(original)`, `original[:]`, `dict(original)`, etc.) | `copy.deepcopy(obj)` |\n| Cost | O(1) for the container + O(N) for copying the container\u2019s references \u2192 very fast. | O(N) in the total number of reachable objects \u2192 slower and uses more memory. |\n| When does it matter? | When the container holds **immutable** objects (ints, strings, tuples) you often don\u2019t notice any difference. | When the container holds **mutable** objects (lists, dicts, custom objects) and you intend to modify those inner objects without affecting the source. |\n\n---\n\n## A concrete example where the distinction matters\n\n```python\nimport copy\n\n# ---- 1\ufe0f\u20e3  A nested mutable structure ---------------------------------\noriginal = {\n    \"numbers\": [1, 2, 3],\n    \"settings\": {\"mode\": \"auto\", \"threshold\": 0.75},\n}\n\n# ---- 2\ufe0f\u20e3  Shallow copy -------------------------------------------------\nshallow = copy.copy(original)          # or: shallow = original.copy()\n# ---- 3\ufe0f\u20e3  Deep copy ----------------------------------------------------\ndeep = copy.deepcopy(original)\n\n# ---- 4\ufe0f\u20e3  Mutate an inner object ---------------------------------------\noriginal[\"numbers\"].append(99)          # modify the inner list\noriginal[\"settings\"][\"mode\"] = \"manual\" # modify the inner dict\n\n# ---- 5\ufe0f\u20e3  Observe the results -----------------------------------------\nprint(\"original :\", original)\nprint(\"shallow  :\", shallow)\nprint(\"deep     :\", deep)\n```\n\n### Expected output\n\n```\noriginal : {'numbers': [1, 2, 3, 99], 'settings': {'mode': 'manual', 'threshold': 0.75}}\nshallow  : {'numbers': [1, 2, 3, 99], 'settings': {'mode': 'manual', 'threshold': 0.75}}\ndeep     : {'numbers': [1, 2, 3],      'settings': {'mode': 'auto',   'threshold': 0.75}}\n```\n\n#### What happened?\n\n* **`original`** \u2013 we changed the *inner* objects (`list` and `dict`).  \n* **`shallow`** \u2013 because it only copied the top\u2011level dictionary, both `\"numbers\"` and `\"settings\"` still point to the **same** inner objects that belong to `original`. Hence the changes are visible here as well.  \n* **`deep`** \u2013 `deepcopy` created brand\u2011new copies of the inner list and dict, so changes to `original` do **not** affect `deep`.\n\n---\n\n## Why a shallow copy sometimes *looks* fine\n\nIf you only store immutable values, a shallow copy behaves like a deep copy because there is nothing that can be mutated:\n\n```python\na = (1, 2, 3)\nb = copy.copy(a)       # or simply b = a\nb = (4, 5, 6)          # rebinding a name never changes the original tuple\n```\n\nBoth `a` and `b` are independent because tuples cannot be changed in place. The problem only appears when **mutability** is involved.\n\n---\n\n## Quick cheat\u2011sheet for everyday use\n\n| Situation | Preferred technique |\n|-----------|----------------------|\n| Duplicate a simple list/dict/tuple that contains only immutable items | `new = old[:]` or `new = dict(old)`",
+        "tokens_in": 89,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006133499999999999,
+        "complexity_score": 0.5657,
+        "latency_ms": 7862.579299999197
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "## Shallow vs. Deep Copy in Python  \n\n| Aspect | Shallow copy | Deep copy |\n|--------|--------------|-----------|\n| **What is copied?** | Only the **outer container** (list, dict, set, custom object, \u2026). The elements inside the container are **references** to the original objects. | The **entire object graph** is duplicated. Every container and every object it contains (recursively) is copied, so you get new inner objects as well. |\n| **How is it created?** | `copy.copy(obj)` or slicing (`new = old[:]`) for sequences, `dict(old)` for dicts, `list(old)`, etc. | `copy.deepcopy(obj)` |\n| **Cost** | O(1) for the container + O(number\u202fof\u202felements) to copy the references \u2192 cheap. | O(number\u202fof\u202fobjects\u202fin\u202fthe\u202fgraph) \u2192 more expensive, especially for large or deeply nested structures. |\n| **When modifications affect the original** | Mutating a **mutable element** (e.g., a list inside the outer list) will be seen by both copies because they share the same inner object. Changing the outer container itself (e.g., reassigning `new[0]`) does **not** affect the original. | Because every inner object is its own copy, mutations on any level are isolated; the original stays unchanged. |\n| **Typical use\u2011case** | You just need a new container but are fine with sharing the contained objects (e.g., copying a list of immutable values). | You need a completely independent replica, for example when you\u2019ll modify nested structures and must not corrupt the original. |\n\n---\n\n## Code Illustration\n\n```python\nimport copy\n\n# ---- 1. A nested mutable structure ---------------------------------\noriginal = {\n    'numbers': [1, 2, 3],\n    'info': {'name': 'Alice', 'scores': [10, 20]}\n}\n```\n\n### Shallow copy\n\n```python\nshallow = copy.copy(original)          # or: shallow = original.copy()\nshallow['numbers'].append(4)            # mutate inner list\nshallow['info']['name'] = 'Bob'        # mutate inner dict (replace value)\nshallow['info']['scores'][0] = 99      # mutate nested list inside inner dict\n```\n\n**What happened to `original`?**\n\n```python\nprint(original)\n# {'numbers': [1, 2, 3, 4],          # <-- list was mutated!\n#  'info': {'name': 'Bob',          # <-- inner dict entry changed!\n#           'scores': [99, 20]}}    # <-- nested list mutated!\n```\n\n*Why?*  \n`original` and `shallow` share the same inner objects (`list` and `dict`). The shallow copy only duplicated the top\u2011level dictionary; the values inside are still references to the same objects.\n\n### Deep copy\n\n```python\ndeep = copy.deepcopy(original)         # start from the *modified* original above\ndeep['numbers'].append(5)\ndeep['info']['scores'][1] = 88\ndeep['info']['name'] = 'Carol'\n```\n\n**Now inspect both containers:**\n\n```python\nprint('original:', original)\nprint('deep:', deep)\n```\n\nOutput\n\n```\noriginal: {'numbers': [1, 2, 3, 4],\n           'info': {'name': 'Bob', 'scores': [99, 20]}}\ndeep:      {'numbers': [1, 2, 3, 4, 5],\n           'info': {'name': 'Carol', 'scores': [99, 88]}}\n```\n\nThe deep copy created **new** inner lists and dicts, so changes to `deep` never touch `original`.\n\n---\n\n## When the Difference **Matters**\n\n### Scenario: Caching or \u201cundo\u201d functionality\n\nImagine you are implementing a simple text\u2011editor that keeps a history of document states so a user can undo changes.\n\n```python\nclass Document:\n    def __init__(self, lines):\n        self.lines = lines               # a list of strings\n\ndoc = Document([\"line 1\", \"line 2\", \"line 3\"])\nhistory = []\n\n# WRONG: using shallow copy\nhistory.append(copy.copy(doc))          # only the Document instance is copied,\n                                        # but `lines` list is shared!\n\ndoc.lines[0] = \"changed line 1\"\nprint(history[-1].lines)                # -> ['changed line 1', 'line 2",
+        "tokens_in": 89,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006133499999999999,
+        "complexity_score": null,
+        "latency_ms": 9044.705799999065
+      }
+    },
+    {
+      "id": 25,
+      "category": "summarize",
+      "expected_tier": "mid",
+      "prompt": "Summarise the main arguments for and against nuclear power for electricity generation.",
+      "routed": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "**Nuclear Power for Electricity Generation \u2013 Key Arguments\u202f**\n\n---\n\n### Arguments **in Favor**  \n\n| Theme | Main Points |\n|-------|--------------|\n| **Low\u2011Carbon Energy** | \u2022 Nuclear plants emit virtually no CO\u2082 during operation, helping meet climate\u2011change targets.<br>\u2022 Provides a stable baseload that can complement intermittent renewables (wind, solar). |\n| **High Energy Density & Reliability** | \u2022 A small amount of uranium yields many times more electricity than the same mass of coal, gas or oil.<br>\u2022 Plants can run continuously for 18\u201124\u202fmonths before refueling, delivering a steady power supply. |\n| **Economic Benefits** | \u2022 Once built, operating costs are relatively low and predictable (fuel is a small share of total cost).<br>\u2022 Generates high\u2011paying, skilled jobs and can stimulate local economies. |\n| **Energy Security** | \u2022 Reduces dependence on imported fossil fuels; uranium is abundant and can be stockpiled.<br>\u2022 Advanced fuel cycles (e.g., fast reactors, thorium) could further extend resource availability. |\n| **Technological Progress** | \u2022 New Generation\u202fIII+ reactors and small modular reactors (SMRs) promise improved safety, lower capital costs, and faster construction.<br>\u2022 Research into molten\u2011salt, gas\u2011cooled and fusion concepts could further reduce risks. |\n| **Waste Management Advances** | \u2022 Modern fuel\u2011cycle strategies (re\u2011processing, advanced cladding) can reduce the volume and radiotoxicity of long\u2011lived waste.<br>\u2022 Deep\u2011geologic repositories (e.g., Finland\u2019s Onkalo) demonstrate safe, long\u2011term disposal. |\n\n---\n\n### Arguments **against**  \n\n| Theme | Main Points |\n|-------|--------------|\n| **Safety & Accident Risk** | \u2022 High\u2011profile accidents (Three Mile Island, Chernobyl, Fukushima) generate lasting public fear.<br>\u2022 Even low\u2011probability events can have catastrophic health, environmental, and economic consequences. |\n| **Radioactive Waste** | \u2022 Spent fuel remains hazardous for tens of thousands of years.<br>\u2022 No permanent, universally\u2011accepted disposal solution yet; interim storage raises security concerns. |\n| **High Capital Cost & Construction Time** | \u2022 Nuclear plants require billions of dollars up\u2011front and often face delays and cost overruns.<br>\u2022 Long lead times (5\u201310\u202fyears or more) make them less responsive to rapidly changing energy markets. |\n| **Proliferation Risks** | \u2022 Enrichment and re\u2011processing technologies can be diverted to produce weapons\u2011grade material.<br>\u2022 International safeguards add complexity and cost. |\n| **Economic Competition from Renewables** | \u2022 Falling costs of solar PV, wind, and battery storage make them increasingly competitive with new nuclear builds.<br>\u2022 Policy incentives and market structures often favor low\u2011cap\u2011ex, fast\u2011deployment technologies. |\n| **Public Opposition & Licensing Hurdles** | \u2022 Strong local and activist opposition can stall projects or lead to cancellations.<br>\u2022 Complex regulatory regimes can lengthen permitting and increase uncertainty. |\n| **Decommissioning Costs** | \u2022 End\u2011of\u2011life dismantling and site remediation are expensive and must be funded over decades. |\n| **Limited Fuel Supply Concerns (if no recycling)** | \u2022 Conventional once\u2011through uranium use would exhaust economically viable resources in a few centuries, though this is mitigated by re\u2011processing or breeder reactors. |\n\n---\n\n### Bottom\u2011Line Take\u2011aways  \n\n- **Climate & Reliability:** Nuclear offers low\u2011carbon, dispatchable power, making it attractive for deep\u2011decarbonisation and grid stability.  \n- **Cost & Timing:** High upfront investment, long construction periods, and potential overruns are the biggest economic hurdles.  \n- **Safety & Waste:** While modern designs dramatically improve safety, the legacy of past accidents and the long\u2011term waste issue remain central public concerns.  \n- **Future Outlook:** Advances such as SMRs, Generation\u2011IV reactors, and proven waste\u2011repository projects could shift the balance, but policy, financing, and societal acceptance will determine the scale of nuclear\u2019s role in the coming decades.",
+        "tokens_in": 86,
+        "tokens_out": 939,
+        "cost_usd": 0.0005763,
+        "complexity_score": 0.67,
+        "latency_ms": 7912.584599998809
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "**Nuclear Power \u2013 Key Pros and Cons for Electricity Generation**\n\n| **Argument** | **Why It\u2019s Seen as a Benefit** | **Why It\u2019s Seen as a Drawback** |\n|--------------|-------------------------------|---------------------------------|\n| **Low\u2011carbon electricity** | \u2022 Nuclear reactors emit virtually no CO\u2082 during operation, helping meet climate\u2011change targets. <br>\u2022 Provides a large, steady baseload that can complement intermittent renewables. | \u2022 Lifecycle emissions (mining, enrichment, construction, decommissioning) are not zero, though they remain far lower than fossil fuels. |\n| **High energy density & reliability** | \u2022 A single kilogram of uranium yields ~\u202f24\u202f000\u202fMWh of electricity\u2014orders of magnitude more than coal or gas. <br>\u2022 Plants run >\u202f90\u202f% capacity factor, delivering power continuously. | \u2022 High capital cost and long lead times (10\u2011+ years) can delay deployment and lock in infrastructure choices. |\n| **Economic considerations** | \u2022 Once built, operating costs are relatively low and fuel costs are a small share of total cost. <br>\u2022 Can provide stable electricity prices and jobs in high\u2011skill sectors. | \u2022 Up\u2011front capital costs are among the highest of all generation options; financing risk can deter investors. <br>\u2022 Cost overruns and delays (e.g., \u201cmega\u2011project\u201d risk) are common. |\n| **Grid stability and flexibility** | \u2022 Reactors can provide ancillary services (frequency regulation, voltage support, inertial response). <br>\u2022 Some modern designs (e.g., SMRs, load\u2011following reactors) can adjust output to match demand. | \u2022 Traditional large reactors are optimized for baseload and can be less flexible than gas turbines or storage\u2011augmented renewables. |\n| **Safety and accident risk** | \u2022 Modern designs incorporate passive safety systems that shut down automatically without operator action. <br>\u2022 The industry has a strong safety culture and regulatory oversight. | \u2022 High\u2011impact accidents (Three Mile Island, Chernobyl, Fukushima) have left lasting public fear and costly clean\u2011up. <br>\u2022 Even low\u2011probability events can have severe consequences for health, environment, and public trust. |\n| **Radioactive waste** | \u2022 Advanced fuel cycles (re\u2011processing, fast reactors) can reduce waste volume and extract additional energy. | \u2022 Spent fuel remains hazardous for tens of thousands of years; long\u2011term disposal solutions (geologic repositories) are politically contentious and technically challenging. |\n| **Proliferation concerns** | \u2022 Civil nuclear programs can provide a foundation for a skilled workforce and infrastructure useful for non\u2011proliferation monitoring. | \u2022 Enrichment and re\u2011processing technologies can be diverted to produce weapons\u2011grade material; international safeguards are required. |\n| **Land use & environmental footprint** | \u2022 Nuclear plants occupy a relatively small footprint compared with large solar farms or wind parks for the same output. | \u2022 Thermal discharge can affect local water bodies; mining of uranium can cause habitat disruption and contamination if not managed responsibly. |\n| **Technology evolution (SMRs, Gen\u2011IV, fusion)** | \u2022 Small modular reactors (SMRs) promise lower upfront cost, factory fabrication, and siting flexibility (e.g., remote or industrial sites). <br>\u2022 Generation\u2011IV concepts aim for higher safety, waste minimisation, and even energy\u2011positive cycles. | \u2022 Many advanced designs are still at prototype or early commercial stages; commercial\u2011scale performance, licensing, and supply chains are unproven. |\n| **Public acceptance & political factors** | \u2022 In some regions (France, Canada, parts of Asia) nuclear enjoys strong public and governmental support, enabling stable policy environments. | \u2022 In many countries (Germany, Italy, parts of the U.S.), public opposition leads to phase\u2011outs or moratoria, creating regulatory uncertainty. |\n\n### Bottom\u2011Line Takeaway\n\n- **Proponents** argue that nuclear power delivers large\u2011scale, low\u2011carbon, reliable electricity with relatively low operating costs, making it a valuable tool for decarbonizing the grid, especially where renewables alone cannot guarantee stability.\n- **Critics** point to the high upfront costs, long development timelines, unresolved waste and proliferation issues, and the societal risk perception tied to safety accidents. These factors can impede investment, provoke public resistance, and raise questions about whether nuclear should be a cornerstone of future energy systems or a transitional/limited option.\n\nThe ultimate policy choice often hinges on a country\u2019s specific energy mix, climate goals, financial capacity,",
+        "tokens_in": 86,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006129,
+        "complexity_score": null,
+        "latency_ms": 7351.643400001194
+      }
+    },
+    {
+      "id": 26,
+      "category": "summarize",
+      "expected_tier": "mid",
+      "prompt": "Describe how the internet routes a packet between two continents, for a non-technical reader.",
+      "routed": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "**Imagine you\u2019re sending a postcard from New\u202fYork to a friend in Tokyo.**  \nYou don\u2019t have to drive it yourself, you just drop it in a mailbox and the postal system takes care of the rest. The Internet works a lot like that\u2014except instead of a single postcard, it\u2019s a tiny bundle of digital \u201cbits,\u201d and instead of trucks and planes, it uses a worldwide network of cables, switches, and computers that we call **routers**.\n\nBelow is a plain\u2011English walk\u2011through of how a tiny piece of data (called a **packet**) makes the long trip from one continent to another.\n\n---\n\n## 1. The packet gets a destination address\n\nBefore anything moves, your computer puts a **digital address** on the packet.  \nThink of it like writing \u201cTokyo, Japan\u201d on the envelope. In the Internet world that address is a series of numbers called an **IP address** (e.g.,\u202f`203.0.113.45`). Your computer finds this address automatically when you type a web address like *www.example.com*.\n\n---\n\n## 2. The local \u201cpost office\u201d (your home router)\n\nYour device hands the packet to the router in your home (or in your office building). This router is the first \u201cpost office.\u201d  \nIt looks at the destination address and decides:\n\n* \u201cIs the packet already on the same local network? No\u2014so I need to send it out to the wider Internet.\u201d\n\nIt then forwards the packet to your **Internet Service Provider** (ISP)\u2014the company that gives you broadband, cable, or fiber service.\n\n---\n\n## 3. The ISP\u2019s network \u2013 the first highway\n\nThe ISP\u2019s routers are like a network of highways that connect many neighborhoods.  \nYour packet travels through a few of these routers until it reaches a **gateway router**\u2014the point where your ISP hands the packet off to the larger, global Internet.\n\n---\n\n## 4. Choosing a route across the ocean\n\nNow the packet has to cross an entire ocean. It can go one of two ways:\n\n| Option | How it works | What you might picture |\n|--------|--------------|------------------------|\n| **Undersea fiber\u2011optic cable** | The packet is sent into a high\u2011capacity fiber line that lies on the ocean floor. Light pulses travel through the glass strands at near\u2011light speed. | A massive \u201cdata submarine cable\u201d linking the U.S. West Coast to Japan. |\n| **Satellite** (used only for backup or remote places) | The packet is beamed up to a satellite orbiting Earth, then down to a ground station on the other continent. | A \u201cspace post office\u201d that\u2019s slower but works when cables are down. |\n\nMost traffic between continents uses **undersea cables** because they are fast and can carry huge amounts of data. The packet hops from router to router along the cable\u2019s landing stations (special facilities on each shore). Each hop is a tiny decision point: \u201cWhich next router brings the packet closer to Tokyo?\u201d\n\n---\n\n## 5. The \u201cexchange points\u201d \u2013 where networks meet\n\nAlong the way, the packet often passes through **Internet Exchange Points (IXPs)**. These are large data\u2011center \u201cmeeting rooms\u201d where many different companies\u2019 networks (ISPs, cloud providers, content companies) interconnect.\n\nThink of an IXP like a busy train station where trains from different railway companies can switch tracks without going through a long detour. This lets the packet move efficiently from, say, your ISP\u2019s network onto the network of a big carrier that owns the undersea cable.\n\n---\n\n## 6. Arriving on the other continent\n\nWhen the packet reaches the **landing station** in Japan, it is handed to a Japanese ISP or a content\u2011delivery network (CDN). From there it follows a similar series of hops\u2014through regional routers, local exchange points, and finally the router that serves your friend\u2019s building.\n\n---\n\n## 7. The final \u201cpost office\u201d (your friend\u2019s router)\n\nThe last router in the chain sees that the packet\u2019s destination address matches a device on its local network, so it delivers the packet to the correct computer. That computer reassembles the packet (along with many other packets that arrived earlier) and shows your friend the requested webpage, video, or email.\n\n---\n\n## 8. What makes all this work automatically?\n\nYou never",
+        "tokens_in": 89,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006133499999999999,
+        "complexity_score": 0.67,
+        "latency_ms": 8026.117599998543
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "**How a Message Travels Across the World \u2013 The Internet\u2019s \u201cMail\u2011Delivery\u201d System**\n\nImagine you want to send a postcard from New\u202fYork to a friend in Tokyo. You write the address, drop the card in a mailbox, and a series of post offices, trucks, and planes whisk it across oceans until it lands at your friend\u2019s doorstep. The Internet works a lot like that, only instead of paper and trucks it moves tiny bundles of digital data called **packets** through a network of cables, switches, and routers.\n\nBelow is a step\u2011by\u2011step story of what happens when you click \u201csend\u201d on an email, stream a video, or load a webpage that lives on a server halfway around the globe. No technical background is needed\u2014just picture a world\u2011wide postal system for data.\n\n---\n\n## 1. Your Device Packages the Message\n\n**What you do:** You type an address (a website name like *example.com* or an email address) and hit \u201cEnter.\u201d\n\n**Internet\u2019s job:**  \n1. **Find the destination\u2019s \u201cstreet address.\u201d**  \n   Your computer asks a \u201cphone\u2011book\u201d service called **DNS** (Domain Name System) to translate the human\u2011readable name into a string of numbers called an **IP address** (e.g., 203.0.113.42). Think of DNS as the post office looking up the exact street number for a given name.\n\n2. **Break the data into packets.**  \n   The message (the web page, the video, the email) is split into small, uniformly\u2011sized pieces called **packets**\u2014like putting a long letter into several envelopes. Each envelope gets a \u201cto\u201d address (the destination IP) and a \u201cfrom\u201d address (your IP), plus a little note about where it belongs in the overall message.\n\n---\n\n## 2. The Local \u201cPost Office\u201d \u2013 Your ISP\n\n**What you see:** Your home router or Wi\u2011Fi box sends the packets to your Internet Service Provider (ISP). This could be a cable company, a phone company, a satellite provider, etc.\n\n**What happens:**  \n* The ISP\u2019s equipment (the \u201clocal post office\u201d) looks at the destination IP address on each packet and decides the best next hop.  \n* If the destination is far away, the packet is handed off to a **regional router**\u2014the first big highway exit.\n\n---\n\n## 3. The Regional Backbone \u2013 \u201cHighways\u201d of the Internet\n\n**What you see:** From the ISP\u2019s local hub, the packets travel through a network of **routers** (think of traffic lights and junctions) that belong to larger carriers called **Tier\u20111 ISPs**. These carriers own or lease massive, high\u2011capacity fiber\u2011optic cables that span continents.\n\n**What happens:**  \n* Each router reads the packet\u2019s destination address and forwards it toward the next router that is \u201ccloser\u201d to the final address.  \n* The route isn\u2019t a straight line; it\u2019s chosen based on speed, cost, and current traffic\u2014just like a GPS picking the fastest road.\n\n---\n\n## 4. Crossing the Ocean \u2013 Undersea Cables (or Satellites)\n\n**What you see:** Somewhere along the route, the packets must cross the Atlantic, Pacific, or other ocean to reach the other continent.\n\n**How they cross:**  \n\n| Method | What it looks like | When it\u2019s used |\n|--------|-------------------|----------------|\n| **Undersea fiber\u2011optic cables** | Thin glass strands laid on the ocean floor, bundled into protective tubes. Light pulses travel through them at near\u2011light speed. | The workhorse for almost all inter\u2011continental traffic (99%+). |\n| **Satellites** | Signals bounce to a satellite in orbit and back down. | Used for backup, remote locations, or specific services (e.g., some maritime connections). |\n\nThe packets hop onto one of these cables (or a satellite link) and zip across the ocean, traveling thousands of miles in a fraction of a second.\n\n---\n\n## 5. The Foreign \u201cPost Office\u201d \u2013 The Destination Country\u2019s Network\n\n**What you see:** Once the packets reach the other side of the ocean, they arrive at a",
+        "tokens_in": 89,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006133499999999999,
+        "complexity_score": null,
+        "latency_ms": 8309.439900000143
+      }
+    },
+    {
+      "id": 27,
+      "category": "multi_question",
+      "expected_tier": "mid",
+      "prompt": "What is a container? How does it differ from a virtual machine? And when would I choose one over the other?",
+      "routed": {
+        "ok": true,
+        "tier": "mid",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "## TL;DR  \n\n| Feature | **Container** | **Virtual Machine (VM)** |\n|---|---|---|\n| **What it is** | A lightweight, OS\u2011level isolation unit that packages an app + its dependencies. | A full\u2011stack computer that runs a *guest* operating system on top of a *hypervisor*. |\n| **Kernel** | Shares the host kernel (no separate kernel). | Own kernel (guest OS) running on virtualized hardware. |\n| **Size & Startup** | MB\u2011scale, starts in seconds (or less). | GB\u2011scale, starts in tens of seconds to minutes. |\n| **Performance** | Near\u2011native (only a small isolation overhead). | Some overhead from hypervisor + emulated hardware (typically 5\u201120\u202f% slower). |\n| **Isolation** | Process\u2011level isolation (cgroups, namespaces). | Hardware\u2011level isolation (full virtualized CPU, memory, devices). |\n| **Portability** | Extremely portable across any host that runs the same container runtime (Docker, containerd, CRI\u2011O, etc.). | Portable across hypervisor types, but you must ship a whole OS image. |\n| **Typical Use Cases** | Micro\u2011services, CI/CD pipelines, dev\u2011environment reproducibility, \u201crun\u2011once\u201d jobs, scaling stateless workloads. | Running multiple OSes on one host, legacy monoliths that need a full OS, workloads that need kernel\u2011level control (e.g., custom drivers, kernel modules, different OS versions). |\n\n---\n\n## 1. What Is a Container?\n\nA **container** is a lightweight, **operating\u2011system\u2011level virtualization** mechanism. Think of it as a \u201cprocess\u201d that runs in its own sandbox:\n\n* **Namespaces** give the process its own view of system resources (PID, network, mount points, etc.).\n* **cgroups** limit and account for CPU, memory, I/O, etc.\n* The container shares the **host kernel**, but gets its own root filesystem, libraries, binaries, and environment variables.  \n* The result is an isolated \u201cpackage\u201d that can run anywhere the same container runtime exists (Docker, containerd, Podman, Kubernetes, etc.).\n\n### Example\n```bash\ndocker run -d --name web -p 8080:80 nginx:1.27\n```\n* Pulls the **nginx** image (\u2248 30\u202fMB) that contains the binary, config files, and a minimal rootfs (Alpine, Debian, etc.).\n* Starts a new process (`nginx`) that thinks it has its own PID 1, its own network stack (mapped to the host), and its own filesystem rooted at `/`.\n* The host\u2019s Linux kernel does all the heavy lifting; there is no separate OS boot.\n\n---\n\n## 2. What Is a Virtual Machine?\n\nA **virtual machine** is **hardware\u2011level virtualization**. A hypervisor (e.g., VMware ESXi, Microsoft Hyper\u2011V, KVM, Xen) emulates a complete set of hardware resources:\n\n* The VM gets a *virtual CPU*, *virtual RAM*, *virtual NIC*, *virtual disk*, etc.\n* Inside the VM runs a **guest operating system** (Linux, Windows, BSD, etc.) with its own kernel.\n* The hypervisor schedules the VM\u2019s virtual CPU on the host\u2019s physical CPU and translates all hardware accesses.\n\n### Example (KVM)\n```bash\nvirt-install \\\n  --name ubuntu20 \\\n  --ram 4096 \\\n  --vcpus 2 \\\n  --os-variant ubuntu20.04 \\\n  --disk path=/var/lib/libvirt/images/ubuntu20.qcow2,size=20 \\\n  --graphics none \\\n  --location 'http://archive.ubuntu.com/ubuntu/dists/focal/main/installer-amd64/'\n```\n* Creates a 20\u202fGB virtual disk, allocates 4\u202fGB RAM and 2 vCPUs, and boots a full Ubuntu 20.04 OS.\n\n---\n\n## 3. Core Technical Differences\n\n| Aspect | Containers | VMs |\n|--------|------------|----|\n| **Isolation level** | Process\u2011level (namespaces, cgroups). | Hardware\u2011level (virtual CPU, memory, devices). |\n| **Kernel** | Same kernel as host (Linux/Windows). | Separate kernel per VM (any OS supported by hypervisor). |\n| **Image size** | Usually tens to a few hundred MB (only the app + minimal OS libs). | Usually several GB (full OS + drivers + optional",
+        "tokens_in": 95,
+        "tokens_out": 1000,
+        "cost_usd": 0.00061425,
+        "complexity_score": 0.34,
+        "latency_ms": 8006.835000000137
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "## TL;DR  \n| Feature | **Container** | **Virtual Machine (VM)** |\n|---------|----------------|---------------------------|\n| **What it is** | An OS\u2011level sandbox that packages an app + its dependencies, sharing the host kernel. | A full guest OS running on virtualized hardware (CPU, memory, disk, NIC) provided by a hypervisor. |\n| **Isolation level** | Process\u2011level isolation (namespaces, cgroups). | Hardware\u2011level isolation (virtual CPU, memory, devices). |\n| **Boot time** | Milliseconds \u2192 seconds. | Seconds \u2192 minutes. |\n| **Resource overhead** | Very low \u2013 only the app + libraries (\u2248\u202f10\u201130\u202fMB). | High \u2013 a whole OS (\u2248\u202f1\u20112\u202fGB) plus hypervisor overhead. |\n| **Portability** | Same image runs on any Linux/Windows host that supports the container runtime. | Portable only as a whole VM image; moving between hypervisors can be non\u2011trivial. |\n| **Security** | Good for many workloads, but shares kernel \u2192 attack surface larger than a VM. | Stronger isolation (different kernels, can enforce stricter SELinux/AppArmor policies). |\n| **Use\u2011case sweet spot** | Micro\u2011services, CI/CD pipelines, stateless web services, dev\u2011prod parity, \u201ccloud\u2011native\u201d. | Legacy monoliths, multi\u2011tenant SaaS with strict compliance, workloads needing a different OS kernel, GPU\u2011heavy or low\u2011level hardware access. |\n\n---\n\n## 1. What is a container?\n\nA **container** is a lightweight, stand\u2011alone, executable package that bundles:\n\n* **Application code**  \n* **Runtime / language interpreter** (e.g., Python, Node.js)  \n* **Libraries & dependencies**  \n* **Metadata** (environment variables, default command, etc.)\n\nAll of this runs **on top of the host operating system\u2019s kernel**. The kernel\u2019s isolation primitives\u2014**namespaces** (process, network, mount, PID, etc.) and **cgroups** (resource limits)\u2014make each container appear as its own isolated Linux (or Windows) environment.\n\nPopular runtimes: **Docker**, **containerd**, **Podman**, **CRI\u2011O**.  \nOrchestrators for many containers: **Kubernetes**, **Docker Swarm**, **Nomad**.\n\n### Key characteristics\n\n| Characteristic | Details |\n|----------------|---------|\n| **Image\u2011based** | A read\u2011only **image** (layers of filesystem changes) is built once, then instantiated many times as **containers** (read\u2011write layer on top). |\n| **Immutable** | Images are versioned and never changed at runtime \u2192 reproducibility. |\n| **Fast start/stop** | No BIOS/boot sequence; the container\u2019s init process starts directly. |\n| **Resource efficiency** | Shares the host kernel; only the necessary libraries are packaged. |\n| **Stateless by default** | Data should be stored outside the container (volumes, object storage). |\n\n---\n\n## 2. How does a container differ from a virtual machine?\n\n| Aspect | Container | Virtual Machine |\n|--------|-----------|-----------------|\n| **Abstraction level** | OS\u2011level (process namespace) | Hardware\u2011level (virtual CPU, memory, disks, NIC) |\n| **Kernel** | Shares host kernel (Linux \u2192 Linux, Windows \u2192 Windows) | Runs its own kernel (can be Linux, Windows, BSD, etc.) |\n| **Size** | Tens of megabytes (just the app + libs) | Gigabytes (full OS + guest tools) |\n| **Performance** | Near\u2011native (\u2264\u202f5\u202f% overhead) | More overhead (",
+        "tokens_in": 95,
+        "tokens_out": 1000,
+        "cost_usd": 0.00061425,
+        "complexity_score": null,
+        "latency_ms": 8924.830399999337
+      }
+    },
+    {
+      "id": 28,
+      "category": "multi_question",
+      "expected_tier": "mid",
+      "prompt": "What causes deadlock? How do you detect it? What are the standard prevention strategies?",
+      "routed": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "## Deadlock \u2013 A Quick Overview  \n\nA **deadlock** is a situation in which a set of processes (or threads) are each waiting for a resource that another member of the same set holds, so none can ever proceed. In other words, the system reaches a state of circular wait and gets stuck.\n\n### The Four Coffman Conditions (Necessary Conditions)\n\nFor a deadlock to arise, **all four** of the following conditions must hold simultaneously (Coffman et al., 1971). Removing any one of them guarantees that deadlock cannot occur.\n\n| Condition | Description | Typical manifestation |\n|-----------|-------------|-----------------------|\n| **Mutual Exclusion** | At least one resource is **non\u2011shareable** \u2013 only one process can use it at a time. | Exclusive locks, printers, files opened in write mode, etc. |\n| **Hold\u2011and\u2011Wait** | A process **holds** at least one resource **while waiting** to acquire additional resources. | A thread that already owns a mutex tries to lock another mutex. |\n| **No Preemption** | Resources **cannot be forcibly taken** away from a process; they must be released voluntarily. | Locks cannot be \u201cstepped on\u201d; the OS cannot preempt a held I/O device. |\n| **Circular Wait** | There exists a **circular chain** of processes, each waiting for a resource held by the next process in the chain. | P1 waits for a lock held by P2, P2 waits for a lock held by P3, \u2026, Pn waits for a lock held by P1. |\n\nIf you can break **any** one of these, you prevent deadlocks.\n\n---\n\n## 1. What Causes Deadlock?  \n\n### 1.1. Resource Allocation Patterns  \n\n| Pattern | Example | Why it leads to deadlock |\n|---------|---------|--------------------------|\n| **Nested locking** (acquiring multiple locks without a global ordering) | Thread A locks **L1**, then **L2**; Thread B locks **L2**, then **L1**. | Circular wait forms. |\n| **Lock promotion** (upgrading a read lock to a write lock) | A thread holds a shared lock on a DB row and later requests an exclusive lock on the same row. | The upgrade can block if another thread also holds a shared lock. |\n| **Unbounded resource requests** | A process requests *all* remaining memory pages at once. | If several processes do this simultaneously, each may hold part of what the others need. |\n| **Irregular release** | A thread holds a lock while performing I/O that may block for an indefinite period. | Other threads are blocked waiting for the lock, while the holder is stuck. |\n| **Improper timeout handling** | A thread gives up waiting for a lock but never releases what it already holds. | The held resources stay unavailable, potentially starving other processes. |\n\n### 1.2. Programming Errors  \n\n* **Missing `finally`/`defer` blocks** \u2013 locks not released on exception.  \n* **Inconsistent lock acquisition order** across code paths.  \n* **Mixing lock\u2011based and lock\u2011free structures** without clear boundaries.  \n* **Using `wait()`/`notify()` without proper predicate checks**, causing a thread to wait forever while holding a monitor.\n\n### 1.3. System\u2011Level Scenarios  \n\n* **Database transaction deadlocks** (row/page locks).  \n* **Distributed systems** (two\u2011phase commit, distributed lock services).  \n* **Operating\u2011system resources** (file locks, device drivers).  \n* **Hardware deadlocks** (e.g., bus arbitration with no timeout).\n\n---\n\n## 2. Detecting Deadlock  \n\n### 2.1. Runtime Detection (Dynamic)\n\n| Technique | How it works | Typical Tools / APIs |\n|-----------|--------------|----------------------|\n| **Wait\u2011for Graph (WFG) construction** | Build a directed graph where nodes = processes (or threads) and an edge `Ti \u2192 Tj` means \u201cTi is waiting for a resource held by Tj\u201d. A cycle indicates deadlock. | OS kernels (e.g., Windows **!deadlock** in WinDbg), DBMS deadlock detectors, Java\u2019s **ThreadMXBean** (`findDeadlockedThreads`). |\n| **Lock\u2011order monitoring** | Record the order each thread acquires locks; flag any inversion that would create a cycle. | Concurrency testing frameworks (e.g., **ThreadSanitizer**, **Java Pathfinder**, **Microsoft Concurrency Runtime**). |\n| **Timeout\u2011based detection** | If a thread waits longer than a",
+        "tokens_in": 89,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006133499999999999,
+        "complexity_score": 0.67,
+        "latency_ms": 8062.569000001531
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "## 1. What *causes* a deadlock?\n\nA deadlock is a situation in which a set of processes (or threads) are each waiting for a resource that another member of the set holds, so none can ever make progress.  \n\nFour **necessary conditions** (Coffman conditions) must hold simultaneously for a deadlock to arise:\n\n| Condition | What it means | Typical manifestation |\n|-----------|----------------|------------------------|\n| **Mutual Exclusion** | At least one resource cannot be shared; it can be held by only one process at a time. | A printer, a file lock, a memory page, a mutex. |\n| **Hold\u2011and\u2011Wait** | A process that already holds some resources may request additional resources while continuing to hold the ones it has. | Thread A holds lock\u202fL1 and then asks for lock\u202fL2. |\n| **No Preemption** | Resources cannot be forcibly taken away from a process; they must be released voluntarily. | A lock is released only when the owning thread calls `unlock`. |\n| **Circular Wait** | There exists a circular chain of processes, each waiting for a resource held by the next process in the chain. | A \u2192 B \u2192 C \u2192 A. |\n\nIf any one of these conditions is broken, deadlock cannot occur.  Most prevention techniques target one or more of them.\n\n---\n\n## 2. How do you **detect** a deadlock?\n\nDetection is usually done **after** the system has allowed the conditions to arise (e.g., in systems where preventing them would be too restrictive). The two classic models are:\n\n### 2.1 Resource\u2011Allocation Graph (RAG)\n\n* **Vertices** \u2013 processes (P) and resource types (R).  \n* **Edges** \u2013  \n  * **Assignment edge** `R \u2192 P` (resource instance allocated to process).  \n  * **Request edge** `P \u2192 R` (process waiting for a resource).\n\nA **cycle** in a RAG that contains *only* a single instance of each resource type indicates a deadlock.  \nIf resources have multiple identical instances, a cycle is a *potential* deadlock; you must check if the number of processes in the cycle exceeds the number of instances.\n\n**Algorithm (static snapshot)**  \n\n1. Build the RAG from the current allocation tables.  \n2. Run a depth\u2011first search (DFS) to find cycles.  \n3. If a cycle is found and each resource on the cycle has only one free instance, declare deadlock.\n\n### 2.2 Wait\u2011For Graph (WFG)\n\nA simplification of the RAG that eliminates resource nodes:\n\n* **Vertices** \u2013 only processes.  \n* **Edge** `P_i \u2192 P_j` if `P_i` is waiting for a resource currently held by `P_j`.\n\nA **cycle** in the WFG is *exactly* a deadlock (no need to consider resource multiplicity because it is already encoded in the edges).\n\n**Dynamic detection algorithm** (used in many OS kernels, e.g., Linux O( N\u00b2 ))  \n\n```text\ndetect_deadlock():\n    for each process Pi still runnable:\n        visited = {}\n        if dfs(Pi, visited):\n            report_cycle(visited)   // deadlock found\n            return true\n    return false\n\ndfs(P, visited):\n    if P in visited:               // back edge => cycle\n        return true\n    visited.add(P)\n    for each Q such that P \u2192 Q in WFG:\n        if dfs(Q, visited):\n            return true\n    visited.remove(P)\n    return false\n```\n\nThe algorithm runs periodically (e.g., every few seconds) or is triggered when a process blocks on a lock.\n\n### 2.3 Banker's Algorithm (for *resource\u2011allocation systems* like databases)\n\n* Maintains a **claim vector** (",
+        "tokens_in": 89,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006133499999999999,
+        "complexity_score": null,
+        "latency_ms": 7929.856899998413
+      }
+    },
+    {
+      "id": 29,
+      "category": "long_and_hard",
+      "expected_tier": "large",
+      "prompt": "We run a fleet of about four hundred microservices and our on-call engineers are drowning in alerts, most of which turn out to be noise. Alert rules were written by individual teams over six years with no shared standard, and nobody feels able to delete any of them in case the one they remove is the one that mattered. Latency alerts fire on p99 spikes that self-resolve within a minute. Diagnose the organisational and technical roots of this, propose a concrete alerting philosophy with specific thresholds and ownership rules, and explain how you would migrate without a period of dangerous blindness.",
+      "routed": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "## 1. Why the alert\u2011storm exists \u2013 root\u2011cause analysis  \n\n| **Domain** | **Symptom** | **Underlying cause** | **Impact** |\n|------------|-------------|----------------------|------------|\n| **Organisational** | 400\u202f+ disparate alert rules, nobody wants to delete them | \u2022 **No shared ownership model** \u2013 each team treats alerts as *their* safety net.<br>\u2022 **Fear of regression** \u2013 \u201cWhat if the alert we delete is the one that saved a prod incident?\u201d <br>\u2022 **Lack of a central \u201calert stewardship\u201d function** \u2013 no body to audit or retire alerts.<br>\u2022 **Incentive mismatch** \u2013 on\u2011call engineers are penalised for \u201cnoise\u201d but teams are rewarded for \u201ccoverage\u201d. | 80\u202f%+ of alerts are ignored, on\u2011call fatigue, slower response to real incidents. |\n| **Process** | Alerts are written ad\u2011hoc, never reviewed, no version control | \u2022 No **alert lifecycle** (design \u2192 test \u2192 review \u2192 retire).<br>\u2022 No **definition of \u201cgood\u201d vs \u201cbad\u201d alert** in the service\u2011level agreement (SLA) or error\u2011budget. <br>\u2022 No **post\u2011mortem** requirement for every fired alert \u2013 alerts that fire and resolve are never examined. | Accumulation of stale, overlapping, and over\u2011sensitive alerts. |\n| **Technical** | Latency alerts on p99 spikes that self\u2011resolve in \u2264\u202f1\u202fmin | \u2022 **Thresholds chosen without a data\u2011driven baseline** (e.g., \u201cp99 > 5\u202fs\u201d).<br>\u2022 **Too\u2011short evaluation windows** \u2013 a 1\u2011minute \u201cfire\u2011and\u2011resolve\u201d window gives no time for a human to see the alert before it clears.<br>\u2022 **Metric collection granularity** (e.g., per\u2011instance vs aggregated) makes spikes look worse.<br>\u2022 **No correlation or deduplication** \u2013 multiple services emit identical latency alerts for the same root cause. | Alert noise, alert fatigue, false sense of reliability. |\n| **Tooling** | Alert rules live in many repositories, mixed formats | \u2022 **No single source of truth** \u2013 some rules in PrometheusRule CRDs, others in Datadog monitors, Splunk alerts, etc.<br>\u2022 **No linting / validation pipeline** \u2013 broken or duplicated rules slip through.<br>\u2022 **No visibility dashboard** \u2013 on\u2011call engineers cannot see \u201cwho owns what\u201d without digging through code. | Hard to audit, impossible to know impact of deleting a rule. |\n| **Cultural** | \u201cIf we delete it, we might break something\u201d | \u2022 **Blame\u2011avoidance** \u2013 teams protect their own alerts rather than improving the ecosystem.<br>\u2022 **Lack of shared \u201calert health\u201d metrics** (e.g., alert\u2011to\u2011incident conversion rate). | Stagnation \u2013 alerts never get better. |\n\n### The core feedback loop that keeps the problem alive  \n\n1. **Team writes an alert \u2192**  \n2. **Alert fires (often false\u2011positive) \u2192**  \n3. **On\u2011call drowns in noise \u2192**  \n4. **Team receives \u201ctoo many alerts\u201d complaints but can\u2019t delete the rule \u2192**  \n5. **Team tightens the rule (lower threshold, shorter window) \u2192**  \n6. **Noise moves to a different metric or tighter threshold \u2192**  \n7. **Cycle repeats.**  \n\nBreaking this loop requires **shared ownership, data\u2011driven thresholds, and a safe retirement path**.\n\n---\n\n## 2. A concrete, data\u2011driven **Alerting Philosophy**  \n\n> **Goal:** *Only alert when a human\u2011actionable, service\u2011impacting problem is likely to persist long enough to merit intervention.*  \n\n### 2.1. Guiding Principles  \n\n| # | Principle | Practical meaning |\n|---|-----------|--------------------|\n| **P1 \u2013 Business\u2011impact first** | Alerts must be tied to a **Service\u2011Level Objective (SLO)** or an error\u2011budget breach. | Latency alerts only fire when the *error budget* for the latency SLO is at risk. |\n| **P2 \u2013 \u201cSignal\u2011to\u2011Noise Ratio\u201d (SNR) \u2265\u202f5** | For every alert, at least 5\u202f% of the time the alert leads to a genuine incident",
+        "tokens_in": 187,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006280499999999999,
+        "complexity_score": 0.67,
+        "latency_ms": 9293.860300000233
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "## 1\ufe0f\u20e3 Why the \u201calert\u2011storm\u201d exists  \nBelow are the **organisational** and **technical** root\u2011causes that most teams hit when a fleet of 400+ micro\u2011services has been left to evolve for six years without a shared alerting discipline.\n\n| # | Organisational root | Symptoms & impact |\n|---|----------------------|-------------------|\n| 1\ufe0f\u20e3 | **No single source of truth** for what constitutes an \u201cimportant\u201d incident. Teams own their own rules, keep them in disparate repos or dashboards, and nobody is sure which rule is the \u201cauthoritative\u201d one. | Duplicate alerts, contradictory thresholds, and \u201corphan\u201d rules that never get touched. |\n| 2\ufe0f\u20e3 | **Fear of breaking the unknown** \u2013 \u201cIf I delete my rule, someone else will lose the only alert they rely on.\u201d | Teams hoard alerts, keep everything \u201con\u201d, and treat every rule as sacrosanct. |\n| 3\ufe0f\u20e3 | **No measurable business\u2011level objectives** (SLOs/SLIs). Alerts are created ad\u2011hoc around \u201chigh CPU\u201d, \u201cp99 latency > X\u201d, etc., without tying them to a customer\u2011impact goal. | Spurious alerts (e.g., p99 spikes that self\u2011resolve in <\u202f1\u202fmin) fire constantly but never trigger a real incident. |\n| 4\ufe0f\u20e3 | **Lack of ownership & stewardship** \u2013 the \u201cowner\u201d of a rule is often the team that wrote it, but the rule lives in a shared monitoring stack. | No one is accountable for reviewing, tuning, or retiring alerts. |\n| 5\ufe0f\u20e3 | **Tool\u2011driven culture** \u2013 teams copy\u2011paste the \u201calert\u2011as\u2011code\u201d snippets that work for them without understanding the underlying metric. | Metric\u2011specific noise (e.g., GC pause alerts on a service that tolerates occasional pauses). |\n| 6\ufe0f\u20e3 | **No alert\u2011triage cadence** \u2013 alerts are never reviewed in a regular post\u2011mortem / backlog grooming session. | Accumulating technical debt, alerts become \u201cknown\u2011unknowns\u201d. |\n\n| # | Technical root | Symptoms & impact |\n|---|----------------|-------------------|\n| 1\ufe0f\u20e3 | **Metrics granularity mismatch** \u2013 p99 latency is measured on a per\u2011minute rollup, which is extremely noisy for low\u2011traffic services. | Minute\u2011level spikes fire, then disappear; on\u2011call sees a flood of \u201cflapping\u201d alerts. |\n| 2\ufe0f\u20e3 | **Missing correlation / deduplication** \u2013 each rule fires independently; there is no \u201calert aggregation\u201d layer that groups related events. | Same underlying problem (e.g., a downstream DB outage) generates dozens of alerts across services. |\n| 3\ufe0f\u20e3 | **Hard\u2011coded thresholds** \u2013 thresholds are static numbers that never evolve with traffic growth or code changes. | Over\u2011alerting during traffic spikes, under\u2011alerting when baseline improves. |\n| 4\ufe0f\u20e3 | **No \u201calert lifecycle\u201d metadata** \u2013 alerts have no `owner`, `last\u2011modified`, `rationale` fields. | Audits are impossible, owners cannot be contacted, and stale alerts survive forever. |\n| 5\ufe0f\u20e3 | **Inconsistent naming / tagging** \u2013 some alerts are `service:foo_latency_p99`, others `latency_foo_p99`, making bulk queries a nightmare. | Bulk actions (e.g., \u201cdisable all latency alerts for low\u2011traffic services\u201d) are error\u2011prone. |\n| 6\ufe0f\u20e3 | **No \u201csilencing\u201d or \u201csnooze\u201d policy** \u2013 on\u2011call can mute an alert but the rule stays active, causing the same noise after the mute expires. | Re\u2011alert fatigue after each mute window. |\n\n---\n\n## 2\ufe0f\u20e3 A **Concrete Alerting Philosophy** that solves the above\n\n> **Goal:** *Only alert when a breach of a *customer\u2011facing* reliability objective is likely to cause real impact.*  \n> **Principle:** *All alerts are first\u2011class artefacts with explicit owners, documented intent, and a measurable \u201cwhen\u2011to\u2011fire\u201d rule that ties directly to an SLO/SLI.*\n\n### 2.1 Core Tenets\n\n| Tenet | What it means | Why it matters |\n|-------|----------------|----------------|\n| **SLO\u2011Driven Alerts** | Every alert must be *derived* from an SLO (e.g., \u201c99.",
+        "tokens_in": 187,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006280499999999999,
+        "complexity_score": null,
+        "latency_ms": 10255.533899999136
+      }
+    },
+    {
+      "id": 30,
+      "category": "long_and_hard",
+      "expected_tier": "large",
+      "prompt": "I have inherited a monolithic Rails application with a 40,000-line models directory, no test coverage on the billing path, and a database where several tables have grown past 200 million rows. Leadership wants to extract billing into its own service within two quarters while continuing to ship features. Evaluate whether that is achievable, identify the specific risks in extracting billing first rather than something safer, and lay out a sequenced plan with the decision points at which you would abandon the extraction.",
+      "routed": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "## Executive Summary  \n\n| Question | Verdict (6\u2011month horizon) |\n|----------|----------------------------|\n| **Can we ship a production\u2011ready \u201cbilling\u2011as\u2011a\u2011service\u201d in two quarters while still delivering new features?** | **Possible, but only if we accept a \u201cminimum viable extraction\u201d (MVE) scope, lock\u2011down the billing domain early, and invest heavily in automated safety nets.** The plan will be high\u2011risk, high\u2011effort and must be gated by three hard \u201cstop\u2011the\u2011train\u201d decision points. |\n| **Is extracting *billing* first the right choice?** | It is **the riskiest** first target because billing touches the largest tables, runs the heaviest write\u2011traffic, and currently has **zero test coverage**. Any mistake can affect revenue, compliance, and customer trust. |\n| **What are the concrete risks?** | Data\u2011integrity / transaction leakage, performance regressions on 200\u202fM\u2011row tables, hidden coupling (callbacks, concerns, global state), lack of observability, migration\u2011time downtime, and the need to keep the monolith functional for other teams while the extraction team works in parallel. |\n| **What does a realistic, sequenced plan look like?** | A **Strangler\u2011Fig / Incremental Extraction** approach broken into four 4\u2011week phases plus a 2\u2011week \u201ccut\u2011over\u201d window. Each phase ends with a **Go/No\u2011Go** gate. The plan includes: a) discovery & safety\u2011net sprint, b) contract & fa\u00e7ade, c) read\u2011side extraction, d) write\u2011side extraction with dual\u2011write sync, and e) production cut\u2011over. |\n| **When would we abort?** | If any gate fails the pre\u2011defined \u201cabort criteria\u201d (e.g., >\u202f5\u202f% data\u2011drift after 48\u202fh, >\u202f30\u202f% latency increase on key billing APIs, or >\u202f2 critical bugs in the \u201cbilling\u2011service\u201d sandbox after 2 weeks of production traffic). |\n\nBelow is the **full evaluation**, **risk catalogue**, and a **step\u2011by\u2011step roadmap** with **decision points** and **abort triggers**.  \n\n---\n\n## 1. Feasibility Assessment (Two\u2011Quarter Target)\n\n| Dimension | Current State | Target State | Gap & Mitigation |\n|-----------|---------------|--------------|------------------|\n| **Code size & coupling** | 40\u202fk\u2011line `app/models`, many cross\u2011model concerns, callbacks, `concerns`, `ActiveRecord` magic. | Isolate billing models (`Invoice`, `Subscription`, `Transaction`, etc.) behind a clean API. | **Gap:** No existing boundaries \u2192 **Mitigation:** Automated \u201ccode\u2011ownership\u201d scan, dependency graph, and a *sandbox* branch where all non\u2011billing code is stubbed out. |\n| **Test coverage** | 0\u202f% on billing path. | >\u202f80\u202f% unit + contract tests before any external traffic. | **Gap:** No safety net \u2192 **Mitigation:** Write **characterisation tests** (snapshot of current behaviour) and **property\u2011based tests** for critical calculations (taxes, discounts). |\n| **Data volume** | Several tables >\u202f200\u202fM rows (e.g., `invoices`, `payments`, `subscription_events`). | Service must be able to read/write those tables without full table locks; migration must be online. | **Gap:** Heavy tables \u2192 **Mitigation:** Use **CDC** (Change Data Capture) + **dual\u2011write** pattern; keep a **read",
+        "tokens_in": 167,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006250499999999999,
+        "complexity_score": 0.67,
+        "latency_ms": 6763.983400000143
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "## TL;DR\n- **Achievable?** Yes \u2013 but only if you treat the extraction as a *controlled, incremental* \u201cstrangler\u2011fig\u201d migration backed by a **high\u2011risk mitigation envelope**.  Expect the first usable billing micro\u2011service (a thin fa\u00e7ade + a few core aggregates) in **\u2248\u202f10\u201112\u202fweeks**; a \u201ccomplete\u201d service that can run most billing use\u2011cases in **\u2248\u202f20\u201124\u202fweeks**.  \n- **Key show\u2011stoppers** that should force you to **stop** the effort:  \n  1. **Data\u2011migration latency >\u202f48\u202fh** for any production\u2010critical batch.  \n  2. **Critical billing transaction latency >\u202f2\u202f\u00d7\u202fbaseline** after the first fa\u00e7ade release.  \n  3. **More than 2\u202f% of production traffic** (or >\u202f5\u202f% of revenue\u2011critical transactions) failing or timing\u2011out in the new service.  \n  4. **Team bandwidth** falls below\u202f2\u202ffull\u2011time engineers (plus a dedicated ops/DB specialist) for **\u2265\u202f4\u202fweeks**.  \n\nIf any of these thresholds are crossed **and cannot be remedied within the next sprint**, abort the extraction and fall back to a \u201cbilling\u2011as\u2011library\u201d refactor inside the monolith.\n\n---\n\n## 1. WHY THIS IS HARD\n\n| Dimension | Current State | Why it hurts extraction |\n|-----------|---------------|------------------------|\n| **Code size** | 40\u202fk LOC in `app/models` (no test coverage for billing) | No safety net for refactor; high likelihood of hidden side\u2011effects. |\n| **Data volume** | Several tables >\u202f200\u202fM rows (e.g., `invoices`, `transactions`, `subscription_events`) | Full table copies or live sync are extremely expensive; any schema drift is a disaster. |\n| **Coupling** | Billing logic spattered across many unrelated models (order, user, analytics, email) | Hard to draw a clean bounded\u2011context boundary. |\n| **Team capacity** | Existing teams own the monolith, no dedicated \u201cplatform\u201d engineers | Adding a new service will stretch them; risk of \u201cfire\u2011fighting\u201d in both places. |\n| **Operational maturity** | No CI/CD for billing, no contract tests, monolith deployed as a single unit | No automated guardrails for the migration. |\n| **Regulatory / revenue impact** | Billing is a core revenue\u2011critical path | Any outage \u2192 direct revenue loss / compliance breach. |\n\n---\n\n## 2. HIGH\u2011LEVEL FEASIBILITY ASSESSMENT\n\n| Factor | Verdict | Mitigation / Leverage |\n|--------|---------|------------------------|\n| **Time box (2 quarters \u2248\u202f24\u202fweeks)** | **Tight but possible** if you limit scope to *core* billing (invoice creation, payment capture, subscription lifecycle). | Prioritize \u201chappy\u2011path\u201d flows; defer reporting, refunds, tax\u2011calculations, and legacy discounts. |\n| **Team bandwidth** | **Critical** \u2013 need at least **2\u20113 senior Rails engineers** + **1 DB/ops specialist** full\u2011time on the extraction. | Re\u2011allocate 1\u20112 engineers from feature teams, create a dedicated \u201cbilling\u2011migration squad\u201d. |\n| **Infrastructure** | **Missing** \u2013 no existing service mesh, observability, or CI for new service. | Spin up a minimal Kubernetes (or ECS) sandbox; adopt **OpenTelemetry** + **Grafana** from day\u20110. |\n| **Data sync** | **High risk** \u2013 200\u202fM\u2011row tables cannot be fully copied in a maintenance window. | Use **CDC (Change\u2011Data\u2011Capture) + logical replication** (e.g., Debezium + Kafka) to stream changes into a new read\u2011optimized schema; keep monolith as source of truth for a \u201cdual\u2011write\u201d period. |\n| **Testing** | **Zero** \u2013 no unit/integration tests for billing. | Write **contract tests** (Pact/Consumer\u2011Driven) *before* moving any code; add a **characterisation test suite** that records current behaviour (see \u201cSafety Net\u201d section). |\n| **Risk",
+        "tokens_in": 167,
+        "tokens_out": 1000,
+        "cost_usd": 0.0006250499999999999,
+        "complexity_score": null,
+        "latency_ms": 9030.916700001399
+      }
+    },
+    {
+      "id": 31,
+      "category": "trap_long_but_easy",
+      "expected_tier": "small",
+      "prompt": "Below is the agenda that was circulated for our quarterly planning meeting. Nine fifteen, coffee and informal catch-up in the main atrium, no formal agenda item, people are encouraged to arrive early. Nine forty five, welcome and framing from the department head, covering the results of the last quarter and the headline targets for the coming one. Ten fifteen, breakout groups by function, with product, engineering, design and operations each meeting separately to surface their top three constraints. Eleven thirty, coffee break and informal regrouping. Eleven forty five, plenary session where each breakout group presents its constraints and the room discusses dependencies between them. Twelve forty five, lunch is served in the west room, vegetarian and vegan options are available and dietary requirements should have been submitted in advance. One forty five, prioritisation exercise using dot voting against the constraints raised in the morning. Three o'clock, commitments and owners are assigned for the top-ranked items. Three forty five, closing remarks and confirmation of the follow-up schedule. Four o'clock, optional drinks for those who can stay. My question is simply: what time does lunch start?",
+      "routed": {
+        "ok": true,
+        "tier": "small",
+        "provider": "groq",
+        "model": "openai/gpt-oss-20b",
+        "text": "Lunch starts at **12:45\u202fpm**.",
+        "tokens_in": 294,
+        "tokens_out": 91,
+        "cost_usd": 4.934999999999999e-05,
+        "complexity_score": 0.0989,
+        "latency_ms": 766.8274000025121
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "Lunch is scheduled to start at **12:45\u202fPM**.",
+        "tokens_in": 294,
+        "tokens_out": 65,
+        "cost_usd": 8.309999999999999e-05,
+        "complexity_score": null,
+        "latency_ms": 6997.745799999393
+      }
+    },
+    {
+      "id": 32,
+      "category": "trap_long_but_easy",
+      "expected_tier": "small",
+      "prompt": "Here is the full text of the warranty card that came with my washing machine. This appliance is guaranteed against defects in materials and workmanship for a period of twenty four months from the date of purchase, provided that proof of purchase can be supplied. The guarantee covers the cost of parts and labour for repairs carried out by an approved engineer. It does not cover damage caused by misuse, incorrect installation, use of non-approved detergents, or attempts at repair by anyone other than an approved engineer. Consumable parts including filters and hoses are covered for the first twelve months only. Cosmetic damage to the exterior casing is not covered at any point. Where a repair is not economically viable the manufacturer reserves the right to replace the appliance with an equivalent model rather than repair it. Claims must be initiated by telephone or through the website before any work is carried out, and work carried out without prior authorisation will not be reimbursed. This guarantee is in addition to and does not affect your statutory rights. The question I have is: how many months does the guarantee last?",
+      "routed": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "The guarantee covers the appliance for **24\u202fmonths** from the date of purchase. (Note that some parts, such as consumables, have shorter coverage periods, but the overall warranty duration is 24\u202fmonths.)",
+        "tokens_in": 281,
+        "tokens_out": 135,
+        "cost_usd": 0.00012315,
+        "complexity_score": 0.67,
+        "latency_ms": 2814.8645000001125
+      },
+      "baseline": {
+        "ok": true,
+        "tier": "large",
+        "provider": "groq",
+        "model": "openai/gpt-oss-120b",
+        "text": "The guarantee lasts **twenty\u2011four (24) months** from the date of purchase.",
+        "tokens_in": 281,
+        "tokens_out": 79,
+        "cost_usd": 8.955e-05,
+        "complexity_score": null,
+        "latency_ms": 3042.901900000288
+      }
+    }
+  ]
+}

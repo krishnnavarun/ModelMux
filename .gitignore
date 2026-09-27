@@ -17,7 +17,11 @@ __pycache__/
 
 # Evaluation output: regenerable, and a SIMULATED run must never be mistaken
 # for a real result sitting in version control.
-eval/results/
+# NOTE the trailing /* rather than /. Git will not descend into an excluded
+# DIRECTORY, so a `!` negation underneath one can never match. Excluding the
+# contents instead leaves the directory itself visible, which is what makes
+# the carve-out below work at all.
+eval/results/*
 # ...except graded ones. A raw eval run is a regenerable byproduct; a GRADED
 # spot-check is irreplaceable judgement tied to those exact answers, and
 # re-running the eval produces different answers to grade. The eval-*.json is
