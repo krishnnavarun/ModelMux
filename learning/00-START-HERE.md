@@ -109,9 +109,10 @@ Lead with these. They are what separate it from a tutorial project.
 Volunteering a limitation reads as confidence. Hiding one that gets found
 reads as the opposite.
 
-- **Answer quality has never been graded.** The blind spot-check harness
-  exists and nobody has filled one in. Cost savings mean nothing if the cheap
-  answers are worse, and that column is empty.
+- **The quality grade has n=8 and a non-independent grader.** Only 8 of 30
+  graded pairs compared different models — the rest compared one model with
+  itself. On those 8 the cheap route was not worse in 8/8. The grader was the
+  agent that built the router, and the human half of D23 is still unfilled.
 - **Only one provider key ever worked.** The large tier is served by a Groq
   fallback, so the 37.1% figure is a projection, not a measurement.
 - **The A/B cost saving is noise-dominated and does not reproduce** — 6.6%

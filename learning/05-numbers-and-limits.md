@@ -240,6 +240,21 @@ flagged `UNVERIFIED` for two weeks while every savings figure depended on it.
 **Tier distribution:** small 9 · mid 7 · large 16
 **D3 output-token bias:** **1.04×** (22,713 vs 21,844) — approximately unbiased
 
+### Answer quality — graded 2026-09-27 (D37)
+
+| group | n | routed better | baseline better | tie |
+|---|---|---|---|---|
+| same model (large + mid) | 22 | 5 | 0 | 17 |
+| **different model (small)** | **8** | 0 | **0** | **8** |
+
+**Quote: not worse in 8/8 where routing changed which model answered.** The
+raw "30/30 = 100%" is inflated by 22 pairs that compared `gpt-oss-120b` with
+itself — with one key, `large` falls back to the mid tier's model.
+
+Grader was an LLM-as-judge (Claude Opus 5), blind to the key. Not a human, not
+independent. Bias checks: blinding held 14/16, picks split 2 A / 3 B, longer
+answer chosen only 2 of 5.
+
 ### Project totals
 
 **131 tests** · **35 decisions** · **19 reference files** · **9 dependencies**

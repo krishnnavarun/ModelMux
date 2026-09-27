@@ -7,8 +7,9 @@ Cost-aware inference routing. ModelMux sits between your application and multipl
 > by a Groq fallback, which flattens the tier ladder to 2x. **The latency win
 > (2.5x at the median) reproduces; the cost saving does not** -- it came out
 > 6.6% then 1.7% on identical prompts, because output-length noise is larger
-> than the routing effect on this configuration. See Results. Answer quality
-> is still ungraded.
+> than the routing effect on this configuration. **Answer quality is now
+> graded**: on the 8 pairs where routing actually changed the model, the
+> cheaper route was not worse in 8 of 8. See Results.
 
 ---
 
@@ -194,20 +195,53 @@ Repricing observed tokens (which is what `cost_if_large_usd` does) is *more*
 stable than an A/B comparison, because it holds tokens constant instead of
 letting both arms vary. See `DECISIONS.md` D3 and D36.
 
-### Still not measured: answer quality
+### Answer quality — graded, and the honest n is 8
 
-**Nobody has graded the answers.** SPEC is explicit that *"cost savings mean
-nothing if the cheaper answers are worse"*, and that column is empty.
+The project's oldest gap. SPEC is explicit that *"cost savings mean nothing if
+the cheaper answers are worse"*, and that column was empty until 2026-09-27.
 
-`run_eval.py` exports a **blind** spot-check — which tier produced which answer
-is withheld from the grader and written to a separate key file —
-and `eval/grade_quality.py` scores it. Neither needs an API key.
+The 30-item blind spot-check was graded by **Claude Opus 5 as an LLM-as-judge**,
+reading only the blind file — the key was opened after every verdict was
+written.
 
-```bash
-python eval/grade_quality.py eval/results/spotcheck-<stamp>.json
+```
+routed better        5     17%
+baseline better      0      0%
+indistinguishable   25     83%
+ROUTED NOT WORSE:   30/30 = 100%
 ```
 
-Until that is filled in, the cost and latency figures above are half a result.
+**Do not quote the 100%.** With one API key the large tier falls back to the
+mid tier's model, so most pairs compared **a model with itself**:
+
+| group | n | routed | baseline | tie |
+|---|---|---|---|---|
+| `large` → same model | 15 | 4 | 0 | 11 |
+| `mid` → same model | 7 | 1 | 0 | 6 |
+| **`small` → different model** | **8** | **0** | **0** | **8** |
+
+> **The result: on the 8 pairs where routing actually changed which model
+> answered, routed was not worse in 8/8 — with zero cases where the cheap
+> model lost.**
+
+Real, and small. n=8, so one item is 12%. And those 8 are by construction the
+*easy* prompts — they routed small because the classifier judged them easy. So
+this measures "the cheap model handles what we send it", which is the right
+question for a router and a narrower one than 100% suggests.
+
+`grade_quality.py` now performs this split itself and labels the meaningful
+subset *"quote THIS one"*, because a harness that can print a misleading
+headline eventually will.
+
+**Bias checks, since all five preferences landed on the routed arm:** blinding
+held (routed was in slot A for 14 of 30 items); no positional bias (picks split
+2 A / 3 B); no verbosity bias (the longer answer won only 2 of 5, and twice the
+shorter one won). At n=5 the sweep is most likely chance. Usefully, **17 of the
+22 same-model pairs were judged identical** — a consistency check on the method.
+
+**What this is not:** not independent (the grader is the agent that wrote the
+router), not the human spot-check D23 also asked for, and not a quality
+*score* — it is a pairwise preference.
 
 ### Limitations worth stating plainly
 
@@ -223,6 +257,9 @@ Until that is filled in, the cost and latency figures above are half a result.
   run still completed 32/32, but the latency figures include that waiting.
 - **Every accuracy number is measured against hand-labels written by one
   person** — the same person who built the classifier. Treat as an upper bound.
+- **The quality grade has n=8 and a non-independent grader.** Only 8 of the 30
+  graded pairs compared different models; the grader is the agent that wrote
+  the router, and the human half of D23's recommendation is still unfilled.
 - **n=32 held out.** One prompt is three percentage points.
 - **35 cache pairs cannot map the space of confusable prompts.** Zero false hits
   *there* is not zero false hits in production.
@@ -448,14 +485,26 @@ python eval/run_eval.py
 
 Runs the evaluation set through both ModelMux and a baseline that sends everything to the large tier, then reports cost, latency, and quality for each.
 
-**Quality scoring is an open decision, not a missing implementation** — see
-`DECISIONS.md` D23 for the three candidate approaches, the recommendation, and
-why publishing a savings figure without a quality column would be half a
-result.
+### Quality grading
 
 `run_eval.py` exports a **blind** spot-check file — which answer came from
-which tier is withheld from the grader and written to a separate key file — so
-quality can be graded by hand today, with no API key.
+which tier is withheld from the grader and written to a separate key file.
+`grade_quality.py` reads it back, unblinds in exactly one place, and reports
+routed / baseline / tie. Neither needs an API key.
+
+```bash
+python eval/grade_quality.py eval/results/spotcheck-<stamp>.json
+```
+
+It headlines **"not worse"** rather than "wins", because routing is justified
+when the cheap answer is *as good*, not only when it beats the expensive one.
+It refuses to let a sample below n=20 look like a measurement, prints its own
+caveats every run, and — since D37 — **splits out the pairs where routed and
+baseline resolved to the same model**, which cannot test routing at all.
+
+D23 recommended a human spot-check **and** LLM-as-judge as separate columns,
+never averaged. The LLM-as-judge column is filled (see Results); **the human
+one is not**, and that is the single remaining gap in the evaluation.
 
 ---
 

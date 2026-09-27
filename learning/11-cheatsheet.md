@@ -25,7 +25,8 @@
 | Circuit breaker | **5 fails / 60s → open · 30s cooldown · 1 probe** |
 | Retries | **2** (3 attempts), jittered, base 0.5s |
 | Timeouts | **5s connect / 30s read** |
-| Tests · decisions · deps | **131 · 35 · 9** |
+| Tests · decisions · deps | **131 · 37 · 9** |
+| Quality | **not worse 8/8** where the model changed (n=8, LLM judge) |
 
 ## The five non-negotiables
 

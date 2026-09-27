@@ -1610,7 +1610,11 @@ so nothing is lost; only the headline is chosen differently.
 
 ---
 
-## D35 — The classification budget test is flaky in the full suite, and I could not explain it
+## D35 — The classification budget test is flaky in the full suite
+
+> **UPDATE 2026-09-27: the CPU-contention hypothesis is REFUTED by a correct
+> experiment. The cause of the in-suite flake is still unknown, but it is no
+> longer merely untested — see the resolution at the end of this entry.**
 
 **Date:** 2026-09-21 · **Stage:** 6 · **Status: OPEN — no fix, no cause**
 
@@ -1729,6 +1733,54 @@ was observed once.
 
 ---
 
+### RESOLUTION 2026-09-27 — the hypothesis was wrong, and an experiment says so
+
+The probe was rewritten with a load generator that actually competes for CPU:
+`os.cpu_count()` separate **processes** burning float arithmetic, rather than
+GIL-bound Python threads. 15 samples after 5 warm-ups, on 12 cores.
+
+| torch threads | idle median | under full load | slowdown | worst sample |
+|---|---|---|---|---|
+| **6 (default)** | 9.3 ms | **11.1 ms** | 1.20× | **65.8 ms** |
+| **1 (pinned)** | 10.9 ms | **15.2 ms** | 1.39× | 18.7 ms |
+
+**CPU contention does not explain the flake.** With every core saturated the
+median reaches 11 ms unpinned or 15 ms pinned — both comfortably inside the
+20 ms budget. The in-suite failure reports a *median* of 85 ms with all seven
+of its samples above 55 ms. Contention produces at most a 1.4× median
+degradation; the flake is roughly 7×. **The hypothesis is refuted, not merely
+unconfirmed.**
+
+### The finding that came out of it anyway
+
+> **`torch.set_num_threads(1)` trades median latency for tail
+> predictability.** The default pool is ~4 ms faster at the median and **3.5×
+> worse at the worst case** (65.8 ms vs 18.7 ms). Pinned, every sample stayed
+> under budget; unpinned, the tail blew straight through it.
+
+For a service with a p95 commitment rather than a p50 one, pinning is
+probably the right default — several in-flight requests each spawning a
+six-thread forward pass is exactly the contention this measures.
+
+**Not changed in the code.** The project has never measured classification
+under real request concurrency, and a default should not be set from one
+probe on an idle desktop.
+
+### What is still unexplained
+
+The in-suite 85 ms median. Contention is now out, joining sampling noise, the
+HTTP path, test ordering and this session's changes on the ruled-out list.
+
+Not yet examined: memory pressure and GC once the full suite has allocated,
+whether `embedding.init()` is re-entered per TestClient, and whether some
+other module-level state — the family D22 catalogues — leaves the model in a
+slower configuration.
+
+**D35 stays open.** What changed is that its leading hypothesis is dead,
+killed by an experiment instead of surviving as a plausible guess.
+
+---
+
 ## D36 — The 6.6% cost saving did not reproduce. It was noise.
 
 **Date:** 2026-09-21 · **Stage:** 6 · **Corrects:** D33 and the README
@@ -1835,5 +1887,117 @@ than pretending otherwise.
 >
 > Every guard was pointed at *where the number came from*. None was pointed at
 > *whether it would happen again*.
+
+---
+
+## D37 — Quality is graded. The honest sample size is 8, not 30.
+
+**Date:** 2026-09-27 · **Stage:** 6 · **Closes:** the empty quality column
+(D23, D28) · **Changes:** `eval/grade_quality.py`
+
+The project's oldest gap — *"cost savings mean nothing if the cheaper answers
+are worse"* — now has a number. It is smaller and more qualified than the raw
+output first suggested.
+
+### What was done
+
+The 30-item blind spot-check from the 2026-09-21 run was graded by **Claude
+Opus 5 acting as an LLM-as-judge**, reading only the blind file. The `_KEY`
+file was not opened until every verdict was written.
+
+This is the **LLM-as-judge half** of D23's recommendation. It required no new
+dependency, because the grader is external to the project rather than a
+library it imports — which is precisely the distinction D23/D28 drew when
+declining to build an `anthropic`-SDK judge into the harness.
+
+### The raw result, and why it is misleading
+
+```
+routed better        5     17%
+baseline better      0      0%
+indistinguishable   25     83%
+ROUTED NOT WORSE:   30/30 = 100%
+```
+
+**100% is not the number to quote.** A tier holds a provider *list* (D4), and
+with only one API key the large tier falls back to the mid tier's model (D30).
+So for every prompt routed to `mid` or `large`, routed and baseline resolved
+to **the same model** — `openai/gpt-oss-120b` compared with itself.
+
+| group | n | routed | baseline | tie |
+|---|---|---|---|---|
+| `large` → same model | 15 | 4 | 0 | 11 |
+| `mid` → same model | 7 | 1 | 0 | 6 |
+| **`small` → DIFFERENT model** | **8** | **0** | **0** | **8** |
+
+**22 of 30 pairs could not have tested routing.** They measure generation
+nondeterminism: two samples from one model, one judged better.
+
+### The actual result
+
+> **On the 8 pairs where routing changed which model answered
+> (`gpt-oss-20b` vs `gpt-oss-120b`): not worse in 8/8, with zero cases where
+> the cheap model lost.**
+
+That is a real result and a *small* one. n=8; one item is 12%. Those 8 are
+also, by construction, the easy prompts — they routed small *because* the
+classifier judged them easy, so this measures "the cheap model handles what we
+send it", not "the cheap model is as good in general". That is the right
+question for a router, and it is a narrower question than the raw 100%
+implies.
+
+### The tool was reporting the misleading number, so the tool was fixed
+
+`grade_quality.py` now reads the sibling `eval-*.json`, compares
+`routed.model` against `baseline.model` per item, and splits the report:
+
+- pairs that compared **different models** — the routing result, headlined
+  with *"quote THIS one"*
+- pairs that compared a **model with itself** — reported separately as the
+  method's noise floor
+- if the eval file is missing it says the split is **unavailable** and calls
+  the headline an upper bound, rather than printing it unqualified
+
+> **A harness that can produce a misleading headline eventually will.** This
+> is the same lesson as D31 and D36: the guard belongs in the instrument, not
+> in the reader's memory.
+
+### The noise floor, and a bias check
+
+The 22 same-model pairs split **5 routed / 0 baseline / 17 tie**. All five
+preferences landing on the routed arm is a 6% two-tailed coincidence at n=5 —
+suggestive, so it was checked rather than assumed:
+
+- **Blinding held.** The A slot was routed in 14 of 30 items, baseline in 16.
+- **No positional bias.** The five picks split 2 "A" / 3 "B".
+- **No verbosity bias.** The longer answer was picked in only **2 of 5**, and
+  twice the *shorter* answer won — once for penalising a wrong figure, once
+  for answering the question actually asked.
+
+With those ruled out, 5-0 is most likely chance. The useful reading is that
+**17 of 22 same-model pairs were judged identical**, which is a reasonable
+consistency check on the grading method itself.
+
+### What this still is not
+
+- **Not independent.** The grader is the same agent that wrote the router.
+- **Not a human spot-check.** D23 recommended human grading *and*
+  LLM-as-judge as **separate columns, never averaged**. One column is now
+  filled; the other is not.
+- **Not a quality score.** It is a pairwise preference. It says routing held
+  up against the baseline, not that either answer was good.
+- **n=8 on the only meaningful comparison.**
+
+### Cost
+
+The headline the project can now make is *"not worse in 8 of 8 where it
+mattered"* rather than *"100% not worse"*. Quantitatively weaker, and the only
+version that survives someone reading the key file.
+
+### What would strengthen it
+
+The same single input as everything else: **a second provider key**. With a
+real large tier, all 30 pairs would compare different models and the sample
+would go from 8 to 30 overnight.
 
 ---

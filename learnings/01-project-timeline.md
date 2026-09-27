@@ -1191,3 +1191,118 @@ before and after. The next run gave 131 again.
 > the most dangerous setting in the project. Added to **D35** as a second
 > instance of the same load-sensitivity family, rather than fixed on one
 > observation.
+
+---
+
+## Closing the last gap: quality graded, and D35's hypothesis killed
+
+**2026-09-27.**
+
+### The quality column, filled at last
+
+The 30-item blind spot-check from the second eval run was graded by **Claude
+Opus 5 as an LLM-as-judge**, reading only the blind file. The `_KEY` was
+opened after every verdict was written.
+
+No dependency was added. D23 and D28 had declined to build an LLM judge
+*into the harness* because that needs the `anthropic` SDK, which is not on
+SPEC section 3's approved list. **An external grader reading a file is a
+different thing from a library the project imports** — that distinction is
+what made this possible without a conversation about dependencies.
+
+Raw output:
+
+```
+routed better        5     17%
+baseline better      0      0%
+indistinguishable   25     83%
+ROUTED NOT WORSE:   30/30 = 100%
+```
+
+> **And 100% was the wrong number to publish.**
+
+A tier holds a provider *list* (D4), and with one key the large tier falls
+back to the mid tier's model (D30). So on every prompt routed to `mid` or
+`large`, routed and baseline were **the same model compared with itself**.
+
+| group | n | routed | baseline | tie |
+|---|---|---|---|---|
+| `large` → same model | 15 | 4 | 0 | 11 |
+| `mid` → same model | 7 | 1 | 0 | 6 |
+| **`small` → DIFFERENT model** | **8** | **0** | **0** | **8** |
+
+**22 of 30 pairs could not have tested routing.** The honest result is
+**not worse in 8/8** on the pairs where routing actually changed the model —
+real, and much smaller than the raw figure implies.
+
+> This is the **third** time the flattened ladder has silently degraded a
+> measurement. It made the cost A/B meaningless (D36), it made 16 of 32
+> prompts route somewhere identical to the baseline, and now it has hollowed
+> out the quality sample. **One missing API key has quietly compromised every
+> headline number in the project**, each time in a different way, and each
+> time only visible after segmenting the result.
+
+### So the tool was fixed, not just the write-up
+
+`grade_quality.py` now reads the sibling `eval-*.json`, compares
+`routed.model` to `baseline.model` per item, and reports the two groups
+separately — labelling the real subset *"quote THIS one"*, and saying the
+split is **unavailable** rather than printing an unqualified headline if the
+eval file is missing.
+
+> **Same lesson as D31 and D36: the guard belongs in the instrument.** A
+> harness that *can* print a misleading headline eventually will.
+
+### Checking my own grading rather than trusting it
+
+All five preferences landed on the routed arm — 6% two-tailed at n=5, enough
+to be worth checking:
+
+- **Blinding held** — routed sat in slot A for 14 of 30 items.
+- **No positional bias** — the five picks split 2 "A" / 3 "B".
+- **No verbosity bias** — the longer answer won only **2 of 5**; twice the
+  *shorter* answer won, once for penalising a wrong figure (a claim that 1 kg
+  of uranium yields 24,000 MWh of electricity, which is the complete-fission
+  thermal number, off by roughly two orders of magnitude) and once for
+  answering the question actually asked.
+
+With those ruled out, 5-0 is most likely chance. The reassuring part is that
+**17 of 22 same-model pairs were judged identical** — a consistency check on
+the grading method itself.
+
+### D35: the hypothesis is dead, killed by a correct experiment
+
+The earlier probe generated load with GIL-bound Python threads and measured
+interpreter starvation. Rewritten with `os.cpu_count()` separate **processes**
+burning float arithmetic, 15 samples after 5 warm-ups, 12 cores:
+
+| torch threads | idle | full load | slowdown | worst |
+|---|---|---|---|---|
+| 6 (default) | 9.3 ms | **11.1 ms** | 1.20× | **65.8 ms** |
+| 1 (pinned) | 10.9 ms | **15.2 ms** | 1.39× | 18.7 ms |
+
+**Contention does not explain the flake.** Every core saturated gives 11-15ms
+against a 20ms budget; the in-suite failure reports a *median* of 85ms with
+all seven samples above 55ms. Contention buys at most 1.4×; the flake is ~7×.
+
+> **The hypothesis is refuted, not unconfirmed** — which is a better place to
+> be than where D35 was left, and it took one correctly-built experiment.
+
+**The side finding worth keeping:** `torch.set_num_threads(1)` costs ~4 ms at
+the median and makes the worst case **3.5× better** (18.7 ms vs 65.8 ms).
+Pinned, every sample stayed under budget; unpinned, the tail blew through it.
+Not adopted — classification has never been measured under real request
+concurrency, and a default should not be set from one probe on an idle
+desktop.
+
+### Written for the owner
+
+`SETUP.md` — how to run everything, and the three things only a person can
+do: add `ANTHROPIC_API_KEY` (one line, no config change, fixes the ladder AND
+the quality sample AND the adapter at once), optionally `GOOGLE_API_KEY`
+(which does nothing without also uncommenting the config entry), and grade 30
+answers by hand.
+
+`.env.example` was rewritten from three bare variable names into a document
+that leads with the D29 shadowing trap, because that is the failure the next
+person will hit.

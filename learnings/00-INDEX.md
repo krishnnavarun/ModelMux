@@ -99,5 +99,8 @@ Ranked by how much they demonstrate:
 | Guessed torch thread contention, wrote a probe that measured the GIL instead, recorded it as unknown | Refusing to promote an untested hypothesis into an explanation |
 | Published a 6.6% headline saving that re-ran at 1.7% on identical prompts | When the effect is smaller than the variance, one measurement is not a result |
 | The estimator I had flagged as BIASED turned out to be the lower-variance one | "More honest" and "better" are not the same property in an estimator |
+| Graded quality 30/30 "not worse", then found 22 pairs compared a model with itself | Segment a result before publishing it; an aggregate can be mostly non-comparisons |
+| One missing API key silently hollowed out the cost, routing AND quality measurements | A single environmental gap can compromise every headline, differently each time |
+| Killed my own CPU-contention hypothesis with a correct experiment | Refuting your guess is a better outcome than leaving it plausible |
 
 Full write-ups in `01-project-timeline.md`.

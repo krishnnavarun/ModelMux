@@ -50,6 +50,7 @@ That file is the point of the project as much as the code is.
 | `learnings/` | Reference library keyed by **technology**. See `learnings/00-INDEX.md`. |
 | `learning/` | Study guide + interview prep, keyed by how it gets asked. See `learning/00-START-HERE.md`. **Note the singular/plural distinction.** |
 | `PLAN.md` | Status, blockers, and the day-by-day delivery plan. |
+| `SETUP.md` | How to run it, and the short list of things only the owner can do. |
 | `README.md` | The outward-facing description. No placeholder metrics by Stage 6. |
 
 ### learnings/ structure
@@ -76,7 +77,8 @@ and move on.
 (a live `200`) closed on 2026-09-21, and cost and latency are measured rather
 than projected for the first time.
 
-`131 tests passing`, 35 decisions recorded, 19 learnings files.
+`131 tests passing`, 37 decisions recorded, 19 learnings files,
+12 study-guide files. **All six stages complete; quality is graded.**
 
 ### The 401 that lasted weeks was never the key (D29)
 
@@ -123,16 +125,20 @@ output tokens. Approximately unbiased.
 
 ### Two things to know before trusting a number here
 
-- **Quality is still ungraded.** The blind spot-check is exported and
-  `eval/grade_quality.py` reads it; nobody has filled one in. No key needed.
+- **Quality IS graded now (D37), but the honest n is 8.** The 30-item blind
+  spot-check was graded by an LLM-as-judge. 22 of the 30 pairs compared a
+  model WITH ITSELF, because with one key `large` falls back to the mid
+  tier's model -- those measure nondeterminism, not routing. On the 8 pairs
+  where routing actually changed the model: **not worse in 8/8, zero losses.**
+  `grade_quality.py` now performs that split itself and labels the meaningful
+  subset. The **human** half of D23 is still unfilled; the grader was the same
+  agent that wrote the router.
 - **The classification budget test is flaky in the full suite (D35, OPEN).**
   11-12ms alone, intermittently ~85ms in-suite against a 20ms budget. Cause
-  unknown -- not sampling noise, not the HTTP path, not ordering. My torch
-  thread-contention hypothesis was never confirmed: the probe measured GIL
-  starvation instead, and its "76s under load" figure describes the load
-  generator, not the classifier. Its idle reading (11.2ms, outside pytest) does
-  confirm the headline number. **Do not quote 11-12ms without saying it was an
-  idle process.**
+  still unknown, but now genuinely narrowed: sampling noise, the HTTP path,
+  test ordering and **CPU contention** are all ruled out. Contention was
+  refuted by a correct experiment -- 12 cores saturated gives only 11-15ms.
+  **Do not quote 11-12ms without saying it was an idle process.**
 
 ### Re-running the measurement
 
@@ -156,13 +162,22 @@ of them. Server and eval now share `config.cost_for_provider()`.
 - ~~Anthropic's large-tier prices are UNVERIFIED~~ — **VERIFIED 2026-09-21**
   (D27). They were `claude-sonnet-5` at Sonnet **4.6** rates: wrong model, wrong
   generation's price. Now `claude-opus-5` at 0.005 / 0.025 per 1K.
-- **A second provider key** (Anthropic or Google). Everything runs on one Groq
-  key today, which flattens the ladder to 2x. At the configured 33x ladder the
-  saving would be ~37% and would clear the measurement noise that makes the
-  current A/B figure meaningless (D36). This is the single input that would
-  most improve the result.
-- **D35, open:** the classification budget test's in-suite flake. Cause
-  unknown; a correct experiment is described at the end of the entry.
+- **`ANTHROPIC_API_KEY` -- the single highest-value input left.** One line
+  in `.env`; no config change needed, since `config.yaml` already lists
+  anthropic first under `tiers.large`. It simultaneously widens the ladder
+  from 2x to ~33x (fixing D36's noise problem), takes the quality sample from
+  n=8 to n=30 (fixing D37's main limitation), and gives the Anthropic adapter
+  its first live call. See `SETUP.md`.
+- **A human grader for 30 answers** (~40 min, no key). D23 asked for a human
+  spot-check AND LLM-as-judge as separate columns; only the second is filled.
+- **D35, still open but narrowed:** the classification budget test's
+  in-suite flake. The CPU-contention hypothesis is now **refuted** by a
+  correct experiment (separate processes, not GIL-bound threads): under full
+  saturation of 12 cores the median reaches only 11 ms unpinned / 15 ms
+  pinned, against an in-suite failure of 85 ms. Side finding worth keeping:
+  `torch.set_num_threads(1)` costs ~4 ms at the median and makes the tail 3.5x
+  better (18.7 ms vs 65.8 ms worst case). Not adopted -- never measured under
+  real concurrency.
 
 ### Deliberately cut
 
