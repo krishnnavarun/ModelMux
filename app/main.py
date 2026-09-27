@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 
 import httpx
 from fastapi import BackgroundTasks, FastAPI, Request
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 
 from app import config as config_module
 from app import cache, db, metrics, ratelimit, resilience, router, tokens
@@ -113,6 +113,17 @@ async def health():
 
 
 DASHBOARD_PATH = config_module.PROJECT_ROOT / "dashboard" / "index.html"
+
+
+@app.get("/", include_in_schema=False)
+async def root():
+    """Send the bare origin to the dashboard.
+
+    There was no route here, so opening http://localhost:8000 -- the first
+    thing anyone tries -- returned a 404 and read as "the server is broken".
+    A redirect costs nothing and removes that moment.
+    """
+    return RedirectResponse(url="/dashboard", status_code=307)
 
 
 @app.get("/dashboard")
