@@ -409,6 +409,24 @@
   @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
   .anim { animation: rise .42s var(--ease) both; }
 
+  /* Page-load entrance. Sections settle in document order so the eye is led
+     down the page once, rather than everything arriving at once.
+     `both` holds the from-state before the delay elapses, which is what
+     stops a flash of fully-drawn content before the animation starts. */
+  @keyframes reveal {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: none; }
+  }
+  .reveal { animation: reveal .62s var(--ease) both; animation-delay: var(--d, 0ms); }
+
+  /* The header pieces arrive slightly differently -- the wordmark first,
+     then its metadata, so it reads as one element assembling. */
+  @keyframes revealIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: none; }
+  }
+  .reveal-in { animation: revealIn .55s var(--ease) both; animation-delay: var(--d, 0ms); }
+
   footer { margin-top: 28px; font-size: var(--fs-sm); color: var(--ink-muted); }
   footer code { color: var(--ink-2); font-family: var(--mono); }
 
@@ -454,9 +472,9 @@
 <div class="wrap">
 
   <header>
-    <h1>Model<span class="mux">Mux</span></h1>
-    <span class="meta" id="meta"><span class="sk" style="width:18ch"></span></span>
-    <span class="live"><span class="dot"></span><span id="tick">connecting…</span></span>
+    <h1 class="reveal-in">Model<span class="mux">Mux</span></h1>
+    <span class="meta reveal-in" style="--d:90ms" id="meta"><span class="sk" style="width:18ch"></span></span>
+    <span class="live reveal-in" style="--d:150ms"><span class="dot"></span><span id="tick">connecting…</span></span>
 
     <!-- Theme toggle.
 
@@ -492,7 +510,7 @@
   </header>
 
   <!-- ============================================================ console -->
-  <section class="console">
+  <section class="console reveal" style="--d:120ms">
     <h2>Route a prompt</h2>
     <div class="inputrow">
       <!-- Smooth caret.
@@ -527,7 +545,7 @@
     </div>
   </section>
 
-  <div class="controls">
+  <div class="controls reveal" style="--d:220ms">
     <div class="pills" id="windows" role="group" aria-label="Time window"></div>
     <div class="spacer"></div>
     <button class="ghost" id="reload" type="button">↻ Refresh</button>
@@ -537,23 +555,23 @@
   <div id="notices"></div>
 
   <div class="grid2">
-    <div class="panel">
+    <div class="panel reveal" style="--d:430ms">
       <h2>Where the traffic went</h2>
       <div class="stack" id="stack"></div>
       <div class="legend" id="legend"></div>
     </div>
-    <div class="panel">
+    <div class="panel reveal" style="--d:490ms">
       <h2>Budgets <span class="soft">— median of the requests below, cold starts included</span></h2>
       <div id="meters"></div>
     </div>
   </div>
 
-  <div class="panel">
+  <div class="panel reveal" style="--d:550ms">
     <h2>Providers</h2>
     <table><tbody id="providers"></tbody></table>
   </div>
 
-  <div class="panel">
+  <div class="panel reveal" style="--d:610ms">
     <h2>Recent requests <span class="soft">— most recent, regardless of the window above</span></h2>
     <div style="overflow-x:auto">
       <table>
@@ -566,7 +584,7 @@
     </div>
   </div>
 
-  <footer>
+  <footer class="reveal" style="--d:680ms">
     One static file, no build step — <code>DECISIONS.md</code> D24.
     Every request writes a database row, including every failure path.
   </footer>
@@ -600,6 +618,18 @@ const STAGES = [
 let currentWindow = localStorage.getItem("mm.window") || "24h";
 let timer = null, busy = false;
 
+/* Entrance animations must run ONCE.
+ *
+ * refresh() polls every 5s and rebuilds the tiles and the feed each time.
+ * With the entrance class applied unconditionally, every tile replayed its
+ * rise and every figure counted up from zero twice a minute -- a page that
+ * looked like it was perpetually loading. `booted` gates the animation to
+ * the first paint; `lastVals` then gates the count-up to figures that have
+ * actually changed, so a number only moves when the underlying value did.
+ */
+let booted = false;
+const lastVals = new Map();
+
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g,
   (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const money = (n) => "$" + Number(n || 0).toFixed(6);
@@ -619,7 +649,13 @@ function median(xs) {
   const m = v.length >> 1;
   return v.length % 2 ? v[m] : Math.round((v[m - 1] + v[m]) / 2);
 }
-function countTo(el, to, fmt) {
+function countTo(el, to, fmt, key) {
+  // Nothing to celebrate if the number did not move.
+  if (key !== undefined) {
+    const was = lastVals.get(key);
+    lastVals.set(key, to);
+    if (booted && was === to) { el.textContent = fmt(to); return; }
+  }
   if (REDUCED) { el.textContent = fmt(to); return; }
   const t0 = performance.now(), dur = 620;
   (function step(now) {
@@ -907,9 +943,10 @@ function renderWindows() {
   });
 }
 
-function tile(k, value, sub, cls) {
+function tile(k, value, sub, cls, i) {
   const d = document.createElement("div");
-  d.className = "tile anim";
+  d.className = booted ? "tile" : "tile anim";
+  if (!booted) d.style.animationDelay = (280 + (i || 0) * 55) + "ms";
   d.innerHTML = `<div class="k">${esc(k)}</div><div class="v ${cls || ""}"></div><div class="sub2">${sub ? esc(sub) : ""}</div>`;
   const v = d.querySelector(".v");
   if (typeof value === "function") value(v); else v.textContent = value;
@@ -919,18 +956,20 @@ function tile(k, value, sub, cls) {
 function renderTiles(s) {
   const t = $("#tiles"); t.innerHTML = "";
   const n = s.requests || 0;
-  t.append(tile("Requests", (el) => countTo(el, n, (x) => Math.round(x).toLocaleString()), `in the last ${s.window}`));
-  t.append(tile("Cost", (el) => countTo(el, s.cost_usd || 0, money),
-    n ? `vs ${money(s.cost_if_all_large_usd)} all-large` : "—"));
-  t.append(tile("Saved", (el) => countTo(el, s.savings_pct || 0, (x) => x.toFixed(1) + "%"),
-    n ? money(s.cost_saved_usd) + " kept" : "—", n && s.savings_pct > 0 ? "good" : "dim"));
-  t.append(tile("Cache hits", (el) => countTo(el, (s.cache_hit_rate || 0) * 100, (x) => x.toFixed(1) + "%"),
-    n ? "served without a model call" : "—"));
+  t.append(tile("Requests", (el) => countTo(el, n, (x) => Math.round(x).toLocaleString(), "req"),
+    `in the last ${s.window}`, "", 0));
+  t.append(tile("Cost", (el) => countTo(el, s.cost_usd || 0, money, "cost"),
+    n ? `vs ${money(s.cost_if_all_large_usd)} all-large` : "—", "", 1));
+  t.append(tile("Saved", (el) => countTo(el, s.savings_pct || 0, (x) => x.toFixed(1) + "%", "saved"),
+    n ? money(s.cost_saved_usd) + " kept" : "—", n && s.savings_pct > 0 ? "good" : "dim", 2));
+  t.append(tile("Cache hits", (el) => countTo(el, (s.cache_hit_rate || 0) * 100, (x) => x.toFixed(1) + "%", "cache"),
+    n ? "served without a model call" : "—", "", 3));
   t.append(tile("Latency p50 / p95",
-    s.latency_p50_ms == null ? "— / —" : `${s.latency_p50_ms} / ${s.latency_p95_ms} ms`, "successes only"));
-  t.append(tile("Errors", (el) => countTo(el, (s.error_rate || 0) * 100, (x) => x.toFixed(1) + "%"),
+    s.latency_p50_ms == null ? "— / —" : `${s.latency_p50_ms} / ${s.latency_p95_ms} ms`,
+    "successes only", "", 4));
+  t.append(tile("Errors", (el) => countTo(el, (s.error_rate || 0) * 100, (x) => x.toFixed(1) + "%", "err"),
     `${s.fallback_count || 0} fallback${s.fallback_count === 1 ? "" : "s"}, ${s.escalated_count || 0} escalated`,
-    (s.error_rate || 0) > 0 ? "crit" : "dim"));
+    (s.error_rate || 0) > 0 ? "crit" : "dim", 5));
 }
 
 function renderNotices(s, rows) {
@@ -939,7 +978,7 @@ function renderNotices(s, rows) {
     const newest = rows && rows.length ? rows[0].timestamp : null;
     const wider = WINDOWS.slice(WINDOWS.indexOf(s.window) + 1);
     box.insertAdjacentHTML("beforeend", `
-      <div class="notice empty anim"><span class="ico">◔</span><div>
+      <div class="notice empty${booted ? "" : " anim"}"><span class="ico">◔</span><div>
         <b>No requests in the last ${esc(s.window)}.</b>
         ${newest ? `The most recent was <b>${esc(ago(newest))}</b>. The tiles are windowed;
           the table below is not, which is why it still has rows.`
@@ -955,7 +994,7 @@ function renderNotices(s, rows) {
   // actually observed. The API ships it so no UI can quietly drop it.
   if (s.savings_caveat) {
     box.insertAdjacentHTML("beforeend",
-      `<div class="notice anim"><span class="ico">△</span>
+      `<div class="notice${booted ? "" : " anim"}"><span class="ico">△</span>
         <div><b>On the savings figure:</b> ${esc(s.savings_caveat)}</div></div>`);
   }
 }
@@ -1031,7 +1070,7 @@ function renderMeters(rows) {
 
 function renderProviders(h) {
   $("#providers").innerHTML = (h.providers || []).map((p, i) => `
-    <tr class="anim" style="animation-delay:${i * 45}ms">
+    <tr class="${booted ? "" : "anim"}" style="animation-delay:${620 + i * 45}ms">
       <td style="color:var(--ink);font-weight:570">${esc(p.provider)}</td>
       <td class="state ${esc(p.state)}">${esc(p.state.replace("_", " "))}</td>
       <td style="color:var(--ink-muted)">${p.recent_failures} recent failure${p.recent_failures === 1 ? "" : "s"}</td>
@@ -1048,7 +1087,7 @@ function renderFeed(rows) {
     const chips = (r.cache_hit ? `<span class="chip">hit</span>` : "") +
       (r.fallback_fired ? `<span class="chip">fallback</span>` : "") +
       (r.escalated ? `<span class="chip">escalated</span>` : "");
-    return `<tr class="anim" style="animation-delay:${Math.min(i, 14) * 28}ms">
+    return `<tr class="${booted ? "" : "anim"}" style="animation-delay:${680 + Math.min(i, 14) * 26}ms">
       <td style="color:var(--ink-muted);white-space:nowrap" title="${esc(r.timestamp)}">${esc(ago(r.timestamp))}</td>
       <td class="prompt-cell" title="${esc(r.prompt_preview)}">${esc(r.prompt_preview)}</td>
       <td>${r.tier ? `<span class="tag ${esc(r.tier)}">${esc(r.tier)}</span>` : "—"}${chips}</td>
@@ -1074,6 +1113,9 @@ async function refresh() {
     renderTiles(stats); renderNotices(stats, rows); renderStack(stats.tier_distribution || {});
     renderMeters(rows); renderProviders(health); renderFeed(rows);
     $("#tick").textContent = "updated " + new Date().toLocaleTimeString();
+    // Set AFTER the first successful render, so the entrance plays exactly
+    // once and every later poll is a silent in-place update.
+    booted = true;
   } catch (e) {
     $("#tick").textContent = "disconnected";
     $("#notices").innerHTML = `<div class="notice bad"><span class="ico">△</span>
