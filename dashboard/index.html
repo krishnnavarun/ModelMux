@@ -101,6 +101,22 @@
       color-mix(in oklab, var(--accent) 13%, transparent), transparent 70%);
     pointer-events: none;
   }
+
+  /* The buffer is tiny and stretched to fill; the blur hides the upscale and
+     costs nothing (it is a compositor filter, not per-pixel JS). */
+  #silk {
+    position: fixed; inset: 0; width: 100vw; height: 100vh;
+    z-index: -2; pointer-events: none;
+    opacity: .34; filter: blur(18px) saturate(115%);
+    transition: opacity .5s var(--ease);
+  }
+  :root[data-theme="light"] #silk { opacity: .16; filter: blur(20px) saturate(90%); }
+  #silk.off { opacity: 0; }
+
+  .silk-off { opacity: 0; transition: opacity .2s var(--ease); }
+  .tgl[aria-pressed="false"] .silk-off { opacity: 1; }
+  .tgl[aria-pressed="false"] .silk-w { opacity: .45; }
+  #silkbtn svg { width: 19px; height: 19px; color: var(--ink); }
   .wrap { max-width: 1200px; margin: 0 auto; }
 
   header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 14px; padding: 34px 0 20px; }
@@ -404,6 +420,37 @@
 </style>
 </head>
 <body>
+
+<!-- Silk background.
+
+     Ported from a React/Tailwind canvas component to plain DOM (D24: no
+     build step, no dependencies).
+
+     THREE THINGS CHANGED, and the reasons matter more than the port:
+
+     1. RESOLUTION. The original iterates every 2nd pixel of a FULLSCREEN
+        canvas every frame -- about 500k iterations with several Math.sin
+        calls each at 1080p. That pegs a core. This page displays a 20ms
+        classification budget and DECISIONS.md D35 records classification
+        being sensitive to CPU and warm state, so a background that burns a
+        core would corrupt the numbers it sits behind. Rendered here into a
+        buffer capped at 240px wide and upscaled by CSS: roughly 1/40th the
+        work. Silk is low-frequency, so upscaling costs nothing visually --
+        it reads smoother, if anything.
+
+     2. FRAME RATE. Capped at 24fps. It is a slow drift; 60 buys nothing.
+
+     3. OPACITY. Kept low, and every panel above it stays OPAQUE. The text
+        tokens were contrast-validated against a solid #121620; letting a
+        moving texture through behind body text would invalidate all of it.
+        The silk shows in the gutters and behind the header, not under
+        anything you have to read.
+
+     Off switch in the header, because during a latency demo you may want
+     provably zero background CPU. Pauses on a hidden tab; freezes to a
+     single frame under prefers-reduced-motion. -->
+<canvas id="silk" aria-hidden="true"></canvas>
+
 <div class="wrap">
 
   <header>
@@ -422,6 +469,16 @@
          static file with no build step and no dependencies (D24), so React
          and Framer Motion are both out. The motion is two counter-rotations
          driven by a single class on the button. -->
+    <button class="tgl" id="silkbtn" type="button"
+            aria-label="Toggle background animation" aria-pressed="true"
+            title="Background animation">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"
+           fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+        <path class="silk-w" d="M2 8c3.5-3 6.5 3 10 0s6.5-3 10 0"/>
+        <path class="silk-w" d="M2 14c3.5-3 6.5 3 10 0s6.5-3 10 0"/>
+        <path class="silk-off" d="M4 20 20 4"/>
+      </svg>
+    </button>
     <button class="tgl" id="theme" type="button"
             aria-label="Switch colour theme" aria-pressed="false" title="Switch theme">
       <svg viewBox="0 0 240 240" aria-hidden="true" focusable="false">
@@ -1037,6 +1094,87 @@ $("#theme").onclick = () => {
   try { localStorage.setItem("mm.theme", next); } catch (_) {}
 };
 try { applyTheme(localStorage.getItem("mm.theme") || "dark"); } catch (_) { applyTheme("dark"); }
+
+/* ---------------------------------------------------------- silk bg --- */
+(function silk() {
+  const cv = $("#silk"), btn = $("#silkbtn");
+  const ctx = cv.getContext("2d", { alpha: false });
+  if (!ctx) return;
+
+  const REDUCED_M = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const MAX_W = 240;          // buffer width -- upscaled by CSS
+  const FPS = 24;
+  let w = 0, h = 0, img = null, t0 = 0, raf = null, on = true;
+
+  function size() {
+    const ar = innerHeight / Math.max(1, innerWidth);
+    w = Math.min(MAX_W, Math.max(120, Math.round(innerWidth / 6)));
+    h = Math.max(80, Math.round(w * ar));
+    cv.width = w; cv.height = h;
+    img = ctx.createImageData(w, h);
+  }
+
+  /* Cheap deterministic hash. The original called Math.sin twice per pixel
+     just for grain; this is integer work and visually identical after the
+     blur. */
+  function grain(i) {
+    let x = (i * 374761393) ^ 0x5bf03635;
+    x = (x ^ (x >>> 13)) * 1274126177;
+    return ((x ^ (x >>> 16)) >>> 0) / 4294967296;
+  }
+
+  function frame(now) {
+    raf = requestAnimationFrame(frame);
+    if (now - t0 < 1000 / FPS) return;
+    t0 = now;
+
+    const time = now * 0.0006;
+    const d = img.data;
+    // Theme-aware ink so the silk tints with the palette instead of
+    // fighting it.
+    const light = document.documentElement.getAttribute("data-theme") === "light";
+    const R = light ? 150 : 96, G = light ? 160 : 104, B = light ? 190 : 142;
+
+    let i = 0;
+    for (let y = 0; y < h; y++) {
+      const v = (y / h) * 2;
+      for (let x = 0; x < w; x++, i++) {
+        const u = (x / w) * 2;
+        const ty = v + 0.03 * Math.sin(8 * u - time);
+        const pattern = 0.6 + 0.4 * Math.sin(
+          5 * (u + ty + Math.cos(3 * u + 5 * ty) + 0.02 * time) +
+          Math.sin(20 * (u + ty - 0.1 * time))
+        );
+        const inten = Math.max(0, pattern - grain(i) * 0.055);
+        const o = i * 4;
+        d[o] = R * inten; d[o + 1] = G * inten; d[o + 2] = B * inten; d[o + 3] = 255;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    if (REDUCED_M) stop();          // one frame, then hold still
+  }
+
+  function start() { if (!raf && on) { t0 = 0; raf = requestAnimationFrame(frame); } }
+  function stop() { if (raf) { cancelAnimationFrame(raf); raf = null; } }
+
+  function setOn(v) {
+    on = v;
+    cv.classList.toggle("off", !v);
+    btn.setAttribute("aria-pressed", String(v));
+    try { localStorage.setItem("mm.silk", v ? "1" : "0"); } catch (_) {}
+    v ? start() : stop();
+  }
+
+  addEventListener("resize", () => { size(); if (!raf) start(); });
+  // Never animate a tab nobody is looking at -- same rule as the polling.
+  document.addEventListener("visibilitychange", () => (document.hidden ? stop() : start()));
+  btn.onclick = () => setOn(btn.getAttribute("aria-pressed") !== "true");
+
+  size();
+  let saved = "1";
+  try { saved = localStorage.getItem("mm.silk") ?? "1"; } catch (_) {}
+  setOn(saved === "1");
+})();
 
 renderSamples(); renderWindows(); refresh();
 timer = setInterval(refresh, 5000);
