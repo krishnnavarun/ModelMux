@@ -102,6 +102,40 @@
     70% { box-shadow: 0 0 0 7px transparent; } 100% { box-shadow: 0 0 0 0 transparent; }
   }
 
+  /* ------------------------------------------------------ theme toggle --- */
+  .tgl {
+    width: 34px; height: 34px; padding: 0; margin-left: 4px;
+    border: 1px solid var(--border); border-radius: 50%;
+    background: var(--surface-2); cursor: pointer; flex: 0 0 auto;
+    display: grid; place-items: center;
+    transition: border-color .2s var(--ease), background .2s var(--ease),
+                transform .12s var(--ease);
+  }
+  .tgl:hover { border-color: var(--accent); background: var(--surface-3); }
+  .tgl:active { transform: scale(.93); }
+  .tgl:focus-visible {
+    outline: none; border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 30%, transparent);
+  }
+  .tgl svg { width: 21px; height: 21px; display: block; overflow: visible; }
+
+  /* Both groups spin about the icon's centre. The viewBox is 240 wide, so
+     the centre is 120,120 -- stated explicitly because the default
+     transform-origin for SVG children is the origin, not the middle. */
+  .tgl-core, .tgl-ring {
+    transform-origin: 120px 120px;
+    transition: transform .42s var(--ease);
+  }
+  /* Counter-rotation is the whole trick: the ring and the split core turn
+     opposite ways, so the lit half sweeps across instead of just spinning. */
+  .tgl[aria-pressed="true"] .tgl-core { transform: rotate(-180deg); }
+  .tgl[aria-pressed="true"] .tgl-ring { transform: rotate(180deg); }
+
+  .tgl-ring { fill: var(--ink); }
+  .tgl-lit  { fill: var(--ink); }
+  .tgl-dim  { fill: var(--surface-2); transition: fill .2s var(--ease); }
+  .tgl:hover .tgl-dim { fill: var(--surface-3); }
+
   /* =========================================================== console = */
   .console {
     background: linear-gradient(180deg, var(--surface-2), var(--surface));
@@ -332,6 +366,28 @@
     <h1>Model<span class="mux">Mux</span></h1>
     <span class="meta" id="meta"><span class="sk" style="width:18ch"></span></span>
     <span class="live"><span class="dot"></span><span id="tick">connecting…</span></span>
+
+    <!-- Theme toggle.
+
+         Design adapted from the open-source CSS theme toggles at
+         https://toggles.dev/ by Alfie Jones, by way of Skiper UI's
+         React/Framer Motion recreation (@gurvinder-singh02, gxuri.me),
+         whose free tier asks for attribution -- hence this note.
+
+         Rebuilt here in plain SVG + CSS transforms: this project ships one
+         static file with no build step and no dependencies (D24), so React
+         and Framer Motion are both out. The motion is two counter-rotations
+         driven by a single class on the button. -->
+    <button class="tgl" id="theme" type="button"
+            aria-label="Switch colour theme" aria-pressed="false" title="Switch theme">
+      <svg viewBox="0 0 240 240" aria-hidden="true" focusable="false">
+        <g class="tgl-core">
+          <path class="tgl-lit" d="M120 67.5C149.25 67.5 172.5 90.75 172.5 120C172.5 149.25 149.25 172.5 120 172.5"/>
+          <path class="tgl-dim" d="M120 67.5C90.75 67.5 67.5 90.75 67.5 120C67.5 149.25 90.75 172.5 120 172.5"/>
+        </g>
+        <path class="tgl-ring" d="M120 3.75C55.5 3.75 3.75 55.5 3.75 120C3.75 184.5 55.5 236.25 120 236.25C184.5 236.25 236.25 184.5 236.25 120C236.25 55.5 184.5 3.75 120 3.75ZM120 214.5V172.5C90.75 172.5 67.5 149.25 67.5 120C67.5 90.75 90.75 67.5 120 67.5V25.5C172.5 25.5 214.5 67.5 214.5 120C214.5 172.5 172.5 214.5 120 214.5Z"/>
+      </svg>
+    </button>
   </header>
 
   <!-- ============================================================ console -->
@@ -356,7 +412,6 @@
   <div class="controls">
     <div class="pills" id="windows" role="group" aria-label="Time window"></div>
     <div class="spacer"></div>
-    <button class="ghost" id="theme" type="button">◑ Theme</button>
     <button class="ghost" id="reload" type="button">↻ Refresh</button>
   </div>
 
@@ -821,12 +876,18 @@ async function refresh() {
 }
 
 $("#reload").onclick = refresh;
+function applyTheme(mode) {
+  document.documentElement.setAttribute("data-theme", mode);
+  // aria-pressed drives BOTH the screen-reader state and the CSS rotation,
+  // so the icon can never disagree with the theme it reports.
+  $("#theme").setAttribute("aria-pressed", String(mode === "light"));
+}
 $("#theme").onclick = () => {
   const next = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
-  document.documentElement.setAttribute("data-theme", next);
+  applyTheme(next);
   try { localStorage.setItem("mm.theme", next); } catch (_) {}
 };
-try { const t = localStorage.getItem("mm.theme"); if (t) document.documentElement.setAttribute("data-theme", t); } catch (_) {}
+try { applyTheme(localStorage.getItem("mm.theme") || "dark"); } catch (_) { applyTheme("dark"); }
 
 renderSamples(); renderWindows(); refresh();
 timer = setInterval(refresh, 5000);
