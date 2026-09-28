@@ -129,8 +129,14 @@
   .meta b { color: var(--ink-2); font-weight: 560; }
   .live { display: inline-flex; align-items: center; gap: 7px; font-size: var(--fs-sm);
           color: var(--ink-muted); margin-left: auto; }
+  /* Static by default. It pulsed on a loop before, which read as "live
+     streaming" when the page was really just on a timer -- and now that
+     there is no timer at all, a pulsing dot would be a plain lie. It
+     animates only while a fetch is genuinely in flight. */
   .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--good);
-         animation: pulse 2.4s var(--ease) infinite; }
+         transition: background .2s var(--ease); }
+  .dot.busy { background: var(--accent); animation: pulse 1s var(--ease) infinite; }
+  .dot.bad  { background: var(--critical); }
   @keyframes pulse {
     0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--good) 60%, transparent); }
     70% { box-shadow: 0 0 0 7px transparent; } 100% { box-shadow: 0 0 0 0 transparent; }
@@ -327,6 +333,9 @@
            font: inherit; font-size: var(--fs-sm); padding: 8px 14px; border-radius: 9px;
            cursor: pointer; transition: background .18s var(--ease), color .18s var(--ease); }
   .ghost:hover { background: var(--surface-2); color: var(--ink); }
+  .ghost .spin { display: inline-block; }
+  .ghost.working .spin { animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
   /* ============================================================= tiles = */
   .tiles { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(176px, 1fr)); }
@@ -548,7 +557,7 @@
   <div class="controls reveal" style="--d:220ms">
     <div class="pills" id="windows" role="group" aria-label="Time window"></div>
     <div class="spacer"></div>
-    <button class="ghost" id="reload" type="button">↻ Refresh</button>
+    <button class="ghost" id="reload" type="button"><span class="spin">↻</span> Refresh</button>
   </div>
 
   <div class="tiles" id="tiles"></div>
@@ -616,16 +625,17 @@ const STAGES = [
 ];
 
 let currentWindow = localStorage.getItem("mm.window") || "24h";
-let timer = null, busy = false;
+let busy = false;
 
 /* Entrance animations must run ONCE.
  *
- * refresh() polls every 5s and rebuilds the tiles and the feed each time.
- * With the entrance class applied unconditionally, every tile replayed its
- * rise and every figure counted up from zero twice a minute -- a page that
- * looked like it was perpetually loading. `booted` gates the animation to
- * the first paint; `lastVals` then gates the count-up to figures that have
+ * refresh() rebuilds the tiles and the feed every time it runs. With the
+ * entrance class applied unconditionally, every tile replayed its rise and
+ * every figure counted up from zero on each update -- a page that looked
+ * like it was perpetually loading. `booted` gates the animation to the
+ * first paint; `lastVals` then gates the count-up to figures that have
  * actually changed, so a number only moves when the underlying value did.
+ * With polling now gone, that means motion is always caused by you.
  */
 let booted = false;
 const lastVals = new Map();
@@ -1101,6 +1111,9 @@ function renderFeed(rows) {
 }
 
 async function refresh() {
+  const dot = document.querySelector(".dot"), btn = $("#reload");
+  dot.classList.add("busy"); dot.classList.remove("bad");
+  btn.classList.add("working");
   try {
     const [stats, reqs, health] = await Promise.all([
       fetch(`/v1/stats?window=${encodeURIComponent(currentWindow)}`).then((r) => r.json()),
@@ -1114,12 +1127,16 @@ async function refresh() {
     renderMeters(rows); renderProviders(health); renderFeed(rows);
     $("#tick").textContent = "updated " + new Date().toLocaleTimeString();
     // Set AFTER the first successful render, so the entrance plays exactly
-    // once and every later poll is a silent in-place update.
+    // once and every later update is silent and in place.
     booted = true;
   } catch (e) {
+    dot.classList.add("bad");
     $("#tick").textContent = "disconnected";
     $("#notices").innerHTML = `<div class="notice bad"><span class="ico">△</span>
       <div><b>Cannot reach the API.</b> Is the server still running on this port?</div></div>`;
+  } finally {
+    dot.classList.remove("busy");
+    btn.classList.remove("working");
   }
 }
 
@@ -1218,12 +1235,19 @@ try { applyTheme(localStorage.getItem("mm.theme") || "dark"); } catch (_) { appl
   setOn(saved === "1");
 })();
 
+/* NO POLLING, deliberately.
+ *
+ * This used to refresh every 5s. Nothing here changes on its own -- the
+ * numbers only move when a request is routed -- so a timer produced
+ * constant HTTP traffic and, worse, made bars and figures animate when
+ * nothing had happened. Motion that fires on a clock teaches you to ignore
+ * motion.
+ *
+ * The page now updates on exactly three things, all of them caused by you:
+ * first load, routing a prompt, and the Refresh button (plus changing the
+ * window, which is a different question being asked).
+ */
 renderSamples(); renderWindows(); refresh();
-timer = setInterval(refresh, 5000);
-document.addEventListener("visibilitychange", () => {
-  clearInterval(timer);
-  if (!document.hidden) { refresh(); timer = setInterval(refresh, 5000); }
-});
 </script>
 </body>
 </html>
