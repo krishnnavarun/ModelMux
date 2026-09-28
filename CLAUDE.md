@@ -50,6 +50,7 @@ That file is the point of the project as much as the code is.
 | `learnings/` | Reference library keyed by **technology**. See `learnings/00-INDEX.md`. |
 | `learning/` | Study guide + interview prep, keyed by how it gets asked. See `learning/00-START-HERE.md`. **Note the singular/plural distinction.** |
 | `PLAN.md` | Status, blockers, and the day-by-day delivery plan. |
+| `RESUME.md` | **Read this first in a new session.** Where we left off, and what is blocking. |
 | `SETUP.md` | How to run it, and the short list of things only the owner can do. |
 | `README.md` | The outward-facing description. No placeholder metrics by Stage 6. |
 
