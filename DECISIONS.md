@@ -1781,6 +1781,76 @@ killed by an experiment instead of surviving as a plausible guess.
 
 ---
 
+### NEW EVIDENCE 2026-09-28 — the first request after idle is reliably slow
+
+Found by the project owner asking why the dashboard's classification meter
+was red at 24 ms. The median was arithmetically right; the *sample* was the
+problem, and picking it apart turned up a pattern.
+
+The 19 classification timings behind that median, sorted:
+
+```
+9, 9, 9, 9, 10, 12, 13, 14, 15, [24], 26, 32, 36, 39, 40, 41, 44, 416, 2540
+```
+
+Sorted, that looks like noise with two outliers. **In timestamp order it is
+not noise at all:**
+
+| time | classify | |
+|---|---|---|
+| 03:56:58 | **36 ms** | first after an idle gap |
+| 03:57:25 | 9 ms | |
+| 03:57:29 | 15 ms | |
+| 03:57:32 | 9 ms | |
+| 04:07:26 | **32 ms** | first after an idle gap |
+| 04:07:37 | 9 ms | |
+| 04:09:44 | **41 ms** | first after an idle gap |
+| 04:10:02 | 10 ms | |
+| 04:10:04 | 9 ms | |
+
+**Every burst opens with a 32-44 ms classification and then settles to
+9-15 ms.** Four separate bursts, same shape each time. That is reproducible
+behaviour, not variance.
+
+The 2540 ms and 416 ms are the same phenomenon at full strength: the first
+classification in a fresh process, paying for lazy imports and the model's
+first forward pass. `eval/explain.py` warms up three times before it
+measures for exactly this reason, and says so in a comment.
+
+### Why this matters to D35
+
+D35 is an unexplained ~7x slowdown in the full test suite. This is an
+unexplained ~3-4x slowdown after an idle gap. They may be the same
+mechanism at different intensities — something about the model's warm state
+decaying, whether that is memory being paged out, an allocator releasing
+arenas, or a torch thread pool parking.
+
+It also supplies the first **reproducible trigger** D35 has had. Every
+earlier attempt needed the whole suite to misbehave; this can be provoked
+on demand by waiting a minute and sending one request.
+
+**Next experiment, now that there is something to poke:** classify in a
+loop, sleep for increasing intervals (1s, 10s, 60s, 300s), and plot the
+first-call time against the gap. If it scales with idle duration, the cause
+is decay of warm state rather than anything about pytest — and D35's
+in-suite flake becomes a symptom rather than its own mystery.
+
+### What was changed in the meantime
+
+Nothing about classification. The **dashboard** was changed to stop hiding
+this: the budget meter now prints `n`, the min-max range, and how many
+samples cleared the budget, and says outright when the maximum is a cold
+start rather than steady state.
+
+> Dropping the outliers would have turned the meter green and thrown away
+> the finding. A red 24 ms sitting next to "min 9 ms, max 2540 ms" tells the
+> reader the truth; a bare 24 ms does not, and a cherry-picked 14 ms would
+> have been worse than either.
+
+---
+
+---
+
 ## D36 — The 6.6% cost saving did not reproduce. It was noise.
 
 **Date:** 2026-09-21 · **Stage:** 6 · **Corrects:** D33 and the README

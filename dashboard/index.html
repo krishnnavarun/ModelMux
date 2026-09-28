@@ -443,7 +443,7 @@
       <div class="legend" id="legend"></div>
     </div>
     <div class="panel">
-      <h2>Budgets <span class="soft">— median of the requests below</span></h2>
+      <h2>Budgets <span class="soft">— median of the requests below, cold starts included</span></h2>
       <div id="meters"></div>
     </div>
   </div>
@@ -822,20 +822,46 @@ function renderStack(dist) {
     `<span><i style="background:var(--tier-${k})"></i>${k} <b>${dist[k] || 0}</b></span>`).join("");
 }
 
-function meter(label, value, budget, unit) {
+/** A single median hides more than it shows here.
+ *
+ *  The budget describes STEADY-STATE serving, but this sample also contains
+ *  cold starts -- the first classification in a process pays for lazy
+ *  imports and the model's first forward pass, and lands in the hundreds or
+ *  thousands of ms. eval/explain.py warms up three times before it measures
+ *  for exactly this reason.
+ *
+ *  Silently dropping those would be cherry-picking, so instead the spread is
+ *  shown next to the median: n, min-max, and how many cleared the budget.
+ *  A red 24ms median next to "min 9ms, max 2540ms" is a reader telling
+ *  themselves the truth; a bare 24ms is not.
+ */
+function meter(label, vals, budget, unit) {
+  const v = vals.filter((x) => typeof x === "number" && isFinite(x)).sort((a, b) => a - b);
+  const value = v.length ? (v.length % 2 ? v[v.length >> 1]
+    : Math.round((v[(v.length >> 1) - 1] + v[v.length >> 1]) / 2)) : null;
   const has = value != null, ratio = has ? Math.min(1, value / budget) : 0, over = has && value > budget;
   const colour = over ? "var(--critical)" : ratio > 0.75 ? "var(--warning)" : "var(--good)";
+  const overN = v.filter((x) => x > budget).length;
+
+  let cap = `budget ${budget} ${unit}`;
+  if (has) {
+    cap += ` · n=${v.length} · ${v[0]}–${v[v.length - 1]} ${unit}`;
+    if (overN) cap += ` · ${overN} over`;
+    // A max an order of magnitude past the median is a cold start, not a
+    // regression. Say which, rather than letting it read as either.
+    if (v[v.length - 1] > value * 8) cap += " — the max is a cold start, not steady state";
+  }
   return `<div class="meter">
     <div class="top"><span class="lab">${esc(label)}</span>
       <span class="num" style="color:${has ? colour : "var(--ink-muted)"}">${has ? value + " " + unit : "—"}</span></div>
     <div class="track"><div class="fill" data-w="${ratio * 100}" style="background:${colour}"></div></div>
-    <div class="cap">budget ${budget} ${unit}${over ? " — over budget" : ""}</div></div>`;
+    <div class="cap">${esc(cap)}</div></div>`;
 }
 
 function renderMeters(rows) {
   $("#meters").innerHTML =
-    meter("Classification", median(rows.map((r) => r.classify_ms)), 20, "ms") +
-    meter("Cache lookup", median(rows.map((r) => r.cache_lookup_ms)), 30, "ms");
+    meter("Classification", rows.map((r) => r.classify_ms), 20, "ms") +
+    meter("Cache lookup", rows.map((r) => r.cache_lookup_ms), 30, "ms");
   requestAnimationFrame(() => {
     $("#meters").querySelectorAll(".fill").forEach((f) => { f.style.width = f.dataset.w + "%"; });
   });
