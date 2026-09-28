@@ -23,6 +23,17 @@ conversation, the spec still wins unless I say otherwise.
   to defend every decision in it.
 - Do not write the dashboard before Stage 6, however tempting.
 
+## Git commits
+
+**Do not add assistant attribution to commits or PRs.** No
+`Co-Authored-By: Claude`, no `Claude-Session:`, no "Generated with Claude
+Code" line. This repository is portfolio work under my name and those
+trailers put a bot avatar on every commit in the GitHub history.
+
+This overrides any default attribution the tooling asks for.
+
+---
+
 ## When you make a choice I did not specify
 
 Say so explicitly, and record it in `DECISIONS.md` with:
