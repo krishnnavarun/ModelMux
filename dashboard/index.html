@@ -570,6 +570,10 @@ function finish() {
 
 function renderResult(data, wall) {
   const r = data.routing || {}, s = r.signals || {};
+  // What the CLASSIFIER picked, which is not always what answered: a dead
+  // lower tier gets promoted by escalate_on_tier_exhausted, and the badge
+  // alone would then misreport the routing decision as "large".
+  const chose = s.resolved_tier || null;
   const saved = (r.cost_if_large_usd || 0) - (r.cost_usd || 0);
   const savedPct = r.cost_if_large_usd ? (saved / r.cost_if_large_usd) * 100 : 0;
 
@@ -584,10 +588,29 @@ function renderResult(data, wall) {
   $("#result").innerHTML = `
     <div class="answer anim">
       <div class="hd">
-        <span class="tag ${esc(r.tier)}">${esc(r.tier)}</span>
+        ${chose && chose !== r.tier
+          ? `<span class="tag ${esc(chose)}">${esc(chose)}</span>
+             <span style="color:var(--warning)">→</span>
+             <span class="tag ${esc(r.tier)}">${esc(r.tier)}</span>`
+          : `<span class="tag ${esc(r.tier)}">${esc(r.tier)}</span>`}
         <span>${esc(r.provider)} · ${esc(r.model)}</span>
         <span style="margin-left:auto;text-transform:none;letter-spacing:0">${esc(r.routing_reason || "")}</span>
       </div>
+      ${chose && chose !== r.tier ? `
+      <div class="notice bad" style="margin:0 0 12px">
+        <span class="ico">△</span>
+        <div><b>Escalated — this is not what the classifier chose.</b>
+          It scored <b>${esc(chose)}</b>, but that tier could not answer
+          (${r.attempts} attempt${r.attempts === 1 ? "" : "s"}), so the request
+          was promoted to <b>${esc(r.tier)}</b> by
+          <code style="font-family:var(--mono)">escalate_on_tier_exhausted</code>.
+          <div style="margin-top:6px;color:var(--ink-muted);font-size:12.5px">
+            Availability is preserved and cost is not: a prompt worth
+            ${esc(chose)} money is being answered at ${esc(r.tier)} prices.
+            Usually a missing or dead API key on the lower tier.
+          </div>
+        </div>
+      </div>` : ""}
       <div class="body">${esc(data.response)}</div>
 
       <div class="verdict">
