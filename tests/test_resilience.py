@@ -18,7 +18,6 @@ import pytest
 from app import config as config_module
 from app import resilience
 from app.providers.base import (
-    ProviderBadRequest,
     ProviderRateLimited,
     ProviderServerError,
 )

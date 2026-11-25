@@ -12,8 +12,16 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
-# Documents -- kept on disk, not in the repo
+# Documents, assistant notes, and personal learning guides -- kept on disk, not in the repo
 *.docx
+CLAUDE.md
+DECISIONS.md
+PLAN.md
+RESUME.md
+SETUP.md
+specs.md
+learning/
+learnings/
 
 # Evaluation output: regenerable, and a SIMULATED run must never be mistaken
 # for a real result sitting in version control.

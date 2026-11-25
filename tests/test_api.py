@@ -246,3 +246,29 @@ def test_request_id_in_response_matches_the_row(client, db_path):
     """A caller complaint must be traceable to its row."""
     routing = client.post("/v1/chat", json={"prompt": "trace me"}).json()["routing"]
     assert rows(db_path)[-1]["id"] == routing["request_id"]
+
+
+def test_omitted_max_tokens_uses_configured_default(client):
+    """When callers omit max_tokens, config.limits.max_tokens_default applies."""
+    from app import config as config_module
+
+    seen = []
+
+    class CaptureProvider:
+        name = "capture"
+
+        async def complete(self, prompt: str, model: str, max_tokens: int):
+            from app.providers.base import ProviderResult
+
+            seen.append(max_tokens)
+            return ProviderResult(
+                text="ok", model=model, tokens_in=5, tokens_out=3, raw_latency_ms=1
+            )
+
+    for name in list(client.app.state.providers):
+        client.app.state.providers[name] = CaptureProvider()
+
+    expected_default = config_module.load().limits["max_tokens_default"]
+    resp = client.post("/v1/chat", json={"prompt": "What is 2+2?"})
+    assert resp.status_code == 200
+    assert seen == [expected_default]

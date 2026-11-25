@@ -21,7 +21,7 @@ class ChatRequest(BaseModel):
     """
 
     prompt: str
-    max_tokens: int = Field(default=1000, ge=1, le=100_000)
+    max_tokens: int | None = Field(default=None, ge=1, le=100_000)
 
     # Testing and dashboard-comparison affordances (SPEC section 5). Neither is
     # part of normal operation; both are honoured from Stage 3 / Stage 4.

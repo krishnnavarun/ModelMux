@@ -10,7 +10,6 @@ import pytest
 
 from app import config as config_module
 from app import metrics
-from conftest import rows
 
 
 # ---------------------------------------------------------------------------

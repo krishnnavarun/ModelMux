@@ -14,8 +14,6 @@ never have to be rewritten around it.
 
 import hashlib
 import json
-import os
-import sys
 import time
 import uuid
 from contextlib import asynccontextmanager
@@ -29,7 +27,6 @@ from app import config as config_module
 from app import cache, db, metrics, ratelimit, resilience, router, tokens
 from app.classifier import embedding
 from app.providers import build_all
-from app.providers.base import ProviderError  # noqa: F401  (re-exported for tests)
 from app.schemas import ChatRequest
 
 # Read .env into the environment before anything reads os.environ.
@@ -222,13 +219,18 @@ async def compare(request: ChatRequest, http_request: Request):
                             content={"error": "prompt must not be empty"})
 
     decision = router.select_tier(request.prompt, config)
+    max_tokens = (
+        request.max_tokens
+        if request.max_tokens is not None
+        else config.limits.get("max_tokens_default", 8000)
+    )
 
     async def run(tier: str) -> dict:
         started = time.perf_counter()
         try:
             dispatched = await resilience.dispatch(
                 prompt=request.prompt, tier=tier,
-                max_tokens=request.max_tokens, config=config,
+                max_tokens=max_tokens, config=config,
                 providers=app.state.providers, breakers=app.state.breakers,
             )
         except resilience.AllProvidersFailed as exc:
@@ -243,8 +245,9 @@ async def compare(request: ChatRequest, http_request: Request):
             "response": result.text,
             "tokens_in": result.tokens_in,
             "tokens_out": result.tokens_out,
-            "cost_usd": round(config.cost_usd(
-                dispatched.tier, result.tokens_in, result.tokens_out), 8),
+            "cost_usd": round(config.cost_for_provider(
+                dispatched.tier, dispatched.provider_name,
+                result.tokens_in, result.tokens_out), 8),
             "latency_ms": int((time.perf_counter() - started) * 1000),
         }
 
@@ -357,7 +360,11 @@ async def chat(request: ChatRequest, background: BackgroundTasks,
 
     tier = decision.tier
     provider_config = decision.provider
-    provider = app.state.providers[provider_config["name"]]
+    max_tokens = (
+        request.max_tokens
+        if request.max_tokens is not None
+        else config.limits.get("max_tokens_default", 8000)
+    )
 
     # --- Cache (SPEC section 8.5) -----------------------------------------
     # AFTER routing, not before. Routing is ~11ms of local compute and the
@@ -418,7 +425,7 @@ async def chat(request: ChatRequest, background: BackgroundTasks,
         dispatched = await resilience.dispatch(
             prompt=request.prompt,
             tier=tier,
-            max_tokens=request.max_tokens,
+            max_tokens=max_tokens,
             config=config,
             providers=app.state.providers,
             breakers=app.state.breakers,
@@ -429,7 +436,6 @@ async def chat(request: ChatRequest, background: BackgroundTasks,
         # logged row, the response) must reflect what actually happened, not
         # what we intended.
         tier = dispatched.tier
-        provider_config = config.provider_for(tier)
     except resilience.AllProvidersFailed as exc:
         # Always 502. Per SPEC section 5, 400 means the *caller's* prompt was
         # empty or over-length; it must never mean "our API key is dead" or
@@ -501,7 +507,7 @@ async def chat(request: ChatRequest, background: BackgroundTasks,
         tier=tier,
         provider=dispatched.provider_name,
         model=result.model,
-        escalated=1 if dispatched.escalated else 0,
+        escalated=1 if (decision.escalated or dispatched.escalated) else 0,
         fallback_fired=1 if dispatched.fallback_fired else 0,
         attempts=dispatched.attempts,
         tokens_in=result.tokens_in,

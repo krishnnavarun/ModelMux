@@ -8,8 +8,6 @@ amount of clever routing matters.
 
 import time
 
-import pytest
-
 from app.ratelimit import Bucket, RateLimiter
 from conftest import rows
 
@@ -205,3 +203,29 @@ def test_compare_is_rate_limited_too(client):
         for i in range(5)
     ]
     assert 429 in statuses
+
+
+def test_compare_bills_fallback_provider_at_its_own_rate(client):
+    """Within-tier fallback on baseline must price by the provider that answered."""
+    from app import config as config_module
+    from app.providers.mock import MockProvider
+
+    cfg = config_module.load()
+    large_providers = cfg.tiers["large"]["providers"]
+    if len(large_providers) < 2:
+        return
+
+    primary = large_providers[0]["name"]
+    fallback = large_providers[1]["name"]
+    client.app.state.providers[primary] = MockProvider(fail_with="bad_request")
+    client.app.state.providers[fallback] = MockProvider(
+        text="fallback answer", tokens_in=100, tokens_out=200
+    )
+
+    body = client.post("/v1/compare", json={"prompt": "What is 2+2?"}).json()
+    assert body["baseline"]["ok"] is True
+    assert body["baseline"]["provider"] == fallback
+    expected_cost = round(
+        cfg.cost_for_provider("large", fallback, 100, 200), 8
+    )
+    assert body["baseline"]["cost_usd"] == expected_cost

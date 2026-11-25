@@ -40,11 +40,6 @@ from app.providers.base import (
     ProviderResult,
 )
 
-# Errors worth trying again. The complement of this set is
-# ProviderBadRequest -- listed by exclusion so that a NEW error type added to
-# base.py defaults to "do not retry", which is the safe direction.
-RETRYABLE = (ProviderError,)
-
 
 class CircuitState(str, Enum):
     CLOSED = "closed"        # normal
